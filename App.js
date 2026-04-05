@@ -12,7 +12,7 @@ export default function App() {
             Bienvenido
           </Text>
           <Text style={tw`mt-4 text-center text-4xl font-bold text-slate-900`}>
-            Hola
+            Hola tu
           </Text>
           <Text style={tw`mt-4 text-center text-base leading-6 text-slate-600`}>
             Que bueno tenerte aqui. Tu app en Expo ya esta lista para comenzar.

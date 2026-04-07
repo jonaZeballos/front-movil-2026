@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { Asset } from "expo-asset";
 
 import { AuthEntryScreen } from "../../features/auth";
 import { HomeScreen } from "../../features/home";
 import { OnboardingScreen } from "../../features/onboarding";
 import { SplashScreen } from "../../features/splash";
+import { onboardingPreloadAssets } from "../../shared/assets";
 
 const Stack = createNativeStackNavigator();
 
@@ -13,11 +15,28 @@ export function AppNavigator() {
   const [isSplashVisible, setIsSplashVisible] = useState(true);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setIsSplashVisible(false);
-    }, 2800);
+    let isMounted = true;
 
-    return () => clearTimeout(timeoutId);
+    const prepareApp = async () => {
+      try {
+        await Promise.all([
+          new Promise((resolve) => setTimeout(resolve, 2800)),
+          Asset.loadAsync(onboardingPreloadAssets),
+        ]);
+      } catch (error) {
+        // If preloading fails, continue boot so the app doesn't get stuck on splash.
+      } finally {
+        if (isMounted) {
+          setIsSplashVisible(false);
+        }
+      }
+    };
+
+    prepareApp();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (isSplashVisible) {

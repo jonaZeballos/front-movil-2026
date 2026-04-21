@@ -36,7 +36,9 @@ function withDefaultFont(existingStyle) {
 export function applyGlobalTextDefaults() {
   Text.defaultProps = Text.defaultProps || {};
   Text.defaultProps.style = withDefaultFont(Text.defaultProps.style);
+  Text.defaultProps.allowFontScaling = false;
 
   TextInput.defaultProps = TextInput.defaultProps || {};
   TextInput.defaultProps.style = withDefaultFont(TextInput.defaultProps.style);
+  TextInput.defaultProps.allowFontScaling = false;
 }

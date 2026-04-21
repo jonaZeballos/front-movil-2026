@@ -1,8 +1,9 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { MaterialCommunityIcons, Ionicons, MaterialIcons, FontAwesome5, Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Stop } from "react-native-svg";
+import { SvgUri } from "react-native-svg";
 
+import EsferaSvg from "../../../../assets/images/esfera.svg";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
@@ -91,172 +92,141 @@ const recentOrders = [
 
 export function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const esferaUri = typeof EsferaSvg === "number" ? Image.resolveAssetSource(EsferaSvg)?.uri : null;
 
   return (
-    <ScreenContainer backgroundColor={colors.primary}>
+    <ScreenContainer backgroundColor={colors.primary} edges={["top"]}>
       <View style={styles.root}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 132 + Math.max(insets.bottom, 10) }}
-        >
-          <View style={styles.hero}>
-            <View style={styles.topGlow} />
-            <View style={styles.avatarRow}>
-              <View style={styles.avatarWrap}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>AG</Text>
-                </View>
-                <View>
-                  <Text style={styles.userName}>Alex G.</Text>
-                  <View style={styles.rolePill}>
-                    <Text style={styles.roleText}>Ventas</Text>
-                  </View>
-                </View>
+        <View style={styles.hero}>
+          <View style={styles.topGlow} />
+          <View style={styles.avatarRow}>
+            <View style={styles.avatarWrap}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>AG</Text>
               </View>
-
-              <View style={styles.notificationWrap}>
-                <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>3</Text>
+              <View>
+                <Text style={styles.userName}>Alex G.</Text>
+                <View style={styles.rolePill}>
+                  <Text style={styles.roleText}>Ventas</Text>
                 </View>
               </View>
             </View>
 
-            <Text style={styles.salesAmount}>7819$</Text>
-            <Text style={styles.salesLabel}>Ventas hoy</Text>
-
-            <View style={styles.sphereWrap}>
-              <SphereGraphic />
+            <View style={styles.notificationWrap}>
+              <Ionicons name="notifications-outline" size={19} color="#FFFFFF" />
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>3</Text>
+              </View>
             </View>
           </View>
 
-          <View style={styles.content}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.serviceRow}
-              decelerationRate="fast"
-              snapToInterval={226}
-            >
-              {serviceCards.map((item) => {
-                const IconPack = item.iconPack;
+          <Text style={styles.salesAmount}>7819$</Text>
+          <Text style={styles.salesLabel}>Ventas hoy</Text>
 
-                return (
-                  <View key={item.id} style={styles.serviceCard}>
-                    <View style={styles.serviceHeader}>
-                      <View style={[styles.serviceIconBox, { backgroundColor: item.iconBg }]}>
-                        <IconPack name={item.iconName} size={20} color="#FFFFFF" />
-                      </View>
-                      <Text style={styles.serviceTitle}>{item.title}</Text>
+          <View style={styles.sphereWrap}>
+            {typeof EsferaSvg === "number" ? (
+              esferaUri ? <SvgUri uri={esferaUri} width={258} height={258} /> : null
+            ) : (
+              <EsferaSvg width={258} height={258} />
+            )}
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.serviceScroll}
+            contentContainerStyle={styles.serviceRow}
+            decelerationRate="fast"
+            snapToInterval={194}
+          >
+            {serviceCards.map((item) => {
+              const IconPack = item.iconPack;
+              const isLargeMetric = item.total.length > 3;
+
+              return (
+                <View key={item.id} style={styles.serviceCard}>
+                  <View style={styles.serviceHeader}>
+                    <View style={[styles.serviceIconBox, { backgroundColor: item.iconBg }]}>
+                      <IconPack name={item.iconName} size={16} color="#FFFFFF" />
                     </View>
+                    <Text style={styles.serviceTitle}>{item.title}</Text>
+                  </View>
 
-                    <View style={styles.metricsRow}>
-                      <Text style={styles.metricsMain}>{item.total}</Text>
-                      <Text style={styles.metricsSub}>{item.totalLabel}</Text>
-                      <View style={styles.metricsDivider} />
-                      <View>
-                        <Text style={styles.metricsRight}>
-                          <Text style={styles.metricsBlue}>{item.confirm}</Text> Confirm.
-                        </Text>
-                        <Text style={styles.metricsRight}>
-                          <Text style={styles.metricsRed}>{item.pending}</Text> Pend.
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Text style={styles.trendText}>
-                      <Text style={{ color: item.trendColor || "#29B45A" }}>{item.trend}</Text> {item.trendLabel}
+                  <View style={styles.metricsRow}>
+                    <Text
+                      style={[styles.metricsMain, isLargeMetric && styles.metricsMainCompact]}
+                      numberOfLines={1}
+                    >
+                      {item.total}
                     </Text>
-                  </View>
-                );
-              })}
-            </ScrollView>
-
-            <Text style={styles.sectionTitle}>Opciones</Text>
-            <View style={styles.optionsGrid}>
-              {options.map((item) => {
-                const IconPack = item.iconPack;
-                return (
-                  <View key={item.id} style={styles.optionCard}>
-                    <IconPack name={item.iconName} size={28} color={item.iconColor} />
-                    <Text style={styles.optionLabel}>{item.label}</Text>
-                  </View>
-                );
-              })}
-            </View>
-
-            <View style={styles.recentTitleRow}>
-              <Text style={styles.sectionTitle}>Ordenes de servicio recientes</Text>
-              <Text style={styles.seeAll}>Ver todas →</Text>
-            </View>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentRow}>
-              {recentOrders.map((order) => {
-                const IconPack = order.iconPack;
-                return (
-                  <View key={order.id} style={styles.recentCard}>
-                    <Text style={styles.recentStatus}>{order.status}</Text>
-                    <View style={[styles.recentIconWrap, { backgroundColor: order.iconColor }]}>
-                      <IconPack name={order.iconName} size={19} color="#FFFFFF" />
+                    <Text style={styles.metricsSub}>{item.totalLabel}</Text>
+                    <View style={styles.metricsDivider} />
+                    <View>
+                      <Text style={styles.metricsRight}>
+                        <Text style={styles.metricsBlue}>{item.confirm}</Text> Confirm.
+                      </Text>
+                      <Text style={styles.metricsRight}>
+                        <Text style={styles.metricsRed}>{item.pending}</Text> Pend.
+                      </Text>
                     </View>
-                    <Text style={styles.recentCode}>{order.code}</Text>
-                    <Text style={styles.recentName}>{order.name}</Text>
                   </View>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </ScrollView>
 
-        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-          <Ionicons name="home-outline" size={22} color="#D8D7FF" />
-          <MaterialCommunityIcons name="briefcase-account-outline" size={22} color="#D8D7FF" />
-          <View style={styles.centerBtn}>
-            <Ionicons name="add" size={44} color="#FFFFFF" />
+                  <Text style={styles.trendText}>
+                    <Text style={{ color: item.trendColor || "#29B45A" }}>{item.trend}</Text> {item.trendLabel}
+                  </Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+
+          <Text style={styles.sectionTitle}>Opciones</Text>
+          <View style={styles.optionsGrid}>
+            {options.map((item) => {
+              const IconPack = item.iconPack;
+              return (
+                <View key={item.id} style={styles.optionCard}>
+                  <IconPack name={item.iconName} size={20} color={item.iconColor} />
+                  <Text style={styles.optionLabel}>{item.label}</Text>
+                </View>
+              );
+            })}
           </View>
-          <Feather name="tag" size={20} color="#D8D7FF" />
-          <Ionicons name="person" size={22} color="#D8D7FF" />
+
+          <View style={styles.recentTitleRow}>
+            <Text style={styles.recentSectionTitle}>Ordenes de servicio recientes</Text>
+            <Text style={styles.seeAll}>Ver todas →</Text>
+          </View>
+
+          <View style={styles.recentRow}>
+            {recentOrders.map((order) => {
+              const IconPack = order.iconPack;
+              return (
+                <View key={order.id} style={styles.recentCard}>
+                  <Text style={styles.recentStatus}>{order.status}</Text>
+                  <View style={[styles.recentIconWrap, { backgroundColor: order.iconColor }]}>
+                    <IconPack name={order.iconName} size={15} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.recentCode}>{order.code}</Text>
+                  <Text style={styles.recentName}>{order.name}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
+          <Ionicons name="home-outline" size={20} color="#D8D7FF" />
+          <MaterialCommunityIcons name="briefcase-account-outline" size={20} color="#D8D7FF" />
+          <View style={styles.centerBtn}>
+            <Ionicons name="add" size={36} color="#FFFFFF" />
+          </View>
+          <Feather name="tag" size={18} color="#D8D7FF" />
+          <Ionicons name="person" size={20} color="#D8D7FF" />
         </View>
       </View>
     </ScreenContainer>
-  );
-}
-
-function SphereGraphic() {
-  return (
-    <Svg width="356" height="356" viewBox="0 0 520 520" fill="none">
-      <Defs>
-        <RadialGradient id="sphereBase" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(360 160) rotate(132) scale(470)">
-          <Stop offset="0" stopColor="#6F6F74" />
-          <Stop offset="0.38" stopColor="#2D2E33" />
-          <Stop offset="0.75" stopColor="#111216" />
-          <Stop offset="1" stopColor="#050609" />
-        </RadialGradient>
-
-        <RadialGradient id="innerGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(370 170) rotate(130) scale(260)">
-          <Stop offset="0" stopColor="#A8A9AF" stopOpacity="0.35" />
-          <Stop offset="1" stopColor="#A8A9AF" stopOpacity="0" />
-        </RadialGradient>
-
-        <LinearGradient id="rimLight" x1="130" y1="160" x2="420" y2="240" gradientUnits="userSpaceOnUse">
-          <Stop stopColor="#FFFFFF" stopOpacity="0.3" />
-          <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.03" />
-        </LinearGradient>
-
-        <ClipPath id="sphereClip">
-          <Circle cx="260" cy="260" r="252" />
-        </ClipPath>
-      </Defs>
-
-      <Circle cx="260" cy="260" r="252" fill="url(#sphereBase)" />
-      <Circle cx="260" cy="260" r="252" fill="url(#innerGlow)" />
-
-      <G clipPath="url(#sphereClip)">
-        <Path d="M59 221C116 146 234 111 332 132C389 145 435 177 464 221" stroke="url(#rimLight)" strokeWidth="44" strokeLinecap="round" />
-        <Ellipse cx="230" cy="354" rx="170" ry="125" fill="#000000" fillOpacity="0.22" />
-        <Path d="M132 272L172 236L196 279L155 316L132 272Z" fill="#B8BABF" fillOpacity="0.42" />
-      </G>
-    </Svg>
   );
 }
 
@@ -266,18 +236,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dashboardBg,
   },
   hero: {
-    height: 306,
-    paddingHorizontal: 30,
-    paddingTop: 20,
+    height: 196,
+    paddingHorizontal: 18,
+    paddingTop: 18,
     backgroundColor: colors.primary,
     overflow: "hidden",
   },
   topGlow: {
     position: "absolute",
-    top: -34,
-    right: 20,
-    width: 188,
-    height: 102,
+    top: -20,
+    right: 14,
+    width: 132,
+    height: 72,
     borderBottomLeftRadius: 100,
     borderBottomRightRadius: 100,
     borderTopLeftRadius: 50,
@@ -289,16 +259,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     zIndex: 2,
+    marginTop: 2,
   },
   avatarWrap: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 9,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: "#2C2B72",
     borderWidth: 2,
     borderColor: "#D7D8FD",
@@ -308,30 +279,31 @@ const styles = StyleSheet.create({
   avatarText: {
     color: "#FFFFFF",
     fontFamily: fontFamilies.bold,
-    fontSize: 15,
+    fontSize: 11,
   },
   userName: {
     color: "#F2F3FF",
     fontFamily: fontFamilies.bold,
-    fontSize: 33,
-    lineHeight: 22,
+    fontSize: 20,
+    lineHeight: 26,
+    paddingTop: 1,
   },
   rolePill: {
-    marginTop: 6,
+    marginTop: 2,
     backgroundColor: "#07060D",
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 1,
     alignSelf: "flex-start",
   },
   roleText: {
     color: "#FFFFFF",
     fontFamily: fontFamilies.medium,
-    fontSize: 12,
+    fontSize: 9,
   },
   notificationWrap: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -339,110 +311,128 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -2,
     right: -2,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    minWidth: 15,
+    height: 15,
+    borderRadius: 8,
     backgroundColor: "#FF4969",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
   badgeText: {
     color: "#FFFFFF",
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: fontFamilies.bold,
   },
   salesAmount: {
-    marginTop: 34,
+    marginTop: 16,
     color: "#E6E9FF",
     fontFamily: fontFamilies.bold,
-    fontSize: 66,
-    lineHeight: 66,
+    fontSize: 42,
+    lineHeight: 50,
+    paddingTop: 1,
     zIndex: 2,
   },
   salesLabel: {
-    marginTop: 6,
+    marginTop: 0,
     color: "#DEE1FF",
     fontFamily: fontFamilies.medium,
-    fontSize: 35,
+    fontSize: 20,
+    lineHeight: 23,
     zIndex: 2,
   },
   sphereWrap: {
     position: "absolute",
-    right: -114,
-    top: 100,
+    right: -100,
+    top: 54,
   },
   content: {
-    marginTop: -50,
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
+    flex: 1,
+    marginTop: -12,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     backgroundColor: colors.dashboardBg,
-    paddingTop: 6,
-    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingHorizontal: 14,
+    paddingBottom: 92,
   },
   serviceRow: {
-    gap: 18,
-    paddingRight: 26,
-    paddingBottom: 12,
+    gap: 10,
+    paddingRight: 12,
+    paddingBottom: 0,
+    alignItems: "flex-start",
+  },
+  serviceScroll: {
+    height: 106,
+    marginBottom: -36,
   },
   serviceCard: {
-    width: 208,
-    borderRadius: 18,
+    width: 178,
+    height: 102,
+    borderRadius: 14,
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 18,
-    paddingVertical: 16,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    alignSelf: "flex-start",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.09,
-    shadowRadius: 14,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
   },
   serviceHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
-    gap: 12,
+    marginBottom: 4,
+    gap: 7,
   },
   serviceIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   serviceTitle: {
     color: "#111111",
     fontFamily: fontFamilies.semibold,
-    fontSize: 19,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 14,
     flexShrink: 1,
   },
   metricsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+    alignItems: "flex-end",
+    gap: 4,
   },
   metricsMain: {
-    fontSize: 50,
+    fontSize: 27,
     color: "#101010",
     fontFamily: fontFamilies.bold,
-    lineHeight: 52,
+    lineHeight: 35,
+    paddingTop: 2,
+    includeFontPadding: false,
+  },
+  metricsMainCompact: {
+    fontSize: 23,
+    lineHeight: 31,
+    paddingTop: 2,
   },
   metricsSub: {
     fontFamily: fontFamilies.medium,
-    fontSize: 34,
+    fontSize: 14,
+    lineHeight: 18,
     color: "#212121",
-    marginRight: 2,
   },
   metricsDivider: {
     width: 1,
-    height: 38,
+    height: 22,
     backgroundColor: "#D9D9D9",
     marginHorizontal: 3,
   },
   metricsRight: {
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 10,
+    lineHeight: 13,
     color: "#8A8A92",
   },
   metricsBlue: {
@@ -454,107 +444,117 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.medium,
   },
   trendText: {
-    marginTop: 8,
-    fontSize: 20,
+    marginTop: 1,
+    fontSize: 10,
     color: "#8A8A92",
-    lineHeight: 28,
+    lineHeight: 12,
   },
   sectionTitle: {
-    marginTop: 8,
-    marginBottom: 12,
+    marginTop: -32,
+    marginBottom: 0,
     color: "#111111",
     fontFamily: fontFamilies.semibold,
-    fontSize: 31,
+    fontSize: 20,
   },
   optionsGrid: {
+    marginTop: -2,
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    rowGap: 14,
+    rowGap: 8,
   },
   optionCard: {
-    width: "31%",
+    width: "31.5%",
     backgroundColor: "#F5F5F7",
-    borderRadius: 16,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 18,
-    minHeight: 104,
+    paddingVertical: 11,
+    minHeight: 82,
   },
   optionLabel: {
-    marginTop: 10,
+    marginTop: 7,
     color: "#7A7A82",
     fontFamily: fontFamilies.medium,
-    fontSize: 17,
+    fontSize: 12,
   },
   recentTitleRow: {
-    marginTop: 14,
+    marginTop: 2,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    columnGap: 8,
   },
   seeAll: {
     color: "#A0A0A7",
     fontFamily: fontFamilies.medium,
+    fontSize: 11,
+  },
+  recentSectionTitle: {
+    color: "#111111",
+    fontFamily: fontFamilies.semibold,
     fontSize: 20,
+    flexShrink: 1,
   },
   recentRow: {
-    gap: 12,
-    paddingBottom: 8,
-    paddingRight: 24,
+    marginTop: 2,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "stretch",
   },
   recentCard: {
-    width: 112,
-    borderRadius: 16,
+    width: "31.5%",
+    borderRadius: 12,
     backgroundColor: "#F5F5F7",
-    paddingVertical: 12,
+    paddingVertical: 8,
     alignItems: "center",
+    justifyContent: "center",
   },
   recentStatus: {
     fontFamily: fontFamilies.semibold,
     color: "#171717",
-    fontSize: 15,
+    fontSize: 11,
   },
   recentIconWrap: {
-    marginTop: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    marginTop: 6,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   recentCode: {
-    marginTop: 10,
+    marginTop: 6,
     fontFamily: fontFamilies.medium,
-    fontSize: 28,
+    fontSize: 19,
     color: "#1B1B1B",
-    lineHeight: 30,
+    lineHeight: 20,
   },
   recentName: {
-    marginTop: 6,
+    marginTop: 2,
     color: "#8E8E96",
     fontFamily: fontFamilies.regular,
-    fontSize: 14,
+    fontSize: 10,
   },
   bottomBar: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    height: 90,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    height: 76,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     backgroundColor: "#060606",
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    paddingHorizontal: 26,
+    paddingHorizontal: 20,
   },
   centerBtn: {
-    marginTop: -42,
-    width: 74,
-    height: 74,
-    borderRadius: 37,
+    marginTop: -30,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: colors.primary,
     borderWidth: 3,
     borderColor: "#E7E7EF",

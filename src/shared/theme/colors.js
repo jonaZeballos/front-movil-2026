@@ -13,4 +13,6 @@ export const colors = {
   gray300: "#d4d4d8",
   black: "#000000",
   accent: "#0f766e",
+  primary: "#5655B9",
+  dashboardBg: "#EFEFF2",
 };

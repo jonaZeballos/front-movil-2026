@@ -22,13 +22,18 @@ import {
   mockOrders,
   mockEquipments,
 } from "../../features/orders";
+import {
+  EquipmentDetailScreen,
+  EquipmentListScreen,
+  RegisterEquipmentScreen,
+} from "../../features/equipos";
 
 const Stack = createNativeStackNavigator();
 
 export function AppNavigator() {
   const [isSplashVisible, setIsSplashVisible] = useState(true);
   const [orders, setOrders] = useState(mockOrders);
-  const [equipments] = useState(mockEquipments);
+  const [equipments, setEquipments] = useState(mockEquipments);
 
   useEffect(() => {
     let isMounted = true;
@@ -55,8 +60,8 @@ export function AppNavigator() {
     };
   }, []);
 
-  const createOrder = (equipmentId, navigation) => {
-    const equipment = equipments.find((item) => item.id === equipmentId);
+  const createOrder = (equipmentId, navigation, providedEquipment) => {
+    const equipment = providedEquipment || equipments.find((item) => item.id === equipmentId);
 
     if (!equipment) return;
 
@@ -99,6 +104,22 @@ export function AppNavigator() {
           : order
       )
     );
+  };
+
+  const saveEquipment = (equipmentData) => {
+    const normalizedEquipment = {
+      id: `eq-${Date.now()}`,
+      clientName: equipmentData.clientName,
+      type: equipmentData.type,
+      brand: equipmentData.brand,
+      model: equipmentData.model,
+      serial: equipmentData.serial,
+      failure: equipmentData.failure,
+    };
+
+    setEquipments((prevEquipments) => [normalizedEquipment, ...prevEquipments]);
+
+    return normalizedEquipment;
   };
 
   if (isSplashVisible) {
@@ -209,6 +230,7 @@ export function AppNavigator() {
             <HomeScreen
               onBackToAuth={() => navigation.replace("AuthEntry")}
               onOpenOrders={() => navigation.push("OrdersList")}
+              onOpenEquipos={() => navigation.push("EquipmentList")}
             />
           )}
         </Stack.Screen>
@@ -270,6 +292,67 @@ export function AppNavigator() {
               />
             );
           }}
+        </Stack.Screen>
+
+        <Stack.Screen
+          name="EquipmentList"
+          options={{
+            gestureEnabled: true,
+          }}
+        >
+          {({ navigation }) => (
+            <EquipmentListScreen
+              equipments={equipments}
+              onRegister={() => navigation.push("RegisterEquipment")}
+              onBack={() => navigation.goBack()}
+              onOpenEquipment={(equipment) =>
+                navigation.push("EquipmentDetail", {
+                  equipmentId: equipment.id,
+                })
+              }
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen
+          name="EquipmentDetail"
+          options={{
+            gestureEnabled: true,
+          }}
+        >
+          {({ navigation, route }) => {
+            const equipment = equipments.find(
+              (item) => item.id === route.params?.equipmentId
+            );
+
+            return (
+              <EquipmentDetailScreen
+                equipment={equipment}
+                onBack={() => navigation.goBack()}
+              />
+            );
+          }}
+        </Stack.Screen>
+
+        <Stack.Screen
+          name="RegisterEquipment"
+          options={{
+            gestureEnabled: true,
+          }}
+        >
+          {({ navigation }) => (
+            <RegisterEquipmentScreen
+              onBack={() => navigation.goBack()}
+              onSave={(equipmentData) => {
+                saveEquipment(equipmentData);
+                navigation.replace("EquipmentList");
+              }}
+              onSaveAndCreateOrder={(equipmentData) => {
+                const newEquipment = saveEquipment(equipmentData);
+                createOrder(newEquipment.id, navigation, newEquipment);
+              }}
+            />
+          )}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>

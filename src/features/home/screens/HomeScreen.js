@@ -117,7 +117,7 @@ const recentOrders = [
   },
 ];
 
-export function HomeScreen({ onOpenOrders }) {
+export function HomeScreen({ onOpenOrders, onOpenEquipos }) {
   const insets = useSafeAreaInsets();
   const esferaUri =
     typeof EsferaSvg === "number"
@@ -127,6 +127,12 @@ export function HomeScreen({ onOpenOrders }) {
   const handleOpenOrders = () => {
     if (onOpenOrders) {
       onOpenOrders();
+    }
+  };
+
+  const handleOpenEquipos = () => {
+    if (onOpenEquipos) {
+      onOpenEquipos();
     }
   };
 
@@ -242,12 +248,13 @@ export function HomeScreen({ onOpenOrders }) {
             {options.map((item) => {
               const IconPack = item.iconPack;
               const isOrdersOption = item.id === "ordenes";
+              const isEquiposOption = item.id === "equipos";
 
               return (
                 <Pressable
                   key={item.id}
                   style={styles.optionCard}
-                  onPress={isOrdersOption ? handleOpenOrders : undefined}
+                  onPress={isOrdersOption ? handleOpenOrders : isEquiposOption ? handleOpenEquipos : undefined}
                 >
                   <IconPack name={item.iconName} size={20} color={item.iconColor} />
                   <Text style={styles.optionLabel}>{item.label}</Text>

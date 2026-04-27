@@ -3,7 +3,13 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Asset } from "expo-asset";
 
-import { AuthEntryScreen, LoginScreen } from "../../features/auth";
+import {
+  AuthEntryScreen,
+  LoginScreen,
+  RegisterStepOneScreen,
+  RegisterStepTwoScreen,
+  RegisterSuccessScreen,
+} from "../../features/auth";
 import { HomeScreen } from "../../features/home";
 import { OnboardingScreen } from "../../features/onboarding";
 import { SplashScreen } from "../../features/splash";
@@ -21,7 +27,6 @@ const Stack = createNativeStackNavigator();
 
 export function AppNavigator() {
   const [isSplashVisible, setIsSplashVisible] = useState(true);
-
   const [orders, setOrders] = useState(mockOrders);
   const [equipments] = useState(mockEquipments);
 
@@ -53,9 +58,7 @@ export function AppNavigator() {
   const createOrder = (equipmentId, navigation) => {
     const equipment = equipments.find((item) => item.id === equipmentId);
 
-    if (!equipment) {
-      return;
-    }
+    if (!equipment) return;
 
     const newOrderNumber = orders.length + 1;
 
@@ -134,7 +137,7 @@ export function AppNavigator() {
           {({ navigation }) => (
             <AuthEntryScreen
               onLogin={() => navigation.push("Login")}
-              onRegister={() => {}}
+              onRegister={() => navigation.push("RegisterStepOne")}
               onGoogle={() => {}}
               onFacebook={() => {}}
             />
@@ -152,6 +155,46 @@ export function AppNavigator() {
               onLoginSuccess={() => navigation.replace("Home")}
               onBack={() => navigation.goBack()}
             />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen
+          name="RegisterStepOne"
+          options={{
+            gestureEnabled: true,
+          }}
+        >
+          {({ navigation }) => (
+            <RegisterStepOneScreen
+              onBack={() => navigation.goBack()}
+              onNext={() => navigation.push("RegisterStepTwo")}
+              onGoToLogin={() => navigation.push("Login")}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen
+          name="RegisterStepTwo"
+          options={{
+            gestureEnabled: true,
+          }}
+        >
+          {({ navigation }) => (
+            <RegisterStepTwoScreen
+              onBack={() => navigation.goBack()}
+              onFinish={() => navigation.replace("RegisterSuccess")}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen
+          name="RegisterSuccess"
+          options={{
+            gestureEnabled: false,
+          }}
+        >
+          {({ navigation }) => (
+            <RegisterSuccessScreen onOk={() => navigation.replace("Login")} />
           )}
         </Stack.Screen>
 

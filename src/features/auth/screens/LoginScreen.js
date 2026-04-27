@@ -1,98 +1,153 @@
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
+import { Text, View, useWindowDimensions } from "react-native";
 
+import { AppLogoFull } from "../../../shared/components/AppLogoFull";
 import { AppButton } from "../../../shared/components/buttons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
-import { colors } from "../../../shared/theme/colors";
 import tw from "../../../shared/styles/tw";
+import { colors } from "../../../shared/theme/colors";
+import { textPresets } from "../../../shared/theme/typography";
+import { AuthInput } from "../components/AuthInput";
+import { AuthTopBar } from "../components/AuthTopBar";
+import { PasswordInput } from "../components/PasswordInput";
 
-const API_URL = "https://movil-backend.vercel.app";
+export function LoginScreen({ onBack, onLoginSuccess }) {
+  const { width: screenWidth } = useWindowDimensions();
 
-export function LoginScreen({ onLoginSuccess, onBack }) {
-  const [usuario, setUsuario] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleLogin = async () => {
-    if (!usuario.trim() || !password.trim()) {
-      Alert.alert("Campos obligatorios", "Ingresa usuario y contraseña.");
+  const horizontalPadding = screenWidth < 380 ? 20 : 24;
+  const contentWidth = Math.min(screenWidth - horizontalPadding * 2, 360);
+  const isDisabled = !username.trim() || !password.trim();
+
+  const handleLogin = () => {
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedUsername) {
+      setErrorMessage("Ingresa tu usuario o correo.");
       return;
     }
 
-    try {
-      setLoading(true);
-
-      const response = await fetch(`${API_URL}/api/usuarios/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          usuario: usuario.trim(),
-          password: password.trim(),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        Alert.alert("Error", data.error || "Credenciales incorrectas.");
-        return;
-      }
-
-      onLoginSuccess(data.data);
-    } catch (error) {
-      Alert.alert("Error", "No se pudo conectar con el servidor.");
-    } finally {
-      setLoading(false);
+    if (!trimmedPassword) {
+      setErrorMessage("Ingresa tu contraseña.");
+      return;
     }
+
+    setErrorMessage("");
+    onLoginSuccess?.();
   };
 
   return (
     <ScreenContainer backgroundColor={colors.surface}>
-      <KeyboardAvoidingView
-        style={tw`flex-1 justify-center px-6`}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      <AuthTopBar title="Volver" onBack={onBack} />
+
+      <View
+        style={[
+          tw`flex-1 items-center`,
+          {
+            paddingHorizontal: horizontalPadding,
+            paddingTop: 20,
+            paddingBottom: 24,
+          },
+        ]}
       >
-        <Text style={tw`text-3xl font-bold text-black mb-2`}>Iniciar sesión</Text>
-        <Text style={tw`text-base text-gray-500 mb-8`}>
-          Ingresa tus credenciales para acceder al sistema.
-        </Text>
+        <View style={{ width: contentWidth }}>
+          <Text
+            style={[
+              textPresets.headingDark,
+              {
+                fontSize: 24,
+                lineHeight: 32,
+                color: colors.black,
+                marginBottom: 24,
+              },
+            ]}
+          >
+            Inicio de sesión
+          </Text>
 
-        <Text style={tw`text-black mb-2`}>Usuario</Text>
-        <TextInput
-          value={usuario}
-          onChangeText={setUsuario}
-          placeholder="Ej: tecnico01"
-          autoCapitalize="none"
-          style={tw`border border-gray-300 rounded-2xl px-4 py-4 mb-4 text-black`}
-        />
+          <View style={tw`items-center mb-8`}>
+            <AppLogoFull width={170} height={36} color={colors.black} />
+          </View>
 
-        <Text style={tw`text-black mb-2`}>Contraseña</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Ingresa tu contraseña"
-          secureTextEntry
-          style={tw`border border-gray-300 rounded-2xl px-4 py-4 mb-6 text-black`}
-        />
+          <View style={{ rowGap: 14 }}>
+            <View>
+              <Text
+                style={[
+                  textPresets.bodyDark,
+                  {
+                    color: colors.black,
+                    marginBottom: 8,
+                  },
+                ]}
+              >
+                Nombre de usuario o correo
+              </Text>
 
-        <AppButton
-          title={loading ? "Validando..." : "Iniciar sesión"}
-          onPress={handleLogin}
-          disabled={loading}
-          backgroundColor={colors.black}
-        />
+              <AuthInput
+                value={username}
+                onChangeText={(text) => {
+                  setUsername(text);
+                  if (errorMessage) setErrorMessage("");
+                }}
+                placeholder="nombre de usuario o correo"
+                icon="user"
+                autoCapitalize="none"
+              />
+            </View>
 
-        <View style={tw`mt-4`}>
-          <AppButton
-            title="Volver"
-            onPress={onBack}
-            backgroundColor="#EFEFEF"
-            textColor="#555"
-          />
+            <View>
+              <Text
+                style={[
+                  textPresets.bodyDark,
+                  {
+                    color: colors.black,
+                    marginBottom: 8,
+                  },
+                ]}
+              >
+                Contraseña
+              </Text>
+
+              <PasswordInput
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errorMessage) setErrorMessage("");
+                }}
+                placeholder="••••••••••"
+              />
+            </View>
+          </View>
+
+          {!!errorMessage && (
+            <Text
+              style={[
+                textPresets.bodyMuted,
+                {
+                  color: "#D14343",
+                  marginTop: 14,
+                  lineHeight: 20,
+                },
+              ]}
+            >
+              {errorMessage}
+            </Text>
+          )}
+
+          <View style={{ marginTop: 28 }}>
+            <AppButton
+              title="Iniciar Sesión"
+              onPress={handleLogin}
+              backgroundColor={isDisabled ? "#B8B8B8" : colors.primary}
+              minHeight={54}
+            />
+          </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </ScreenContainer>
   );
 }

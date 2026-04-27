@@ -117,7 +117,7 @@ const recentOrders = [
   },
 ];
 
-export function HomeScreen({ onOpenOrders, onOpenEquipos }) {
+export function HomeScreen({ onOpenOrders, onOpenEquipos, onOpenClientes }) {
   const insets = useSafeAreaInsets();
   const esferaUri =
     typeof EsferaSvg === "number"
@@ -133,6 +133,12 @@ export function HomeScreen({ onOpenOrders, onOpenEquipos }) {
   const handleOpenEquipos = () => {
     if (onOpenEquipos) {
       onOpenEquipos();
+    }
+  };
+
+  const handleOpenClientes = () => {
+    if (onOpenClientes) {
+      onOpenClientes();
     }
   };
 
@@ -249,12 +255,21 @@ export function HomeScreen({ onOpenOrders, onOpenEquipos }) {
               const IconPack = item.iconPack;
               const isOrdersOption = item.id === "ordenes";
               const isEquiposOption = item.id === "equipos";
+              const isClientesOption = item.id === "clientes";
 
               return (
                 <Pressable
                   key={item.id}
                   style={styles.optionCard}
-                  onPress={isOrdersOption ? handleOpenOrders : isEquiposOption ? handleOpenEquipos : undefined}
+                  onPress={
+                    isOrdersOption
+                      ? handleOpenOrders
+                      : isEquiposOption
+                      ? handleOpenEquipos
+                      : isClientesOption
+                      ? handleOpenClientes
+                      : undefined
+                  }
                 >
                   <IconPack name={item.iconName} size={20} color={item.iconColor} />
                   <Text style={styles.optionLabel}>{item.label}</Text>

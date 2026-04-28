@@ -27,6 +27,7 @@ import {
   EquipmentListScreen,
   RegisterEquipmentScreen,
 } from "../../features/equipos";
+import { RegisterStack } from "../../features/clientes/navigation/RegisterStack";
 
 const Stack = createNativeStackNavigator();
 
@@ -231,8 +232,18 @@ export function AppNavigator() {
               onBackToAuth={() => navigation.replace("AuthEntry")}
               onOpenOrders={() => navigation.push("OrdersList")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
+              onOpenClientes={() => navigation.push("Clientes")}
             />
           )}
+        </Stack.Screen>
+
+        <Stack.Screen
+          name="Clientes"
+          options={{
+            gestureEnabled: true,
+          }}
+        >
+          {() => <RegisterStack />}
         </Stack.Screen>
 
         <Stack.Screen

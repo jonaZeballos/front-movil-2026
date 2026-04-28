@@ -13,86 +13,85 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.surface,
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 14,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 18,
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
+    alignItems: "center",
+    gap: 12,
   },
   backBtn: {
-    width: 36,
-    height: 36,
+    width: 42,
+    height: 42,
     backgroundColor: colors.surface,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 0.5,
     borderColor: "#ddd",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 2,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: colors.black,
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#111827",
   },
   headerSubtitle: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 2,
-    lineHeight: 16,
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 3,
+    lineHeight: 18,
   },
   formCard: {
     backgroundColor: colors.surface,
-    marginHorizontal: 12,
-    marginVertical: 10,
-    borderRadius: 16,
+    marginHorizontal: 14,
+    marginVertical: 12,
+    borderRadius: 18,
     padding: 16,
   },
   fieldLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: "#888",
-    letterSpacing: 0.5,
-    marginBottom: 6,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#4B4B4B",
+    letterSpacing: 1.1,
+    marginBottom: 8,
     textTransform: "uppercase",
   },
   optionalTag: {
-    fontWeight: "400",
-    color: "#bbb",
-    fontSize: 10,
+    fontWeight: "600",
+    color: "#9CA3AF",
+    fontSize: 12,
     textTransform: "none",
     letterSpacing: 0,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 9,
+    gap: 10,
     backgroundColor: "#f7f7f7",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     borderWidth: 0.5,
     borderColor: "#e5e5e5",
   },
   input: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 15,
     color: colors.black,
   },
   saveBtn: {
-    marginHorizontal: 12,
-    marginVertical: 8,
+    marginHorizontal: 14,
+    marginVertical: 10,
     backgroundColor: "#534AB7",
-    borderRadius: 14,
-    padding: 15,
+    borderRadius: 18,
+    padding: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   saveBtnText: {
     color: colors.surface,
-    fontSize: 15,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "800",
   },
 });
 
@@ -118,10 +117,9 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={onVolver}>
-          <Feather name="arrow-left" size={14} color="#555" />
+          <Feather name="arrow-left" size={20} color="#111827" />
         </TouchableOpacity>
         <View>
           <Text style={styles.headerTitle}>Registrar cliente</Text>
@@ -131,32 +129,29 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
         </View>
       </View>
 
-      {/* Formulario */}
       <View style={styles.formCard}>
-        {/* Nombre */}
         <View>
           <Text style={styles.fieldLabel}>Nombre completo</Text>
           <View style={styles.inputRow}>
-            <Feather name="user" size={15} color="#aaa" />
+            <Feather name="user" size={18} color="#8C8C8C" />
             <TextInput
               style={styles.input}
               placeholder="Ingresa el nombre completo"
-              placeholderTextColor="#B8B8B8"
+              placeholderTextColor="#8C8C8C"
               value={form.nombre}
               onChangeText={(value) => handleChange("nombre", value)}
             />
           </View>
         </View>
 
-        {/* Teléfono */}
-        <View style={{ marginTop: 14 }}>
+        <View style={{ marginTop: 16 }}>
           <Text style={styles.fieldLabel}>Teléfono</Text>
           <View style={styles.inputRow}>
-            <Feather name="phone" size={15} color="#aaa" />
+            <Feather name="phone" size={18} color="#8C8C8C" />
             <TextInput
               style={styles.input}
               placeholder="Ingresa el teléfono"
-              placeholderTextColor="#B8B8B8"
+              placeholderTextColor="#8C8C8C"
               keyboardType="phone-pad"
               value={form.telefono}
               onChangeText={(value) => handleChange("telefono", value)}
@@ -164,15 +159,14 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
           </View>
         </View>
 
-        {/* Correo */}
-        <View style={{ marginTop: 14 }}>
+        <View style={{ marginTop: 16 }}>
           <Text style={styles.fieldLabel}>Correo electrónico</Text>
           <View style={styles.inputRow}>
-            <Feather name="mail" size={15} color="#aaa" />
+            <Feather name="mail" size={18} color="#8C8C8C" />
             <TextInput
               style={styles.input}
               placeholder="Ingresa el correo electrónico"
-              placeholderTextColor="#B8B8B8"
+              placeholderTextColor="#8C8C8C"
               keyboardType="email-address"
               autoCapitalize="none"
               value={form.correo}
@@ -181,17 +175,16 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
           </View>
         </View>
 
-        {/* Dirección */}
-        <View style={{ marginTop: 14 }}>
+        <View style={{ marginTop: 16 }}>
           <Text style={styles.fieldLabel}>
             Dirección <Text style={styles.optionalTag}>(opcional)</Text>
           </Text>
           <View style={styles.inputRow}>
-            <Feather name="map-pin" size={15} color="#aaa" />
+            <Feather name="map-pin" size={18} color="#8C8C8C" />
             <TextInput
               style={styles.input}
               placeholder="Ingresa la dirección"
-              placeholderTextColor="#B8B8B8"
+              placeholderTextColor="#8C8C8C"
               value={form.direccion}
               onChangeText={(value) => handleChange("direccion", value)}
             />
@@ -199,7 +192,6 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
         </View>
       </View>
 
-      {/* Botón guardar */}
       <TouchableOpacity style={styles.saveBtn} onPress={handleGuardar}>
         <Text style={styles.saveBtnText}>Guardar cliente</Text>
       </TouchableOpacity>

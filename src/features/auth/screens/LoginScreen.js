@@ -11,7 +11,7 @@ import { AuthInput } from "../components/AuthInput";
 import { AuthTopBar } from "../components/AuthTopBar";
 import { PasswordInput } from "../components/PasswordInput";
 
-export function LoginScreen({ onBack, onLoginSuccess }) {
+export function LoginScreen({ onBack, onLogin }) {
   const { width: screenWidth } = useWindowDimensions();
 
   const [username, setUsername] = useState("");
@@ -23,49 +23,26 @@ export function LoginScreen({ onBack, onLoginSuccess }) {
   const isDisabled = !username.trim() || !password.trim();
 
   const handleLogin = () => {
-    const trimmedUsername = username.trim();
-    const trimmedPassword = password.trim();
+    if (!username.trim()) return setErrorMessage("Ingresa tu usuario o correo.");
+    if (!password.trim()) return setErrorMessage("Ingresa tu contraseña.");
 
-    if (!trimmedUsername) {
-      setErrorMessage("Ingresa tu usuario o correo.");
-      return;
+    const result = onLogin?.({
+      email: username.trim().toLowerCase(),
+      password: password.trim(),
+    });
+
+    if (!result?.success) {
+      setErrorMessage(result?.message || "Credenciales inválidas.");
     }
-
-    if (!trimmedPassword) {
-      setErrorMessage("Ingresa tu contraseña.");
-      return;
-    }
-
-    setErrorMessage("");
-    onLoginSuccess?.();
   };
 
   return (
     <ScreenContainer backgroundColor={colors.surface}>
       <AuthTopBar title="Volver" onBack={onBack} />
 
-      <View
-        style={[
-          tw`flex-1 items-center`,
-          {
-            paddingHorizontal: horizontalPadding,
-            paddingTop: 20,
-            paddingBottom: 24,
-          },
-        ]}
-      >
+      <View style={[tw`flex-1 items-center`, { paddingHorizontal: horizontalPadding, paddingTop: 20 }]}>
         <View style={{ width: contentWidth }}>
-          <Text
-            style={[
-              textPresets.headingDark,
-              {
-                fontSize: 24,
-                lineHeight: 32,
-                color: colors.black,
-                marginBottom: 24,
-              },
-            ]}
-          >
+          <Text style={[textPresets.headingDark, { color: colors.black, marginBottom: 24 }]}>
             Inicio de sesión
           </Text>
 
@@ -74,68 +51,28 @@ export function LoginScreen({ onBack, onLoginSuccess }) {
           </View>
 
           <View style={{ rowGap: 14 }}>
-            <View>
-              <Text
-                style={[
-                  textPresets.bodyDark,
-                  {
-                    color: colors.black,
-                    marginBottom: 8,
-                  },
-                ]}
-              >
-                Nombre de usuario o correo
-              </Text>
+            <AuthInput
+              value={username}
+              onChangeText={(text) => {
+                setUsername(text);
+                if (errorMessage) setErrorMessage("");
+              }}
+              placeholder="correo"
+              icon="mail"
+              autoCapitalize="none"
+            />
 
-              <AuthInput
-                value={username}
-                onChangeText={(text) => {
-                  setUsername(text);
-                  if (errorMessage) setErrorMessage("");
-                }}
-                placeholder="nombre de usuario o correo"
-                icon="user"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View>
-              <Text
-                style={[
-                  textPresets.bodyDark,
-                  {
-                    color: colors.black,
-                    marginBottom: 8,
-                  },
-                ]}
-              >
-                Contraseña
-              </Text>
-
-              <PasswordInput
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (errorMessage) setErrorMessage("");
-                }}
-                placeholder="••••••••••"
-              />
-            </View>
+            <PasswordInput
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errorMessage) setErrorMessage("");
+              }}
+            />
           </View>
 
           {!!errorMessage && (
-            <Text
-              style={[
-                textPresets.bodyMuted,
-                {
-                  color: "#D14343",
-                  marginTop: 14,
-                  lineHeight: 20,
-                },
-              ]}
-            >
-              {errorMessage}
-            </Text>
+            <Text style={{ color: "#D14343", marginTop: 14 }}>{errorMessage}</Text>
           )}
 
           <View style={{ marginTop: 28 }}>

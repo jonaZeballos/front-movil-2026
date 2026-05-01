@@ -17,7 +17,7 @@ export function EquipmentListScreen({ equipments, onRegister, onOpenEquipment, o
 
     return equipments.filter((item) =>
       [item.clientName, item.type, item.brand, item.model, item.serial].some((value) =>
-        value.toLowerCase().includes(normalizedQuery)
+        String(value || "").toLowerCase().includes(normalizedQuery)
       )
     );
   }, [equipments, query]);

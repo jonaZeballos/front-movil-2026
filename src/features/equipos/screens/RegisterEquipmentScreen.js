@@ -5,7 +5,6 @@ import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 
-const clientOptions = ["Juan Soliz", "Pedro Perez", "Maria Lopez"];
 const equipmentTypeOptions = ["Laptop", "PC Escritorio", "Impresora"];
 
 function SelectField({ label, value, placeholder, icon, options, isOpen, onToggle, onSelect }) {
@@ -22,16 +21,21 @@ function SelectField({ label, value, placeholder, icon, options, isOpen, onToggl
 
       {isOpen ? (
         <View style={styles.dropdownMenu}>
-          {options.map((option) => (
+          {options.map((option) => {
+            const optionLabel = option.nombre || option.label || option;
+            const optionKey = option.id || optionLabel;
+
+            return (
             <Pressable
-              key={option}
+              key={optionKey}
               onPress={() => onSelect(option)}
               style={({ pressed }) => [styles.dropdownItem, pressed && styles.pressed]}
             >
-              <Text style={styles.dropdownItemText}>{option}</Text>
-              {option === value ? <Ionicons name="checkmark" size={16} color="#5655B9" /> : null}
+              <Text style={styles.dropdownItemText}>{optionLabel}</Text>
+              {optionLabel === value ? <Ionicons name="checkmark" size={16} color="#5655B9" /> : null}
             </Pressable>
-          ))}
+            );
+          })}
         </View>
       ) : null}
     </View>
@@ -76,8 +80,9 @@ function MultiLineField({ label, value, onChangeText, placeholder }) {
   );
 }
 
-export function RegisterEquipmentScreen({ onSave, onSaveAndCreateOrder, onBack }) {
-  const [selectedClient, setSelectedClient] = useState("");
+export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreateOrder, onBack }) {
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [selectedClientName, setSelectedClientName] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -86,7 +91,8 @@ export function RegisterEquipmentScreen({ onSave, onSaveAndCreateOrder, onBack }
   const [openField, setOpenField] = useState(null);
 
   const equipmentPayload = {
-    clientName: selectedClient,
+    clienteId: selectedClientId,
+    clientName: selectedClientName,
     type: selectedType,
     brand,
     model,
@@ -95,7 +101,7 @@ export function RegisterEquipmentScreen({ onSave, onSaveAndCreateOrder, onBack }
   };
 
   const isFormValid = [
-    selectedClient,
+    selectedClientId,
     selectedType,
     brand.trim(),
     model.trim(),
@@ -139,14 +145,15 @@ export function RegisterEquipmentScreen({ onSave, onSaveAndCreateOrder, onBack }
           <View style={styles.formCard}>
             <SelectField
               label="CLIENTE"
-              value={selectedClient}
+              value={selectedClientName}
               placeholder="Selecciona un cliente"
               icon="user"
-              options={clientOptions}
+              options={clientes}
               isOpen={openField === "client"}
               onToggle={() => setOpenField((current) => (current === "client" ? null : "client"))}
               onSelect={(option) => {
-                setSelectedClient(option);
+                setSelectedClientId(option.id);
+                setSelectedClientName(option.nombre);
                 setOpenField(null);
               }}
             />

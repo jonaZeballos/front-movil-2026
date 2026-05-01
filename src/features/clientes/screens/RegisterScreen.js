@@ -5,9 +5,9 @@ import RegistrarCliente from "../components/clienteRegister";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 
 export function RegisterScreen({ navigation, onGuardar }) {
-  const handleGuardar = (clienteData) => {
+  const handleGuardar = async (clienteData) => {
     if (onGuardar) {
-      onGuardar(clienteData);
+      await onGuardar(clienteData);
       Alert.alert("Éxito", `Cliente ${clienteData.nombre} registrado.`);
     }
   };

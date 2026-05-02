@@ -68,11 +68,16 @@ const options = [
 const chartData = [42, 68, 50, 78, 62, 90, 74];
 
 export function SalesDashboardScreen({
+  user,
+  onLogout,
   onOpenClientes,
   onOpenInventory,
   onOpenSales,
 }) {
   const insets = useSafeAreaInsets();
+  const displayName = getUserDisplayName(user, "Ventas");
+  const initials = getInitials(displayName);
+  const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "ventas");
 
   const handleOptionPress = (id) => {
     if (id === "clientes") onOpenClientes?.();
@@ -89,23 +94,20 @@ export function SalesDashboardScreen({
           <View style={styles.avatarRow}>
             <View style={styles.avatarWrap}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>VT</Text>
+                <Text style={styles.avatarText}>{initials}</Text>
               </View>
 
               <View>
-                <Text style={styles.userName}>Ventas</Text>
+                <Text style={styles.userName}>{displayName}</Text>
                 <View style={styles.rolePill}>
-                  <Text style={styles.roleText}>Área comercial</Text>
+                  <Text style={styles.roleText}>{roleLabel}</Text>
                 </View>
               </View>
             </View>
 
-            <View style={styles.notificationWrap}>
-              <Ionicons name="notifications-outline" size={19} color="#FFFFFF" />
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>2</Text>
-              </View>
-            </View>
+            <Pressable style={styles.notificationWrap} onPress={onLogout}>
+              <Ionicons name="log-out-outline" size={21} color="#FFFFFF" />
+            </Pressable>
           </View>
 
           <Text style={styles.mainAmount}>Bs 920</Text>
@@ -221,6 +223,26 @@ export function SalesDashboardScreen({
       </View>
     </ScreenContainer>
   );
+}
+
+function getUserDisplayName(user, fallback) {
+  const fullName = [user?.nombres, user?.apellidos].filter(Boolean).join(" ").trim();
+  return fullName || user?.username || user?.email || fallback;
+}
+
+function getInitials(name) {
+  return name
+    .split(" ")
+    .map((part) => part[0]?.toUpperCase() || "")
+    .slice(0, 2)
+    .join("");
+}
+
+function getRoleLabel(role) {
+  if (role === "admin") return "Admin";
+  if (role === "tecnico") return "Tecnico";
+  if (role === "ventas") return "Ventas";
+  return role || "Usuario";
 }
 
 const styles = StyleSheet.create({

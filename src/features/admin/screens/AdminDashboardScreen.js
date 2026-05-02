@@ -90,6 +90,8 @@ const options = [
 ];
 
 export function AdminDashboardScreen({
+  user,
+  onLogout,
   onOpenUsers,
   onOpenClientes,
   onOpenEquipos,
@@ -98,6 +100,9 @@ export function AdminDashboardScreen({
   onOpenInventory,
 }) {
   const insets = useSafeAreaInsets();
+  const displayName = getUserDisplayName(user, "Administrador");
+  const initials = getInitials(displayName);
+  const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "admin");
 
   const esferaUri =
     typeof EsferaSvg === "number"
@@ -122,23 +127,20 @@ export function AdminDashboardScreen({
           <View style={styles.avatarRow}>
             <View style={styles.avatarWrap}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>AD</Text>
+                <Text style={styles.avatarText}>{initials}</Text>
               </View>
 
               <View>
-                <Text style={styles.userName}>Administrador</Text>
+                <Text style={styles.userName}>{displayName}</Text>
                 <View style={styles.rolePill}>
-                  <Text style={styles.roleText}>Admin principal</Text>
+                  <Text style={styles.roleText}>{roleLabel}</Text>
                 </View>
               </View>
             </View>
 
-            <View style={styles.notificationWrap}>
-              <Ionicons name="notifications-outline" size={19} color="#FFFFFF" />
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>5</Text>
-              </View>
-            </View>
+            <Pressable style={styles.notificationWrap} onPress={onLogout}>
+              <Ionicons name="log-out-outline" size={21} color="#FFFFFF" />
+            </Pressable>
           </View>
 
           <Text style={styles.salesAmount}>Panel</Text>
@@ -223,6 +225,26 @@ export function AdminDashboardScreen({
       </View>
     </ScreenContainer>
   );
+}
+
+function getUserDisplayName(user, fallback) {
+  const fullName = [user?.nombres, user?.apellidos].filter(Boolean).join(" ").trim();
+  return fullName || user?.username || user?.email || fallback;
+}
+
+function getInitials(name) {
+  return name
+    .split(" ")
+    .map((part) => part[0]?.toUpperCase() || "")
+    .slice(0, 2)
+    .join("");
+}
+
+function getRoleLabel(role) {
+  if (role === "admin") return "Admin";
+  if (role === "tecnico") return "Tecnico";
+  if (role === "ventas") return "Ventas";
+  return role || "Usuario";
 }
 
 const styles = StyleSheet.create({

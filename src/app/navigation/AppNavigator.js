@@ -21,7 +21,7 @@ import { SalesDashboardScreen } from "../../features/sales";
 import { SplashScreen } from "../../features/splash";
 import { onboardingPreloadAssets } from "../../shared/assets";
 import { login as loginRequest, logout } from "../../features/auth/services/authApi";
-import { createUser as createUserRequest } from "../../features/admin/services/usersApi";
+import { createUser as createUserRequest, listUsers } from "../../features/admin/services/usersApi";
 import { listClientes, createCliente } from "../../features/clientes/services/clientesApi";
 import { listEquipos, createEquipo } from "../../features/equipos/services/equiposApi";
 import { listOrdenes, createOrden, updateOrden } from "../../features/orders/services/ordersApi";
@@ -73,7 +73,7 @@ export function AppNavigator() {
     };
   }, []);
 
-  const refreshSprintData = async () => {
+  const refreshSprintData = async (role) => {
     const [clientesData, equiposData, ordenesData] = await Promise.all([
       listClientes(),
       listEquipos(),
@@ -83,6 +83,11 @@ export function AppNavigator() {
     setClientes(clientesData);
     setEquipments(equiposData);
     setOrders(ordenesData);
+
+    if (role === "admin") {
+      const usersData = await listUsers();
+      setUsers(usersData);
+    }
   };
 
   const handleLogin = async ({ email, password }, navigation) => {
@@ -96,7 +101,7 @@ export function AppNavigator() {
         user: loggedUser,
         role,
       });
-      await refreshSprintData();
+      await refreshSprintData(role);
 
       if (role === "admin") {
         navigation.replace("AdminDashboard");
@@ -118,10 +123,11 @@ export function AppNavigator() {
   const handleLogout = (navigation) => {
     logout();
     setSession(null);
+    setUsers([]);
     setClientes([]);
     setEquipments([]);
     setOrders([]);
-    navigation.replace("AuthEntry");
+    navigation.replace("Login");
   };
 
   const createServiceOrder = async (equipmentId, navigation, providedEquipment, diagnostico) => {
@@ -161,23 +167,9 @@ export function AppNavigator() {
   };
 
   const saveUser = async (userData) => {
-    const createdUser = await createUserRequest(userData);
-    const names = userData.name.trim().split(" ");
-    const initials = names
-      .slice(0, 2)
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase();
-
-    const newUser = {
-      id: createdUser.id,
-      name: userData.name.trim(),
-      email: userData.email.trim().toLowerCase(),
-      role: userData.role,
-      initials,
-    };
-
-    setUsers((prevUsers) => [newUser, ...prevUsers]);
+    await createUserRequest(userData);
+    const usersData = await listUsers();
+    setUsers(usersData);
   };
 
   const saveCliente = async (clienteData) => {
@@ -254,6 +246,8 @@ export function AppNavigator() {
         <Stack.Screen name="AdminDashboard">
           {({ navigation }) => (
             <AdminDashboardScreen
+              user={session?.user}
+              onLogout={() => handleLogout(navigation)}
               onOpenUsers={() => navigation.push("UsersManagement")}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
@@ -289,6 +283,8 @@ export function AppNavigator() {
         <Stack.Screen name="SalesDashboard">
           {({ navigation }) => (
             <SalesDashboardScreen
+              user={session?.user}
+              onLogout={() => handleLogout(navigation)}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenInventory={() => {}}
               onOpenSales={() => {}}
@@ -299,6 +295,7 @@ export function AppNavigator() {
         <Stack.Screen name="Home">
           {({ navigation }) => (
             <HomeScreen
+              user={session?.user}
               onBackToAuth={() => handleLogout(navigation)}
               onOpenOrders={() => navigation.push("OrdersList")}
               onOpenEquipos={() => navigation.push("EquipmentList")}

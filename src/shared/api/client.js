@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "http://localhost:3000";
+const DEFAULT_API_URL = "http://192.168.0.14:3000";
 
 let authToken = null;
 

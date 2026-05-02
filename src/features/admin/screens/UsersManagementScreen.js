@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -6,26 +5,7 @@ import { UserCard } from "../components/UserCard";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 
-const initialUsers = [
-  {
-    id: "u1",
-    name: "Carlos Técnico",
-    email: "tecnico@servitech.com",
-    role: "tecnico",
-    initials: "CT",
-  },
-  {
-    id: "u2",
-    name: "Laura Ventas",
-    email: "ventas@servitech.com",
-    role: "ventas",
-    initials: "LV",
-  },
-];
-
-export function UsersManagementScreen({ users = initialUsers, onBack, onCreateUser }) {
-  const [localUsers] = useState(users);
-
+export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
@@ -35,18 +15,18 @@ export function UsersManagementScreen({ users = initialUsers, onBack, onCreateUs
           </Pressable>
 
           <View style={styles.headerText}>
-            <Text style={styles.title}>Gestión de usuarios</Text>
-            <Text style={styles.subtitle}>Crear y administrar técnicos y ventas</Text>
+            <Text style={styles.title}>Gestion de usuarios</Text>
+            <Text style={styles.subtitle}>Crear y administrar tecnicos y ventas</Text>
           </View>
         </View>
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Usuarios registrados</Text>
-          <Text style={styles.sectionCount}>{localUsers.length}</Text>
+          <Text style={styles.sectionCount}>{users.length}</Text>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
-          {localUsers.map((user) => (
+          {users.map((user) => (
             <UserCard key={user.id} user={user} />
           ))}
 

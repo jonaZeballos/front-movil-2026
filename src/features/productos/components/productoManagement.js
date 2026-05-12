@@ -1,15 +1,13 @@
-﻿import React, { useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import React, { useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-const productosData = [
+import { colors } from "../../../shared/theme/colors";
+import { ProductCard } from "./ProductCard";
+import { ProductListHeader } from "./ProductListHeader";
+import { ProductSearchBox } from "./ProductSearchBox";
+
+const fallbackProducts = [
   {
     id: 1,
     nombre: "Laptop HP Pavilion 15",
@@ -36,10 +34,11 @@ const productosData = [
   },
 ];
 
-export default function GestionInventario({ onRegistrar }) {
+export default function GestionInventario({ productos = [], onRegistrar }) {
   const [busqueda, setBusqueda] = useState("");
+  const productList = productos.length > 0 ? productos : fallbackProducts;
 
-  const filtrados = productosData.filter(
+  const filtrados = productList.filter(
     (producto) =>
       producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       producto.marca.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -47,228 +46,89 @@ export default function GestionInventario({ onRegistrar }) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={styles.backBtn}>
-            <Text style={styles.backBtnText}>{"<"}</Text>
-          </View>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>Gestión de inventario</Text>
-            <Text style={styles.headerSubtitle}>Registro y lista de productos</Text>
-          </View>
+        <View style={styles.backButton}>
+          <Ionicons name="arrow-back" size={22} color="#111827" />
+        </View>
+
+        <View style={styles.headerText}>
+          <Text style={styles.title}>Gestion de inventario</Text>
+          <Text style={styles.subtitle}>Registro y lista de productos</Text>
         </View>
       </View>
 
-      <View style={styles.searchBox}>
-        <Text style={styles.searchLabel}>Buscar producto</Text>
-        <View style={styles.searchInput}>
-          <TextInput
-            style={styles.inputText}
-            placeholder="Por nombre, marca o modelo"
-            placeholderTextColor="#7A7A82"
-            value={busqueda}
-            onChangeText={setBusqueda}
-          />
-        </View>
-      </View>
-
-      <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>Productos registrados</Text>
-        <Text style={styles.listCount}>{filtrados.length}</Text>
-      </View>
+      <ProductSearchBox value={busqueda} onChangeText={setBusqueda} />
+      <ProductListHeader count={filtrados.length} />
 
       <FlatList
         data={filtrados}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContainer}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardRow}>
-              <View style={styles.iconBox}>
-                <Text style={styles.iconSymbol}>💻</Text>
-              </View>
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardName}>{item.nombre}</Text>
-                <Text style={styles.cardSub}>
-                  Marca: {item.marca} · Modelo: {item.modelo}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.cardBottom}>
-              <Text style={styles.cardDetail}>Stock: {item.stock} unidades</Text>
-              <Text style={styles.priceText}>{item.precio}</Text>
-            </View>
-          </View>
-        )}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => <ProductCard product={item} />}
       />
 
       <Pressable style={styles.registerBtn} onPress={onRegistrar}>
-        <Text style={styles.registerBtnIcon}>+</Text>
+        <Ionicons name="add" size={22} color="#FFFFFF" />
         <Text style={styles.registerBtnText}>Registrar producto</Text>
       </Pressable>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: colors.dashboardBg,
+    paddingHorizontal: 18,
+    paddingTop: 14,
   },
   header: {
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 14,
-  },
-  headerLeft: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 18,
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#dddddd",
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
+    marginRight: 12,
   },
-  backBtnText: {
-    color: "#555555",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  headerTextContainer: {
+  headerText: {
     flex: 1,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1a1a1a",
+  title: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#111827",
   },
-  headerSubtitle: {
-    fontSize: 12,
-    color: "#888888",
-    marginTop: 4,
-  },
-  searchBox: {
-    backgroundColor: "#ffffff",
-    marginHorizontal: 12,
-    borderRadius: 14,
-    padding: 14,
-    marginTop: 10,
-  },
-  searchLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#888888",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  searchInput: {
-    backgroundColor: "#f5f5f5",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  inputText: {
+  subtitle: {
+    marginTop: 3,
     fontSize: 13,
-    color: "#1a1a1a",
-  },
-  listHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 16,
-    marginHorizontal: 12,
-  },
-  listTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#1a1a1a",
-  },
-  listCount: {
-    fontSize: 14,
-    color: "#888888",
+    color: "#6B7280",
   },
   listContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-  },
-  cardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  iconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 9,
-    backgroundColor: "#e8e4fd",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-  iconSymbol: {
-    fontSize: 18,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  cardName: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#1a1a1a",
-  },
-  cardSub: {
-    fontSize: 11,
-    color: "#888888",
-    marginTop: 2,
-  },
-  cardBottom: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  cardDetail: {
-    fontSize: 11,
-    color: "#777777",
-  },
-  priceText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#534AB7",
+    paddingTop: 10,
+    paddingBottom: 16,
   },
   registerBtn: {
+    height: 54,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 12,
-    marginBottom: 24,
-    marginTop: 8,
-    backgroundColor: "#534AB7",
-    borderRadius: 14,
-    paddingVertical: 15,
-  },
-  registerBtnIcon: {
-    color: "#ffffff",
-    fontSize: 20,
-    marginRight: 8,
+    columnGap: 8,
+    marginTop: 10,
+    marginBottom: 16,
   },
   registerBtnText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "700",
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800",
   },
 });

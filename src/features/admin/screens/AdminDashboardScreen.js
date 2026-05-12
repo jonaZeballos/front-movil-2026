@@ -82,6 +82,13 @@ const options = [
     iconColor: "#2386F5",
   },
   {
+    id: MODULES.COTIZACIONES,
+    label: "Cotizar",
+    iconPack: MaterialCommunityIcons,
+    iconName: "file-document-edit-outline",
+    iconColor: "#0F766E",
+  },
+  {
     id: MODULES.INVENTARIO,
     label: "Inventario",
     iconPack: MaterialIcons,
@@ -106,6 +113,7 @@ export function AdminDashboardScreen({
   onOpenOrders,
   onOpenSales,
   onOpenInventory,
+  onOpenQuotations,
   onOpenRolesPermissions,
 }) {
   const insets = useSafeAreaInsets();
@@ -124,6 +132,7 @@ export function AdminDashboardScreen({
     if (id === MODULES.EQUIPOS) onOpenEquipos?.();
     if (id === MODULES.ORDENES) onOpenOrders?.();
     if (id === MODULES.VENTAS) onOpenSales?.();
+    if (id === MODULES.COTIZACIONES) onOpenQuotations?.();
     if (id === MODULES.INVENTARIO) onOpenInventory?.();
     if (id === MODULES.ROLES_PERMISOS) onOpenRolesPermissions?.();
   };

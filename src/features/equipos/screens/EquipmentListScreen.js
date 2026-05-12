@@ -90,11 +90,12 @@ export function EquipmentListScreen({ equipments, onRegister, onOpenEquipment, o
             </View>
           ) : null}
 
-          <Pressable style={styles.createButton} onPress={onRegister}>
-            <Ionicons name="add" size={22} color="#FFFFFF" />
-            <Text style={styles.createButtonText}>Registrar equipo</Text>
-          </Pressable>
         </ScrollView>
+
+        <Pressable style={styles.createButton} onPress={onRegister}>
+          <Ionicons name="add" size={22} color="#FFFFFF" />
+          <Text style={styles.createButtonText}>Registrar equipo</Text>
+        </Pressable>
       </View>
     </ScreenContainer>
   );
@@ -171,7 +172,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     columnGap: 8,
-    marginTop: 8,
+    marginTop: 10,
+    marginBottom: 16,
   },
   createButtonText: {
     color: "#FFFFFF",
@@ -195,7 +197,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   equipmentCard: {
     backgroundColor: "#FFFFFF",

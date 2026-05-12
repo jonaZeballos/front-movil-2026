@@ -98,6 +98,7 @@ const styles = StyleSheet.create({
 export default function RegistrarCliente({ onVolver, onGuardar }) {
   const [form, setForm] = useState({
     nombre: "",
+    numeroDocumento: "",
     telefono: "",
     correo: "",
     direccion: "",
@@ -108,8 +109,8 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
   };
 
   const handleGuardar = () => {
-    if (!form.nombre || !form.telefono || !form.correo) {
-      Alert.alert("Error", "Por favor completa nombre, teléfono y correo.");
+    if (!form.nombre || !form.numeroDocumento || !form.telefono || !form.correo) {
+      Alert.alert("Error", "Por favor completa nombre, documento, telefono y correo.");
       return;
     }
     if (onGuardar) onGuardar(form);
@@ -140,6 +141,21 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
               placeholderTextColor="#8C8C8C"
               value={form.nombre}
               onChangeText={(value) => handleChange("nombre", value)}
+            />
+          </View>
+        </View>
+
+        <View style={{ marginTop: 16 }}>
+          <Text style={styles.fieldLabel}>Documento</Text>
+          <View style={styles.inputRow}>
+            <Feather name="credit-card" size={18} color="#8C8C8C" />
+            <TextInput
+              style={styles.input}
+              placeholder="Ingresa CI o NIT"
+              placeholderTextColor="#8C8C8C"
+              keyboardType="number-pad"
+              value={form.numeroDocumento}
+              onChangeText={(value) => handleChange("numeroDocumento", value)}
             />
           </View>
         </View>

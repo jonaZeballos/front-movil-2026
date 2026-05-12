@@ -17,19 +17,22 @@ export function LoginScreen({ onBack, onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const horizontalPadding = screenWidth < 380 ? 20 : 24;
   const contentWidth = Math.min(screenWidth - horizontalPadding * 2, 360);
-  const isDisabled = !username.trim() || !password.trim();
+  const isDisabled = isLoading || !username.trim() || !password.trim();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!username.trim()) return setErrorMessage("Ingresa tu usuario o correo.");
     if (!password.trim()) return setErrorMessage("Ingresa tu contraseña.");
 
-    const result = onLogin?.({
+    setIsLoading(true);
+    const result = await onLogin?.({
       email: username.trim().toLowerCase(),
       password: password.trim(),
     });
+    setIsLoading(false);
 
     if (!result?.success) {
       setErrorMessage(result?.message || "Credenciales inválidas.");
@@ -77,7 +80,7 @@ export function LoginScreen({ onBack, onLogin }) {
 
           <View style={{ marginTop: 28 }}>
             <AppButton
-              title="Iniciar Sesión"
+              title={isLoading ? "Ingresando..." : "Iniciar Sesión"}
               onPress={handleLogin}
               backgroundColor={isDisabled ? "#B8B8B8" : colors.primary}
               minHeight={54}

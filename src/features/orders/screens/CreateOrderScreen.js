@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -7,6 +7,7 @@ import { colors } from "../../../shared/theme/colors";
 
 export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
+  const [diagnostico, setDiagnostico] = useState("");
 
   const selectedEquipment = equipments.find((item) => item.id === selectedEquipmentId);
 
@@ -16,7 +17,12 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
       return;
     }
 
-    onCreateOrder(selectedEquipmentId);
+    if (!diagnostico.trim()) {
+      Alert.alert("Diagnostico obligatorio", "Describe la falla reportada para crear la orden.");
+      return;
+    }
+
+    onCreateOrder(selectedEquipmentId, diagnostico.trim());
   };
 
   return (
@@ -76,6 +82,14 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
           <View style={styles.summaryBox}>
             <Text style={styles.summaryTitle}>Cliente seleccionado automáticamente</Text>
             <Text style={styles.summaryText}>{selectedEquipment.clientName}</Text>
+            <TextInput
+              value={diagnostico}
+              onChangeText={setDiagnostico}
+              placeholder="Describe la falla o diagnostico inicial"
+              placeholderTextColor="#8C8C8C"
+              multiline
+              style={styles.diagnosticInput}
+            />
           </View>
         ) : null}
 
@@ -185,6 +199,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
     color: "#111827",
+  },
+  diagnosticInput: {
+    minHeight: 88,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 12,
+    color: "#111827",
+    textAlignVertical: "top",
   },
   createButton: {
     height: 56,

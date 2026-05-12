@@ -20,13 +20,16 @@ import { OnboardingScreen } from "../../features/onboarding";
 import { SalesDashboardScreen } from "../../features/sales";
 import { SplashScreen } from "../../features/splash";
 import { onboardingPreloadAssets } from "../../shared/assets";
+import { login as loginRequest, logout } from "../../features/auth/services/authApi";
+import { createUser as createUserRequest, listUsers } from "../../features/admin/services/usersApi";
+import { listClientes, createCliente } from "../../features/clientes/services/clientesApi";
+import { listEquipos, createEquipo } from "../../features/equipos/services/equiposApi";
+import { listOrdenes, createOrden, updateOrden } from "../../features/orders/services/ordersApi";
 
 import {
   OrdersListScreen,
   CreateOrderScreen,
   OrderDetailScreen,
-  mockOrders,
-  mockEquipments,
 } from "../../features/orders";
 import {
   EquipmentDetailScreen,
@@ -38,39 +41,13 @@ import { InventarioStack } from "../../features/productos/navigation/InventarioS
 
 const Stack = createNativeStackNavigator();
 
-const adminUser = {
-  id: "admin-1",
-  name: "Administrador",
-  email: "admin@servitech.com",
-  password: "123456",
-  role: "admin",
-  initials: "AD",
-};
-
-const initialUsers = [
-  {
-    id: "u1",
-    name: "Carlos Técnico",
-    email: "tecnico@servitech.com",
-    password: "123456",
-    role: "tecnico",
-    initials: "CT",
-  },
-  {
-    id: "u2",
-    name: "Laura Ventas",
-    email: "ventas@servitech.com",
-    password: "123456",
-    role: "ventas",
-    initials: "LV",
-  },
-];
-
 export function AppNavigator() {
   const [isSplashVisible, setIsSplashVisible] = useState(true);
-  const [orders, setOrders] = useState(mockOrders);
-  const [equipments, setEquipments] = useState(mockEquipments);
-  const [users, setUsers] = useState(initialUsers);
+  const [session, setSession] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [equipments, setEquipments] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -97,118 +74,109 @@ export function AppNavigator() {
     };
   }, []);
 
-  const handleLogin = ({ email, password }, navigation) => {
-    const allUsers = [adminUser, ...users];
+  const refreshSprintData = async (role) => {
+    const [clientesData, equiposData, ordenesData] = await Promise.all([
+      listClientes(),
+      listEquipos(),
+      listOrdenes(),
+    ]);
 
-    const foundUser = allUsers.find(
-      (user) =>
-        user.email.toLowerCase() === email.toLowerCase() &&
-        user.password === password
-    );
+    setClientes(clientesData);
+    setEquipments(equiposData);
+    setOrders(ordenesData);
 
-    if (!foundUser) {
-      return {
-        success: false,
-        message: "Credenciales inválidas.",
-      };
+    if (role === "admin") {
+      const usersData = await listUsers();
+      setUsers(usersData);
     }
-
-    if (foundUser.role === "admin") {
-      navigation.replace("AdminDashboard");
-    }
-
-    if (foundUser.role === "tecnico") {
-      navigation.replace("Home");
-    }
-
-    if (foundUser.role === "ventas") {
-      navigation.replace("SalesDashboard");
-    }
-
-    return { success: true };
   };
 
-  const createOrder = (equipmentId, navigation, providedEquipment) => {
-    const equipment =
-      providedEquipment || equipments.find((item) => item.id === equipmentId);
+  const handleLogin = async ({ email, password }, navigation) => {
+    try {
+      const loginData = await loginRequest({ email, password });
+      const loggedUser = loginData.usuario;
+      const role = (loggedUser.rol || loggedUser.tipoUsuario || "").toLowerCase();
+
+      setSession({
+        token: loginData.token,
+        user: loggedUser,
+        role,
+      });
+      await refreshSprintData(role);
+
+      if (role === "admin") {
+        navigation.replace("AdminDashboard");
+      } else if (role === "ventas") {
+        navigation.replace("SalesDashboard");
+      } else {
+        navigation.replace("Home");
+      }
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Credenciales invalidas.",
+      };
+    }
+  };
+
+  const handleLogout = (navigation) => {
+    logout();
+    setSession(null);
+    setUsers([]);
+    setClientes([]);
+    setEquipments([]);
+    setOrders([]);
+    navigation.replace("Login");
+  };
+
+  const createServiceOrder = async (equipmentId, navigation, providedEquipment, diagnostico) => {
+    const equipment = providedEquipment || equipments.find((item) => item.id === equipmentId);
 
     if (!equipment) return;
 
-    const newOrderNumber = orders.length + 1;
-
-    const newOrder = {
-      id: `os-${Date.now()}`,
-      code: `#${String(newOrderNumber).padStart(4, "0")}`,
-      clientName: equipment.clientName,
-      equipmentName: `${equipment.type} ${equipment.brand} ${equipment.model}`,
-      equipmentSerial: equipment.serial,
-      failure: equipment.failure,
-      status: "Recibido",
-      observations: [],
-    };
+    const newOrder = await createOrden({
+      equipoId: equipment.id,
+      diagnostico: diagnostico || equipment.failure || "Diagnostico pendiente",
+    });
 
     setOrders((prevOrders) => [newOrder, ...prevOrders]);
-
-    navigation.replace("OrderDetail", {
-      orderId: newOrder.id,
-    });
+    navigation.replace("OrderDetail", { orderId: newOrder.id });
   };
 
-  const updateOrderStatus = (orderId, status) => {
+  const updateOrderStatus = async (orderId, status) => {
+    const updatedOrder = await updateOrden(orderId, { estado: status });
     setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === orderId ? { ...order, status } : order
-      )
+      prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
     );
   };
 
-  const addOrderObservation = (orderId, observation) => {
+  const addOrderObservation = async (orderId, observation) => {
+    const updatedOrder = await updateOrden(orderId, { observacion: observation });
     setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              observations: [...(order.observations || []), observation],
-            }
-          : order
-      )
+      prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
     );
   };
 
-  const saveEquipment = (equipmentData) => {
-    const normalizedEquipment = {
-      id: `eq-${Date.now()}`,
-      clientName: equipmentData.clientName,
-      type: equipmentData.type,
-      brand: equipmentData.brand,
-      model: equipmentData.model,
-      serial: equipmentData.serial,
-      failure: equipmentData.failure,
-    };
+  const saveEquipment = async (equipmentData) => {
+    const savedEquipment = await createEquipo(equipmentData);
+    const equipmentWithFailure = { ...savedEquipment, failure: equipmentData.failure };
 
-    setEquipments((prevEquipments) => [normalizedEquipment, ...prevEquipments]);
-
-    return normalizedEquipment;
+    setEquipments((prevEquipments) => [equipmentWithFailure, ...prevEquipments]);
+    return equipmentWithFailure;
   };
 
-  const saveUser = (userData) => {
-    const names = userData.name.trim().split(" ");
-    const initials = names
-      .slice(0, 2)
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase();
+  const saveUser = async (userData) => {
+    await createUserRequest(userData);
+    const usersData = await listUsers();
+    setUsers(usersData);
+  };
 
-    const newUser = {
-      id: `user-${Date.now()}`,
-      name: userData.name.trim(),
-      email: userData.email.trim().toLowerCase(),
-      password: userData.password.trim(),
-      role: userData.role,
-      initials,
-    };
-
-    setUsers((prevUsers) => [newUser, ...prevUsers]);
+  const saveCliente = async (clienteData) => {
+    const savedCliente = await createCliente(clienteData);
+    setClientes((prevClientes) => [savedCliente, ...prevClientes]);
+    return savedCliente;
   };
 
   if (isSplashVisible) {
@@ -227,9 +195,7 @@ export function AppNavigator() {
       >
         <Stack.Screen name="Onboarding" options={{ gestureEnabled: false }}>
           {({ navigation }) => (
-            <OnboardingScreen
-              onComplete={() => navigation.replace("AuthEntry")}
-            />
+            <OnboardingScreen onComplete={() => navigation.replace("AuthEntry")} />
           )}
         </Stack.Screen>
 
@@ -281,10 +247,10 @@ export function AppNavigator() {
         <Stack.Screen name="AdminDashboard">
           {({ navigation }) => (
             <AdminDashboardScreen
-              onOpenUsers={() => navigation.navigate("UsersManagement")}
-              onOpenClientes={() => navigation.navigate("Clientes")}
-              onOpenEquipos={() => navigation.navigate("EquipmentList")}
-              onOpenOrders={() => navigation.navigate("OrdersList")}
+              onOpenUsers={() => navigation.push("UsersManagement")}
+              onOpenClientes={() => navigation.push("Clientes")}
+              onOpenEquipos={() => navigation.push("EquipmentList")}
+              onOpenOrders={() => navigation.push("OrdersList")}
               onOpenSales={() => {}}
               onOpenInventory={() => navigation.navigate("Inventario")}
             />
@@ -305,8 +271,8 @@ export function AppNavigator() {
           {({ navigation }) => (
             <CreateUserScreen
               onBack={() => navigation.goBack()}
-              onSave={(userData) => {
-                saveUser(userData);
+              onSave={async (userData) => {
+                await saveUser(userData);
                 navigation.replace("UsersManagement");
               }}
             />
@@ -316,6 +282,8 @@ export function AppNavigator() {
         <Stack.Screen name="SalesDashboard">
           {({ navigation }) => (
             <SalesDashboardScreen
+              user={session?.user}
+              onLogout={() => handleLogout(navigation)}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenInventory={() => {}}
               onOpenSales={() => {}}
@@ -326,7 +294,8 @@ export function AppNavigator() {
         <Stack.Screen name="Home">
           {({ navigation }) => (
             <HomeScreen
-              onBackToAuth={() => navigation.replace("AuthEntry")}
+              user={session?.user}
+              onBackToAuth={() => handleLogout(navigation)}
               onOpenOrders={() => navigation.push("OrdersList")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenClientes={() => navigation.push("Clientes")}
@@ -335,7 +304,7 @@ export function AppNavigator() {
         </Stack.Screen>
 
         <Stack.Screen name="Clientes">
-          {() => <RegisterStack />}
+          {() => <RegisterStack clientes={clientes} onGuardarCliente={saveCliente} />}
         </Stack.Screen>
 
         <Stack.Screen name="Inventario">
@@ -347,9 +316,7 @@ export function AppNavigator() {
             <OrdersListScreen
               orders={orders}
               onCreateOrder={() => navigation.push("CreateOrder")}
-              onOpenOrder={(order) =>
-                navigation.push("OrderDetail", { orderId: order.id })
-              }
+              onOpenOrder={(order) => navigation.push("OrderDetail", { orderId: order.id })}
               onBack={() => navigation.goBack()}
             />
           )}
@@ -359,8 +326,8 @@ export function AppNavigator() {
           {({ navigation }) => (
             <CreateOrderScreen
               equipments={equipments}
-              onCreateOrder={(equipmentId) =>
-                createOrder(equipmentId, navigation)
+              onCreateOrder={(equipmentId, diagnostico) =>
+                createServiceOrder(equipmentId, navigation, null, diagnostico)
               }
               onBack={() => navigation.goBack()}
             />
@@ -369,9 +336,7 @@ export function AppNavigator() {
 
         <Stack.Screen name="OrderDetail">
           {({ navigation, route }) => {
-            const order = orders.find(
-              (item) => item.id === route.params?.orderId
-            );
+            const order = orders.find((item) => item.id === route.params?.orderId);
 
             return (
               <OrderDetailScreen
@@ -391,9 +356,7 @@ export function AppNavigator() {
               onRegister={() => navigation.push("RegisterEquipment")}
               onBack={() => navigation.goBack()}
               onOpenEquipment={(equipment) =>
-                navigation.push("EquipmentDetail", {
-                  equipmentId: equipment.id,
-                })
+                navigation.push("EquipmentDetail", { equipmentId: equipment.id })
               }
             />
           )}
@@ -417,14 +380,20 @@ export function AppNavigator() {
         <Stack.Screen name="RegisterEquipment">
           {({ navigation }) => (
             <RegisterEquipmentScreen
+              clientes={clientes}
               onBack={() => navigation.goBack()}
-              onSave={(equipmentData) => {
-                saveEquipment(equipmentData);
+              onSave={async (equipmentData) => {
+                await saveEquipment(equipmentData);
                 navigation.replace("EquipmentList");
               }}
-              onSaveAndCreateOrder={(equipmentData) => {
-                const newEquipment = saveEquipment(equipmentData);
-                createOrder(newEquipment.id, navigation, newEquipment);
+              onSaveAndCreateOrder={async (equipmentData) => {
+                const newEquipment = await saveEquipment(equipmentData);
+                await createServiceOrder(
+                  newEquipment.id,
+                  navigation,
+                  newEquipment,
+                  equipmentData.failure
+                );
               }}
             />
           )}

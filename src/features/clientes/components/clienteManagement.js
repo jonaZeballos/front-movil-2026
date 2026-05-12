@@ -174,14 +174,14 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function GestionClientes({ clientes, onBack, onRegistrar, onSelectCliente }) {
+export default function GestionClientes({ clientes = [], onBack, onRegistrar, onSelectCliente }) {
   const [busqueda, setBusqueda] = useState("");
 
   const filtrados = clientes.filter(
     (c) =>
       c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      c.telefono.includes(busqueda) ||
-      c.correo.toLowerCase().includes(busqueda.toLowerCase())
+      (c.telefono || "").includes(busqueda) ||
+      (c.correo || "").toLowerCase().includes(busqueda.toLowerCase())
   );
 
   const renderCliente = ({ item }) => (

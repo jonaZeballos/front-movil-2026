@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { StatusBadge } from "../components/StatusBadge";
-import { orderStatuses } from "../data/ordersMock";
+import { orderStatuses } from "../services/ordersApi";
 
 export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservation }) {
   const [observation, setObservation] = useState("");
@@ -31,13 +31,13 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
     );
   }
 
-  const handleAddObservation = () => {
+  const handleAddObservation = async () => {
     if (!observation.trim()) {
       Alert.alert("Observación vacía", "Ingresa una observación válida.");
       return;
     }
 
-    onAddObservation(order.id, observation.trim());
+    await onAddObservation(order.id, observation.trim());
     setObservation("");
     Alert.alert("Confirmación", "La observación fue agregada correctamente.");
   };
@@ -82,8 +82,8 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
                   <Pressable
                     key={status}
                     style={[styles.statusButton, active && styles.statusButtonActive]}
-                    onPress={() => {
-                      onUpdateStatus(order.id, status);
+                    onPress={async () => {
+                      await onUpdateStatus(order.id, status);
                       Alert.alert("Confirmación", "El estado fue actualizado correctamente.");
                     }}
                   >

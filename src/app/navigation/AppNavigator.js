@@ -37,6 +37,7 @@ import {
   RegisterEquipmentScreen,
 } from "../../features/equipos";
 import { RegisterStack } from "../../features/clientes/navigation/RegisterStack";
+import { InventarioStack } from "../../features/productos/navigation/InventarioStack";
 
 const Stack = createNativeStackNavigator();
 
@@ -246,14 +247,12 @@ export function AppNavigator() {
         <Stack.Screen name="AdminDashboard">
           {({ navigation }) => (
             <AdminDashboardScreen
-              user={session?.user}
-              onLogout={() => handleLogout(navigation)}
               onOpenUsers={() => navigation.push("UsersManagement")}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenOrders={() => navigation.push("OrdersList")}
               onOpenSales={() => {}}
-              onOpenInventory={() => {}}
+              onOpenInventory={() => navigation.navigate("Inventario")}
             />
           )}
         </Stack.Screen>
@@ -306,6 +305,10 @@ export function AppNavigator() {
 
         <Stack.Screen name="Clientes">
           {() => <RegisterStack clientes={clientes} onGuardarCliente={saveCliente} />}
+        </Stack.Screen>
+
+        <Stack.Screen name="Inventario">
+          {() => <InventarioStack />}
         </Stack.Screen>
 
         <Stack.Screen name="OrdersList">

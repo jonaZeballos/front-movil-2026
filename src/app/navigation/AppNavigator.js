@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { Alert, BackHandler } from "react-native";
+import { NavigationContainer, useNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Asset } from "expo-asset";
 
@@ -47,10 +47,13 @@ import { RegisterStack } from "../../features/clientes/navigation/RegisterStack"
 import { InventarioStack } from "../../features/productos/navigation/InventarioStack";
 
 const Stack = createNativeStackNavigator();
+const LOGOUT_CONFIRM_ROUTES = ["AdminDashboard", "SalesDashboard", "Home"];
 
 export function AppNavigator() {
+  const navigationRef = useNavigationContainerRef();
   const [isSplashVisible, setIsSplashVisible] = useState(true);
   const [session, setSession] = useState(null);
+  const [currentRouteName, setCurrentRouteName] = useState(null);
   const [orders, setOrders] = useState([]);
   const [equipments, setEquipments] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -156,6 +159,19 @@ export function AppNavigator() {
     );
   };
 
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!LOGOUT_CONFIRM_ROUTES.includes(currentRouteName)) {
+        return false;
+      }
+
+      confirmLogout(navigationRef);
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [currentRouteName, navigationRef]);
+
   const createServiceOrder = async (
     equipmentId,
     navigation,
@@ -220,7 +236,11 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      ref={navigationRef}
+      onReady={() => setCurrentRouteName(navigationRef.getCurrentRoute()?.name)}
+      onStateChange={() => setCurrentRouteName(navigationRef.getCurrentRoute()?.name)}
+    >
       <Stack.Navigator
         initialRouteName="Onboarding"
         screenOptions={{

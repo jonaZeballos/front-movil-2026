@@ -1,11 +1,24 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
-import { OrderCard } from "../components/OrderCard";
+import { OrderQuotationCard } from "../components/OrderQuotationCard";
+import { quotationOrdersMock } from "../data/quotationOrdersMock";
 
-export function OrdersListScreen({ orders, onCreateOrder, onOpenOrder, onBack }) {
+export function CotizacionesScreen({ onBack, onGenerateQuotation }) {
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const handleGenerate = () => {
+    if (!selectedOrder) {
+      Alert.alert("Orden obligatoria", "Selecciona una orden para generar la cotizacion.");
+      return;
+    }
+
+    onGenerateQuotation?.(selectedOrder);
+  };
+
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
@@ -15,33 +28,28 @@ export function OrdersListScreen({ orders, onCreateOrder, onOpenOrder, onBack })
           </Pressable>
 
           <View style={styles.headerText}>
-            <Text style={styles.title}>Órdenes de servicio</Text>
-            <Text style={styles.subtitle}>Gestiona trabajos técnicos pendientes</Text>
+            <Text style={styles.title}>Cotizaciones</Text>
+            <Text style={styles.subtitle}>Ordenes listas para cotizar</Text>
           </View>
         </View>
 
         <FlatList
-          data={orders}
+          data={quotationOrdersMock}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
-            <OrderCard order={item} onPress={() => onOpenOrder(item)} />
+            <OrderQuotationCard
+              order={item}
+              selected={selectedOrder?.id === item.id}
+              onSelect={() => setSelectedOrder(item)}
+            />
           )}
-          ListEmptyComponent={
-            <View style={styles.emptyBox}>
-              <Ionicons name="document-text-outline" size={46} color="#9CA3AF" />
-              <Text style={styles.emptyTitle}>No hay órdenes disponibles</Text>
-              <Text style={styles.emptyText}>
-                Presiona “Nueva orden” para crear una orden desde un equipo registrado.
-              </Text>
-            </View>
-          }
         />
 
-        <Pressable style={styles.createButton} onPress={onCreateOrder}>
+        <Pressable style={styles.createButton} onPress={handleGenerate}>
           <Ionicons name="add" size={22} color="#FFFFFF" />
-          <Text style={styles.createButtonText}>Nueva orden</Text>
+          <Text style={styles.createButtonText}>Generar cotizacion</Text>
         </Pressable>
       </View>
     </ScreenContainer>
@@ -78,13 +86,16 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 3,
-    fontSize: 13,
     color: "#6B7280",
+    fontSize: 13,
+  },
+  listContent: {
+    paddingBottom: 16,
   },
   createButton: {
     height: 54,
     borderRadius: 18,
-    backgroundColor: "#5655B9",
+    backgroundColor: colors.primary,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -96,28 +107,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
-  },
-  listContent: {
-    paddingBottom: 16,
-  },
-  emptyBox: {
-    marginTop: 60,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 24,
-    alignItems: "center",
-  },
-  emptyTitle: {
-    marginTop: 12,
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  emptyText: {
-    marginTop: 6,
-    fontSize: 13,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 19,
   },
 });

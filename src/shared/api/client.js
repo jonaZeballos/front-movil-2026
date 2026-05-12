@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "http://192.168.0.14:3000";
+const DEFAULT_API_URL = "https://movil-backend.vercel.app";
 
 let authToken = null;
 
@@ -7,10 +7,11 @@ export function setAuthToken(token) {
 }
 
 export function getApiBaseUrl() {
-  return process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_URL;
+  return (process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
 }
 
 export async function apiRequest(path, options = {}) {
+  const url = `${getApiBaseUrl()}${path}`;
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
@@ -20,10 +21,16 @@ export async function apiRequest(path, options = {}) {
     headers.Authorization = `Bearer ${authToken}`;
   }
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    throw new Error(`No se pudo conectar con el servidor: ${url}`);
+  }
 
   const payload = await response.json().catch(() => ({}));
 

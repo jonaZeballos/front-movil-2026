@@ -70,6 +70,18 @@ npm run ios
 npm run web
 ```
 
+Por defecto la app consume el backend desplegado en:
+
+```text
+https://movil-backend.vercel.app
+```
+
+Si necesitas apuntar a otro backend, crea un archivo `.env.local` y define:
+
+```bash
+EXPO_PUBLIC_API_URL=http://TU_IP_LOCAL:3000
+```
+
 ## Probar en celular
 
 1. Instala `Expo Go` desde la tienda de aplicaciones.

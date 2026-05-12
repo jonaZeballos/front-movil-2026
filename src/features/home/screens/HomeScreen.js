@@ -85,6 +85,13 @@ const options = [
     iconName: "view-dashboard",
     iconColor: "#4A40BF",
   },
+  {
+    id: "cotizaciones",
+    label: "Cotizar",
+    iconPack: MaterialCommunityIcons,
+    iconName: "file-document-edit-outline",
+    iconColor: "#0F766E",
+  },
 ];
 
 const recentOrders = [
@@ -117,7 +124,14 @@ const recentOrders = [
   },
 ];
 
-export function HomeScreen({ user, onBackToAuth, onOpenOrders, onOpenEquipos, onOpenClientes }) {
+export function HomeScreen({
+  user,
+  onBackToAuth,
+  onOpenOrders,
+  onOpenEquipos,
+  onOpenClientes,
+  onOpenQuotations,
+}) {
   const insets = useSafeAreaInsets();
   const displayName = getUserDisplayName(user, "Tecnico");
   const initials = getInitials(displayName);
@@ -142,6 +156,12 @@ export function HomeScreen({ user, onBackToAuth, onOpenOrders, onOpenEquipos, on
   const handleOpenClientes = () => {
     if (onOpenClientes) {
       onOpenClientes();
+    }
+  };
+
+  const handleOpenQuotations = () => {
+    if (onOpenQuotations) {
+      onOpenQuotations();
     }
   };
 
@@ -256,6 +276,7 @@ export function HomeScreen({ user, onBackToAuth, onOpenOrders, onOpenEquipos, on
               const isOrdersOption = item.id === "ordenes";
               const isEquiposOption = item.id === "equipos";
               const isClientesOption = item.id === "clientes";
+              const isQuotationsOption = item.id === "cotizaciones";
 
               return (
                 <Pressable
@@ -268,6 +289,8 @@ export function HomeScreen({ user, onBackToAuth, onOpenOrders, onOpenEquipos, on
                       ? handleOpenEquipos
                       : isClientesOption
                       ? handleOpenClientes
+                      : isQuotationsOption
+                      ? handleOpenQuotations
                       : undefined
                   }
                 >
@@ -588,7 +611,9 @@ const styles = StyleSheet.create({
   },
   optionsGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
+    rowGap: 10,
     marginBottom: 14,
   },
   optionCard: {

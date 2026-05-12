@@ -10,6 +10,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
+import { SalesChartCard } from "../components/SalesChartCard";
+import { SalesMetricCard } from "../components/SalesMetricCard";
+import { SalesNoteCard } from "../components/SalesNoteCard";
+import { SalesOptionCard } from "../components/SalesOptionCard";
 
 const salesCards = [
   {
@@ -120,90 +124,25 @@ export function SalesDashboardScreen({
 
         <View style={styles.content}>
           <View style={styles.cardsRow}>
-            {salesCards.map((item) => {
-              const IconPack = item.iconPack;
-
-              return (
-                <View key={item.id} style={styles.salesCard}>
-                  <View style={styles.cardTop}>
-                    <View style={[styles.iconBox, { backgroundColor: item.iconBg }]}>
-                      <IconPack name={item.iconName} size={15} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.cardTitle}>{item.title}</Text>
-                  </View>
-
-                  <View style={styles.metricRow}>
-                    <Text
-                      style={[
-                        styles.metricValue,
-                        item.value.length > 4 && styles.metricValueSmall,
-                      ]}
-                    >
-                      {item.value}
-                    </Text>
-                    <Text style={styles.metricLabel}>{item.label}</Text>
-                  </View>
-                </View>
-              );
-            })}
+            {salesCards.map((item) => (
+              <SalesMetricCard key={item.id} item={item} />
+            ))}
           </View>
 
           <Text style={styles.sectionTitle}>Accesos comerciales</Text>
 
           <View style={styles.optionsGrid}>
-            {options.map((item) => {
-              const IconPack = item.iconPack;
-
-              return (
-                <Pressable
-                  key={item.id}
-                  style={styles.optionCard}
-                  onPress={() => handleOptionPress(item.id)}
-                >
-                  <IconPack name={item.iconName} size={22} color={item.iconColor} />
-                  <Text style={styles.optionLabel}>{item.label}</Text>
-                </Pressable>
-              );
-            })}
+            {options.map((item) => (
+              <SalesOptionCard
+                key={item.id}
+                item={item}
+                onPress={() => handleOptionPress(item.id)}
+              />
+            ))}
           </View>
 
-          <View style={styles.chartCard}>
-            <View style={styles.chartHeader}>
-              <View>
-                <Text style={styles.chartTitle}>Estadísticas de ventas</Text>
-                <Text style={styles.chartSubtitle}>Movimiento semanal</Text>
-              </View>
-
-              <View style={styles.chartBadge}>
-                <Text style={styles.chartBadgeText}>+18%</Text>
-              </View>
-            </View>
-
-            <View style={styles.chartBars}>
-              {chartData.map((height, index) => (
-                <View key={index} style={styles.barWrap}>
-                  <View style={[styles.bar, { height }]} />
-                  <Text style={styles.barLabel}>
-                    {["L", "M", "M", "J", "V", "S", "D"][index]}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.noteCard}>
-            <View style={styles.noteIcon}>
-              <Feather name="info" size={18} color="#FFFFFF" />
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text style={styles.noteTitle}>Resumen comercial</Text>
-              <Text style={styles.noteText}>
-                Revisa productos disponibles, registra ventas y consulta clientes
-                antes de completar una operación.
-              </Text>
-            </View>
-          </View>
+          <SalesChartCard data={chartData} />
+          <SalesNoteCard />
         </View>
 
         <View
@@ -375,54 +314,6 @@ const styles = StyleSheet.create({
     marginTop: -34,
     marginBottom: 12,
   },
-  salesCard: {
-    flex: 1,
-    borderRadius: 14,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    elevation: 3,
-  },
-  cardTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    marginBottom: 4,
-  },
-  iconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardTitle: {
-    color: "#111111",
-    fontFamily: fontFamilies.semibold,
-    fontSize: 12,
-    lineHeight: 13,
-    flexShrink: 1,
-  },
-  metricRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 4,
-  },
-  metricValue: {
-    fontFamily: fontFamilies.bold,
-    fontSize: 26,
-    lineHeight: 34,
-    color: "#101010",
-  },
-  metricValueSmall: {
-    fontSize: 18,
-  },
-  metricLabel: {
-    fontFamily: fontFamilies.medium,
-    fontSize: 13,
-    color: "#212121",
-    marginBottom: 5,
-  },
   sectionTitle: {
     marginTop: 4,
     marginBottom: 8,
@@ -434,102 +325,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 14,
-  },
-  optionCard: {
-    width: "31.5%",
-    backgroundColor: "#F5F5F7",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    minHeight: 78,
-  },
-  optionLabel: {
-    marginTop: 7,
-    color: "#7A7A82",
-    fontFamily: fontFamilies.medium,
-    fontSize: 12,
-  },
-  chartCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
-  },
-  chartHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  chartTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: 16,
-    color: "#111111",
-  },
-  chartSubtitle: {
-    marginTop: 2,
-    fontFamily: fontFamilies.regular,
-    fontSize: 12,
-    color: "#7A7A82",
-  },
-  chartBadge: {
-    backgroundColor: "#E9F8F1",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  chartBadgeText: {
-    color: "#29B45A",
-    fontFamily: fontFamilies.bold,
-    fontSize: 12,
-  },
-  chartBars: {
-    height: 110,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  barWrap: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  bar: {
-    width: 20,
-    borderRadius: 999,
-    backgroundColor: colors.primary,
-  },
-  barLabel: {
-    marginTop: 6,
-    fontFamily: fontFamilies.medium,
-    fontSize: 11,
-    color: "#7A7A82",
-  },
-  noteCard: {
-    backgroundColor: "#F5F5F7",
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: "row",
-    gap: 12,
-  },
-  noteIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  noteTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: 15,
-    color: "#111111",
-  },
-  noteText: {
-    marginTop: 4,
-    fontFamily: fontFamilies.regular,
-    fontSize: 12,
-    lineHeight: 17,
-    color: "#7A7A82",
   },
   bottomBar: {
     position: "absolute",

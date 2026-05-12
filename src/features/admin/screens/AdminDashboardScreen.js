@@ -81,6 +81,13 @@ const options = [
     iconColor: "#2386F5",
   },
   {
+    id: "cotizaciones",
+    label: "Cotizar",
+    iconPack: MaterialCommunityIcons,
+    iconName: "file-document-edit-outline",
+    iconColor: "#0F766E",
+  },
+  {
     id: "inventario",
     label: "Inventario",
     iconPack: MaterialIcons,
@@ -98,6 +105,7 @@ export function AdminDashboardScreen({
   onOpenOrders,
   onOpenSales,
   onOpenInventory,
+  onOpenQuotations,
 }) {
   const insets = useSafeAreaInsets();
   const displayName = getUserDisplayName(user, "Administrador");
@@ -115,6 +123,7 @@ export function AdminDashboardScreen({
     if (id === "equipos") onOpenEquipos?.();
     if (id === "ordenes") onOpenOrders?.();
     if (id === "ventas") onOpenSales?.();
+    if (id === "cotizaciones") onOpenQuotations?.();
     if (id === "inventario") onOpenInventory?.();
   };
 

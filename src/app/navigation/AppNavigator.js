@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Alert } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Asset } from "expo-asset";
@@ -19,6 +20,11 @@ import { HomeScreen } from "../../features/home";
 import { OnboardingScreen } from "../../features/onboarding";
 import { SalesDashboardScreen } from "../../features/sales";
 import { SplashScreen } from "../../features/splash";
+import {
+  CotizacionesScreen,
+  GenerateQuotationScreen,
+  QuotationSummaryScreen,
+} from "../../features/cotizaciones";
 import { onboardingPreloadAssets } from "../../shared/assets";
 import { login as loginRequest, logout } from "../../features/auth/services/authApi";
 import { createUser as createUserRequest, listUsers } from "../../features/admin/services/usersApi";
@@ -102,7 +108,10 @@ export function AppNavigator() {
         user: loggedUser,
         role,
       });
-      await refreshSprintData(role);
+
+      refreshSprintData(role).catch((error) => {
+        console.warn("No se pudo cargar la informacion inicial.", error);
+      });
 
       if (role === "admin") {
         navigation.replace("AdminDashboard");
@@ -129,6 +138,21 @@ export function AppNavigator() {
     setEquipments([]);
     setOrders([]);
     navigation.replace("Login");
+  };
+
+  const confirmLogout = (navigation) => {
+    Alert.alert(
+      "Cerrar sesion",
+      "Vas a salir de tu cuenta. ¿Deseas continuar?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Salir",
+          style: "destructive",
+          onPress: () => handleLogout(navigation),
+        },
+      ]
+    );
   };
 
   const createServiceOrder = async (equipmentId, navigation, providedEquipment, diagnostico) => {
@@ -247,12 +271,15 @@ export function AppNavigator() {
         <Stack.Screen name="AdminDashboard">
           {({ navigation }) => (
             <AdminDashboardScreen
+              user={session?.user}
+              onLogout={() => confirmLogout(navigation)}
               onOpenUsers={() => navigation.push("UsersManagement")}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenOrders={() => navigation.push("OrdersList")}
               onOpenSales={() => {}}
               onOpenInventory={() => navigation.navigate("Inventario")}
+              onOpenQuotations={() => navigation.push("Cotizaciones")}
             />
           )}
         </Stack.Screen>
@@ -283,7 +310,7 @@ export function AppNavigator() {
           {({ navigation }) => (
             <SalesDashboardScreen
               user={session?.user}
-              onLogout={() => handleLogout(navigation)}
+              onLogout={() => confirmLogout(navigation)}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenInventory={() => {}}
               onOpenSales={() => {}}
@@ -295,10 +322,11 @@ export function AppNavigator() {
           {({ navigation }) => (
             <HomeScreen
               user={session?.user}
-              onBackToAuth={() => handleLogout(navigation)}
+              onBackToAuth={() => confirmLogout(navigation)}
               onOpenOrders={() => navigation.push("OrdersList")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenClientes={() => navigation.push("Clientes")}
+              onOpenQuotations={() => navigation.push("Cotizaciones")}
             />
           )}
         </Stack.Screen>
@@ -309,6 +337,40 @@ export function AppNavigator() {
 
         <Stack.Screen name="Inventario">
           {() => <InventarioStack />}
+        </Stack.Screen>
+
+        <Stack.Screen name="Cotizaciones">
+          {({ navigation }) => (
+            <CotizacionesScreen
+              onBack={() => navigation.goBack()}
+              onGenerateQuotation={(order) =>
+                navigation.push("GenerateQuotation", { order })
+              }
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="GenerateQuotation">
+          {({ navigation, route }) => (
+            <GenerateQuotationScreen
+              order={route.params?.order}
+              onBack={() => navigation.goBack()}
+              onCancel={() => navigation.goBack()}
+              onSave={(quotation) =>
+                navigation.replace("QuotationSummary", { quotation })
+              }
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="QuotationSummary">
+          {({ navigation, route }) => (
+            <QuotationSummaryScreen
+              quotation={route.params?.quotation}
+              onBackToOrders={() => navigation.navigate("Cotizaciones")}
+              onViewDetail={() => {}}
+            />
+          )}
         </Stack.Screen>
 
         <Stack.Screen name="OrdersList">

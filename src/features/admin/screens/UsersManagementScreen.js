@@ -29,12 +29,12 @@ export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
           {users.map((user) => (
             <UserCard key={user.id} user={user} />
           ))}
-
-          <Pressable style={styles.createButton} onPress={onCreateUser}>
-            <Ionicons name="add" size={22} color="#FFFFFF" />
-            <Text style={styles.createButtonText}>Crear usuario</Text>
-          </Pressable>
         </ScrollView>
+
+        <Pressable style={styles.createButton} onPress={onCreateUser}>
+          <Ionicons name="add" size={22} color="#FFFFFF" />
+          <Text style={styles.createButtonText}>Crear usuario</Text>
+        </Pressable>
       </View>
     </ScreenContainer>
   );
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   createButton: {
     height: 54,
@@ -100,7 +100,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     columnGap: 8,
-    marginTop: 8,
+    marginTop: 10,
+    marginBottom: 16,
   },
   createButtonText: {
     color: "#FFFFFF",

@@ -11,6 +11,7 @@ import { SvgUri } from "react-native-svg";
 
 import EsferaSvg from "../../../../assets/images/esfera.svg";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
+import { MODULES } from "../../../shared/permissions/permissions";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
 
@@ -46,46 +47,53 @@ const summaryCards = [
 
 const options = [
   {
-    id: "usuarios",
+    id: MODULES.USUARIOS,
     label: "Usuarios",
     iconPack: Feather,
     iconName: "users",
     iconColor: "#5655B9",
   },
   {
-    id: "clientes",
+    id: MODULES.CLIENTES,
     label: "Clientes",
     iconPack: FontAwesome5,
     iconName: "id-badge",
     iconColor: "#F04C75",
   },
   {
-    id: "equipos",
+    id: MODULES.EQUIPOS,
     label: "Equipos",
     iconPack: MaterialCommunityIcons,
     iconName: "monitor-dashboard",
     iconColor: "#3D3D45",
   },
   {
-    id: "ordenes",
+    id: MODULES.ORDENES,
     label: "Órdenes",
     iconPack: MaterialCommunityIcons,
     iconName: "view-dashboard",
     iconColor: "#4A40BF",
   },
   {
-    id: "ventas",
+    id: MODULES.VENTAS,
     label: "Ventas",
     iconPack: FontAwesome5,
     iconName: "shopping-cart",
     iconColor: "#2386F5",
   },
   {
-    id: "inventario",
+    id: MODULES.INVENTARIO,
     label: "Inventario",
     iconPack: MaterialIcons,
     iconName: "inventory",
     iconColor: "#E29217",
+  },
+  {
+    id: MODULES.ROLES_PERMISOS,
+    label: "Roles y permisos",
+    iconPack: MaterialCommunityIcons,
+    iconName: "shield-account-outline",
+    iconColor: "#5655B9",
   },
 ];
 
@@ -98,6 +106,7 @@ export function AdminDashboardScreen({
   onOpenOrders,
   onOpenSales,
   onOpenInventory,
+  onOpenRolesPermissions,
 }) {
   const insets = useSafeAreaInsets();
   const displayName = getUserDisplayName(user, "Administrador");
@@ -110,12 +119,13 @@ export function AdminDashboardScreen({
       : null;
 
   const handleOptionPress = (id) => {
-    if (id === "usuarios") onOpenUsers?.();
-    if (id === "clientes") onOpenClientes?.();
-    if (id === "equipos") onOpenEquipos?.();
-    if (id === "ordenes") onOpenOrders?.();
-    if (id === "ventas") onOpenSales?.();
-    if (id === "inventario") onOpenInventory?.();
+    if (id === MODULES.USUARIOS) onOpenUsers?.();
+    if (id === MODULES.CLIENTES) onOpenClientes?.();
+    if (id === MODULES.EQUIPOS) onOpenEquipos?.();
+    if (id === MODULES.ORDENES) onOpenOrders?.();
+    if (id === MODULES.VENTAS) onOpenSales?.();
+    if (id === MODULES.INVENTARIO) onOpenInventory?.();
+    if (id === MODULES.ROLES_PERMISOS) onOpenRolesPermissions?.();
   };
 
   return (
@@ -148,7 +158,9 @@ export function AdminDashboardScreen({
 
           <View style={styles.sphereWrap}>
             {typeof EsferaSvg === "number" ? (
-              esferaUri ? <SvgUri uri={esferaUri} width={258} height={258} /> : null
+              esferaUri ? (
+                <SvgUri uri={esferaUri} width={258} height={258} />
+              ) : null
             ) : (
               <EsferaSvg width={258} height={258} />
             )}
@@ -163,9 +175,15 @@ export function AdminDashboardScreen({
               return (
                 <View key={item.id} style={styles.serviceCard}>
                   <View style={styles.serviceHeader}>
-                    <View style={[styles.serviceIconBox, { backgroundColor: item.iconBg }]}>
+                    <View
+                      style={[
+                        styles.serviceIconBox,
+                        { backgroundColor: item.iconBg },
+                      ]}
+                    >
                       <IconPack name={item.iconName} size={16} color="#FFFFFF" />
                     </View>
+
                     <Text style={styles.serviceTitle}>{item.title}</Text>
                   </View>
 
@@ -203,7 +221,8 @@ export function AdminDashboardScreen({
             <Text style={styles.infoTitle}>Acceso total habilitado</Text>
             <Text style={styles.infoText}>
               Desde este panel podrás administrar usuarios, clientes, equipos,
-              órdenes, ventas e inventario.
+              órdenes, ventas, inventario y consultar el control de roles y
+              permisos.
             </Text>
           </View>
         </View>
@@ -216,9 +235,11 @@ export function AdminDashboardScreen({
         >
           <Ionicons name="home-outline" size={20} color="#D8D7FF" />
           <Feather name="users" size={18} color="#D8D7FF" />
+
           <Pressable style={styles.centerBtn} onPress={onOpenUsers}>
             <Ionicons name="add" size={36} color="#FFFFFF" />
           </Pressable>
+
           <Feather name="bar-chart-2" size={18} color="#D8D7FF" />
           <Ionicons name="person" size={20} color="#D8D7FF" />
         </View>
@@ -228,7 +249,11 @@ export function AdminDashboardScreen({
 }
 
 function getUserDisplayName(user, fallback) {
-  const fullName = [user?.nombres, user?.apellidos].filter(Boolean).join(" ").trim();
+  const fullName = [user?.nombres, user?.apellidos]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
   return fullName || user?.username || user?.email || fallback;
 }
 
@@ -244,6 +269,7 @@ function getRoleLabel(role) {
   if (role === "admin") return "Admin";
   if (role === "tecnico") return "Tecnico";
   if (role === "ventas") return "Ventas";
+
   return role || "Usuario";
 }
 
@@ -454,6 +480,7 @@ const styles = StyleSheet.create({
     color: "#7A7A82",
     fontFamily: fontFamilies.medium,
     fontSize: 12,
+    textAlign: "center",
   },
   recentSectionTitle: {
     color: "#111111",

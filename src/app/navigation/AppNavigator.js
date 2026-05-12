@@ -8,6 +8,7 @@ import {
   UsersManagementScreen,
   CreateUserScreen,
 } from "../../features/admin";
+import { RolesPermissionsScreen } from "../../features/admin/screens/RolesPermissionsScreen";
 import {
   AuthEntryScreen,
   LoginScreen,
@@ -102,6 +103,7 @@ export function AppNavigator() {
         user: loggedUser,
         role,
       });
+
       await refreshSprintData(role);
 
       if (role === "admin") {
@@ -131,7 +133,12 @@ export function AppNavigator() {
     navigation.replace("Login");
   };
 
-  const createServiceOrder = async (equipmentId, navigation, providedEquipment, diagnostico) => {
+  const createServiceOrder = async (
+    equipmentId,
+    navigation,
+    providedEquipment,
+    diagnostico
+  ) => {
     const equipment = providedEquipment || equipments.find((item) => item.id === equipmentId);
 
     if (!equipment) return;
@@ -147,6 +154,7 @@ export function AppNavigator() {
 
   const updateOrderStatus = async (orderId, status) => {
     const updatedOrder = await updateOrden(orderId, { estado: status });
+
     setOrders((prevOrders) =>
       prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
     );
@@ -154,6 +162,7 @@ export function AppNavigator() {
 
   const addOrderObservation = async (orderId, observation) => {
     const updatedOrder = await updateOrden(orderId, { observacion: observation });
+
     setOrders((prevOrders) =>
       prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
     );
@@ -164,18 +173,22 @@ export function AppNavigator() {
     const equipmentWithFailure = { ...savedEquipment, failure: equipmentData.failure };
 
     setEquipments((prevEquipments) => [equipmentWithFailure, ...prevEquipments]);
+
     return equipmentWithFailure;
   };
 
   const saveUser = async (userData) => {
     await createUserRequest(userData);
     const usersData = await listUsers();
+
     setUsers(usersData);
   };
 
   const saveCliente = async (clienteData) => {
     const savedCliente = await createCliente(clienteData);
+
     setClientes((prevClientes) => [savedCliente, ...prevClientes]);
+
     return savedCliente;
   };
 
@@ -247,13 +260,22 @@ export function AppNavigator() {
         <Stack.Screen name="AdminDashboard">
           {({ navigation }) => (
             <AdminDashboardScreen
+              user={session?.user}
+              onLogout={() => handleLogout(navigation)}
               onOpenUsers={() => navigation.push("UsersManagement")}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenOrders={() => navigation.push("OrdersList")}
-              onOpenSales={() => {}}
+              onOpenSales={() => navigation.push("SalesDashboard")}
               onOpenInventory={() => navigation.navigate("Inventario")}
+              onOpenRolesPermissions={() => navigation.push("RolesPermissions")}
             />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="RolesPermissions">
+          {({ navigation }) => (
+            <RolesPermissionsScreen onBack={() => navigation.goBack()} />
           )}
         </Stack.Screen>
 
@@ -285,7 +307,7 @@ export function AppNavigator() {
               user={session?.user}
               onLogout={() => handleLogout(navigation)}
               onOpenClientes={() => navigation.push("Clientes")}
-              onOpenInventory={() => {}}
+              onOpenInventory={() => navigation.navigate("Inventario")}
               onOpenSales={() => {}}
             />
           )}
@@ -316,7 +338,9 @@ export function AppNavigator() {
             <OrdersListScreen
               orders={orders}
               onCreateOrder={() => navigation.push("CreateOrder")}
-              onOpenOrder={(order) => navigation.push("OrderDetail", { orderId: order.id })}
+              onOpenOrder={(order) =>
+                navigation.push("OrderDetail", { orderId: order.id })
+              }
               onBack={() => navigation.goBack()}
             />
           )}
@@ -388,6 +412,7 @@ export function AppNavigator() {
               }}
               onSaveAndCreateOrder={async (equipmentData) => {
                 const newEquipment = await saveEquipment(equipmentData);
+
                 await createServiceOrder(
                   newEquipment.id,
                   navigation,

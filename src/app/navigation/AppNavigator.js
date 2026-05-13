@@ -309,7 +309,12 @@ export function AppNavigator() {
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenOrders={() => navigation.push("OrdersList")}
-              onOpenSales={() => navigation.push("SalesDashboard")}
+              onOpenSales={() =>
+                Alert.alert(
+                  "Modulo no disponible",
+                  "El modulo de ventas para administrador aun no esta habilitado."
+                )
+              }
               onOpenInventory={() => navigation.navigate("Inventario")}
               onOpenQuotations={() => navigation.push("Cotizaciones")}
               onOpenRolesPermissions={() => navigation.push("RolesPermissions")}

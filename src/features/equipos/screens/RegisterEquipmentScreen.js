@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
@@ -89,6 +89,8 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
   const [serial, setSerial] = useState("");
   const [problem, setProblem] = useState("");
   const [openField, setOpenField] = useState(null);
+  const [submittingAction, setSubmittingAction] = useState(null);
+  const submittingRef = useRef(false);
 
   const equipmentPayload = {
     clienteId: selectedClientId,
@@ -109,29 +111,39 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
     problem.trim(),
   ].every(Boolean);
 
-  const handleSave = () => {
+  const submitEquipment = async (action, submitFn, successMessage) => {
+    if (submittingRef.current) return;
+
     if (!isFormValid) {
       Alert.alert("Formulario incompleto", "Completa todos los campos antes de continuar.");
       return;
     }
 
-    onSave?.(equipmentPayload);
+    try {
+      submittingRef.current = true;
+      setSubmittingAction(action);
+      await submitFn?.(equipmentPayload);
+      Alert.alert("Confirmacion", successMessage);
+    } catch (error) {
+      Alert.alert("Error", error.message || "No se pudo registrar el equipo.");
+      submittingRef.current = false;
+      setSubmittingAction(null);
+    }
+  };
+
+  const handleSave = () => {
+    submitEquipment("save", onSave, "Equipo registrado correctamente.");
   };
 
   const handleSaveAndCreateOrder = () => {
-    if (!isFormValid) {
-      Alert.alert("Formulario incompleto", "Completa todos los campos antes de continuar.");
-      return;
-    }
-
-    onSaveAndCreateOrder?.(equipmentPayload);
+    submitEquipment("saveAndOrder", onSaveAndCreateOrder, "Equipo registrado. Se creara la orden.");
   };
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton}>
+          <Pressable onPress={onBack} style={styles.backButton} disabled={Boolean(submittingAction)}>
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
@@ -205,17 +217,23 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
           </View>
 
           <Pressable
-            style={styles.primaryButton}
+            style={[styles.primaryButton, submittingAction && styles.disabledButton]}
             onPress={handleSave}
+            disabled={Boolean(submittingAction)}
           >
-            <Text style={styles.primaryButtonText}>Guardar equipo</Text>
+            <Text style={styles.primaryButtonText}>
+              {submittingAction === "save" ? "Guardando..." : "Guardar equipo"}
+            </Text>
           </Pressable>
 
           <Pressable
-            style={styles.secondaryButton}
+            style={[styles.secondaryButton, submittingAction && styles.disabledButton]}
             onPress={handleSaveAndCreateOrder}
+            disabled={Boolean(submittingAction)}
           >
-            <Text style={styles.secondaryButtonText}>Guardar y crear orden</Text>
+            <Text style={styles.secondaryButtonText}>
+              {submittingAction === "saveAndOrder" ? "Creando..." : "Guardar y crear orden"}
+            </Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -366,5 +384,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
 });

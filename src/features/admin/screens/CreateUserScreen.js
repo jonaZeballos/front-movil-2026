@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -12,30 +12,43 @@ export function CreateUserScreen({ onBack, onSave }) {
     password: "",
     role: "tecnico",
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (isSavingRef.current) return;
+
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
       Alert.alert("Error", "Completa nombre, correo y contraseña.");
       return;
     }
 
-    onSave?.({
-      ...form,
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password.trim(),
-    });
+    try {
+      isSavingRef.current = true;
+      setIsSaving(true);
+      await onSave?.({
+        ...form,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password.trim(),
+      });
+      Alert.alert("Confirmacion", "Usuario registrado correctamente.");
+    } catch (error) {
+      Alert.alert("Error", error.message || "No se pudo registrar el usuario.");
+      isSavingRef.current = false;
+      setIsSaving(false);
+    }
   };
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton}>
+          <Pressable onPress={onBack} style={styles.backButton} disabled={isSaving}>
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
@@ -52,6 +65,7 @@ export function CreateUserScreen({ onBack, onSave }) {
               icon="person-outline"
               placeholder="Ingresa el nombre"
               value={form.name}
+              editable={!isSaving}
               onChangeText={(value) => handleChange("name", value)}
             />
 
@@ -62,6 +76,7 @@ export function CreateUserScreen({ onBack, onSave }) {
               value={form.email}
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={!isSaving}
               onChangeText={(value) => handleChange("email", value)}
             />
 
@@ -71,6 +86,7 @@ export function CreateUserScreen({ onBack, onSave }) {
               placeholder="Contraseña inicial"
               value={form.password}
               secureTextEntry
+              editable={!isSaving}
               onChangeText={(value) => handleChange("password", value)}
             />
 
@@ -80,18 +96,26 @@ export function CreateUserScreen({ onBack, onSave }) {
               <RoleButton
                 label="Técnico"
                 active={form.role === "tecnico"}
-                onPress={() => handleChange("role", "tecnico")}
+                onPress={() => {
+                  if (!isSaving) handleChange("role", "tecnico");
+                }}
               />
               <RoleButton
                 label="Ventas"
                 active={form.role === "ventas"}
-                onPress={() => handleChange("role", "ventas")}
+                onPress={() => {
+                  if (!isSaving) handleChange("role", "ventas");
+                }}
               />
             </View>
           </View>
 
-          <Pressable style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Guardar usuario</Text>
+          <Pressable
+            style={[styles.saveButton, isSaving && styles.disabledButton]}
+            onPress={handleSave}
+            disabled={isSaving}
+          >
+            <Text style={styles.saveButtonText}>{isSaving ? "Guardando..." : "Guardar usuario"}</Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -108,6 +132,7 @@ function Field({
   keyboardType = "default",
   autoCapitalize = "sentences",
   secureTextEntry = false,
+  editable = true,
 }) {
   return (
     <View style={styles.fieldGroup}>
@@ -123,6 +148,7 @@ function Field({
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           secureTextEntry={secureTextEntry}
+          editable={editable}
           style={styles.input}
         />
       </View>
@@ -250,5 +276,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
 });

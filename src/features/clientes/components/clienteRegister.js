@@ -93,9 +93,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
+  disabledBtn: {
+    opacity: 0.65,
+  },
 });
 
-export default function RegistrarCliente({ onVolver, onGuardar }) {
+export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false }) {
   const [form, setForm] = useState({
     nombre: "",
     numeroDocumento: "",
@@ -109,17 +112,29 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
   };
 
   const handleGuardar = () => {
-    if (!form.nombre || !form.numeroDocumento || !form.telefono || !form.correo) {
+    if (isSaving) return;
+
+    if (!form.nombre.trim() || !form.numeroDocumento.trim() || !form.telefono.trim() || !form.correo.trim()) {
       Alert.alert("Error", "Por favor completa nombre, documento, telefono y correo.");
       return;
     }
-    if (onGuardar) onGuardar(form);
+
+    if (onGuardar) {
+      onGuardar({
+        ...form,
+        nombre: form.nombre.trim(),
+        numeroDocumento: form.numeroDocumento.trim(),
+        telefono: form.telefono.trim(),
+        correo: form.correo.trim(),
+        direccion: form.direccion.trim(),
+      });
+    }
   };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={onVolver}>
+        <TouchableOpacity style={styles.backBtn} onPress={onVolver} disabled={isSaving}>
           <Feather name="arrow-left" size={20} color="#111827" />
         </TouchableOpacity>
         <View>
@@ -208,8 +223,12 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.saveBtn} onPress={handleGuardar}>
-        <Text style={styles.saveBtnText}>Guardar cliente</Text>
+      <TouchableOpacity
+        style={[styles.saveBtn, isSaving && styles.disabledBtn]}
+        onPress={handleGuardar}
+        disabled={isSaving}
+      >
+        <Text style={styles.saveBtnText}>{isSaving ? "Guardando..." : "Guardar cliente"}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

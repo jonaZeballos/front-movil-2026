@@ -9,6 +9,8 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
   const [stock, setStock] = useState("");
 
   const onSubmit = () => {
+    if (isSaving) return;
+
     if (!nombre.trim()) {
       Alert.alert("Nombre obligatorio", "Ingresa el nombre del producto.");
       return;
@@ -19,12 +21,25 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
       return;
     }
 
+    const precioNumber = Number(String(precio).replace(",", "."));
+    const stockNumber = Number(stock || 0);
+
+    if (!Number.isFinite(precioNumber) || precioNumber < 0) {
+      Alert.alert("Precio invalido", "Ingresa un precio mayor o igual a 0.");
+      return;
+    }
+
+    if (!Number.isInteger(stockNumber) || stockNumber < 0) {
+      Alert.alert("Stock invalido", "Ingresa un stock entero mayor o igual a 0.");
+      return;
+    }
+
     const producto = {
       nombre: nombre.trim(),
       marca: marca.trim(),
       modelo: modelo.trim(),
-      precio: Number(String(precio).replace(",", ".")) || 0,
-      stock: Number(stock) || 0,
+      precio: precioNumber,
+      stock: stockNumber,
       stockMinimo: 1,
     };
     onGuardar(producto);
@@ -94,10 +109,18 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
         </View>
 
         <View style={styles.actions}>
-          <Pressable style={[styles.button, styles.cancelButton]} onPress={onCancelar}>
+          <Pressable
+            style={[styles.button, styles.cancelButton, isSaving && styles.disabledButton]}
+            onPress={onCancelar}
+            disabled={isSaving}
+          >
             <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancelar</Text>
           </Pressable>
-          <Pressable style={[styles.button, styles.submitButton]} onPress={onSubmit} disabled={isSaving}>
+          <Pressable
+            style={[styles.button, styles.submitButton, isSaving && styles.disabledButton]}
+            onPress={onSubmit}
+            disabled={isSaving}
+          >
             <Text style={[styles.buttonText, styles.submitButtonText]}>
               {isSaving ? "Guardando..." : "Guardar"}
             </Text>
@@ -177,5 +200,8 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: "#ffffff",
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -8,10 +8,14 @@ import { colors } from "../../../shared/theme/colors";
 export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
   const [diagnostico, setDiagnostico] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const isCreatingRef = useRef(false);
 
   const selectedEquipment = equipments.find((item) => item.id === selectedEquipmentId);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    if (isCreatingRef.current) return;
+
     if (!selectedEquipmentId) {
       Alert.alert("Equipo obligatorio", "Selecciona un equipo registrado para crear la orden.");
       return;
@@ -22,14 +26,23 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
       return;
     }
 
-    onCreateOrder(selectedEquipmentId, diagnostico.trim());
+    try {
+      isCreatingRef.current = true;
+      setIsCreating(true);
+      await onCreateOrder(selectedEquipmentId, diagnostico.trim());
+      Alert.alert("Confirmacion", "Orden creada correctamente.");
+    } catch (error) {
+      Alert.alert("Error", error.message || "No se pudo crear la orden.");
+      isCreatingRef.current = false;
+      setIsCreating(false);
+    }
   };
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton}>
+          <Pressable onPress={onBack} style={styles.backButton} disabled={isCreating}>
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
@@ -50,7 +63,9 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
             return (
               <Pressable
                 style={[styles.equipmentCard, selected && styles.equipmentCardSelected]}
-                onPress={() => setSelectedEquipmentId(item.id)}
+                onPress={() => {
+                  if (!isCreating) setSelectedEquipmentId(item.id);
+                }}
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.iconBox}>
@@ -85,6 +100,7 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
             <TextInput
               value={diagnostico}
               onChangeText={setDiagnostico}
+              editable={!isCreating}
               placeholder="Describe la falla o diagnostico inicial"
               placeholderTextColor="#8C8C8C"
               multiline
@@ -93,8 +109,12 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
           </View>
         ) : null}
 
-        <Pressable style={styles.createButton} onPress={handleCreate}>
-          <Text style={styles.createButtonText}>Crear orden</Text>
+        <Pressable
+          style={[styles.createButton, isCreating && styles.disabledButton]}
+          onPress={handleCreate}
+          disabled={isCreating}
+        >
+          <Text style={styles.createButtonText}>{isCreating ? "Creando..." : "Crear orden"}</Text>
         </Pressable>
       </View>
     </ScreenContainer>
@@ -222,5 +242,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
 });

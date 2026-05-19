@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -12,6 +12,7 @@ export function SalesRegisterScreen({ onBack }) {
   const [clienteNombre, setClienteNombre] = useState("");
   const [selectedItems, setSelectedItems] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
     listProductos()
@@ -37,6 +38,8 @@ export function SalesRegisterScreen({ onBack }) {
   const total = items.reduce((sum, item) => sum + item.cantidad * item.precioUnitario, 0);
 
   const updateQuantity = (producto, delta) => {
+    if (isSavingRef.current) return;
+
     setSelectedItems((prev) => {
       const current = prev[producto.id] || 0;
       const next = Math.max(0, Math.min(producto.stock, current + delta));
@@ -45,12 +48,15 @@ export function SalesRegisterScreen({ onBack }) {
   };
 
   const handleSave = async () => {
+    if (isSavingRef.current) return;
+
     if (!items.length) {
       Alert.alert("Productos obligatorios", "Selecciona al menos un producto para registrar la venta.");
       return;
     }
 
     try {
+      isSavingRef.current = true;
       setIsSaving(true);
       const venta = await createVenta({ clienteNombre, items });
       Alert.alert("Venta registrada", `Recibo electronico ${venta.reciboCodigo}`);
@@ -58,6 +64,7 @@ export function SalesRegisterScreen({ onBack }) {
     } catch (error) {
       Alert.alert("Error", error.message || "No se pudo registrar la venta.");
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   };
@@ -66,7 +73,7 @@ export function SalesRegisterScreen({ onBack }) {
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton}>
+          <Pressable onPress={onBack} style={styles.backButton} disabled={isSaving}>
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
           <View style={styles.headerText}>
@@ -81,6 +88,7 @@ export function SalesRegisterScreen({ onBack }) {
           placeholder="Nombre del cliente (opcional)"
           placeholderTextColor="#8C8C8C"
           style={styles.input}
+          editable={!isSaving}
         />
 
         <FlatList
@@ -98,11 +106,19 @@ export function SalesRegisterScreen({ onBack }) {
                   <Text style={styles.productMeta}>Stock: {item.stock} | Bs. {Number(item.precio).toFixed(2)}</Text>
                 </View>
                 <View style={styles.stepper}>
-                  <Pressable style={styles.stepButton} onPress={() => updateQuantity(item, -1)}>
+                  <Pressable
+                    style={[styles.stepButton, isSaving && styles.disabledButton]}
+                    onPress={() => updateQuantity(item, -1)}
+                    disabled={isSaving}
+                  >
                     <Text style={styles.stepText}>-</Text>
                   </Pressable>
                   <Text style={styles.quantity}>{quantity}</Text>
-                  <Pressable style={styles.stepButton} onPress={() => updateQuantity(item, 1)}>
+                  <Pressable
+                    style={[styles.stepButton, isSaving && styles.disabledButton]}
+                    onPress={() => updateQuantity(item, 1)}
+                    disabled={isSaving}
+                  >
                     <Text style={styles.stepText}>+</Text>
                   </Pressable>
                 </View>
@@ -122,8 +138,12 @@ export function SalesRegisterScreen({ onBack }) {
           <Text style={styles.totalValue}>Bs. {total.toFixed(2)}</Text>
         </View>
 
-        <Pressable style={styles.createButton} onPress={handleSave} disabled={isSaving}>
-          <Text style={styles.createButtonText}>{isSaving ? "Guardando..." : "Generar recibo"}</Text>
+        <Pressable
+          style={[styles.createButton, isSaving && styles.disabledButton]}
+          onPress={handleSave}
+          disabled={isSaving}
+        >
+          <Text style={styles.createButtonText}>{isSaving ? "Registrando..." : "Generar recibo"}</Text>
         </Pressable>
       </View>
     </ScreenContainer>
@@ -268,5 +288,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "900",
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
 });

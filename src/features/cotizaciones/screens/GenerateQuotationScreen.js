@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -21,6 +21,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
 
   const amounts = useMemo(() => {
     const manoObra = parseAmount(form.manoObra);
@@ -40,6 +41,8 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
   };
 
   const handleSave = async () => {
+    if (isSavingRef.current) return;
+
     const validationErrors = validateQuotation(form, amounts);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -48,6 +51,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
     }
 
     try {
+      isSavingRef.current = true;
       setIsSaving(true);
       await onSave?.({
         ordenId: order.id,
@@ -62,6 +66,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
     } catch (error) {
       Alert.alert("Error", error.message || "No se pudo generar la cotizacion.");
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   };
@@ -72,7 +77,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
 
   const handleCancel = () => {
     if (!hasFormChanges) {
-      onCancel?.();
+      if (!isSavingRef.current) onCancel?.();
       return;
     }
 
@@ -84,7 +89,9 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
         {
           text: "Salir",
           style: "destructive",
-          onPress: onCancel,
+          onPress: () => {
+            if (!isSavingRef.current) onCancel?.();
+          },
         },
       ]
     );
@@ -144,9 +151,10 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
               borderRadius={18}
               minHeight={52}
               width="48%"
+              disabled={isSaving}
             />
             <AppButton
-              title={isSaving ? "Guardando..." : "Guardar"}
+              title={isSaving ? "Generando..." : "Generar"}
               onPress={handleSave}
               backgroundColor={colors.primary}
               borderRadius={18}

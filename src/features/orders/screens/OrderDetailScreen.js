@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -17,6 +17,10 @@ import { orderStatuses } from "../services/ordersApi";
 
 export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservation }) {
   const [observation, setObservation] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [isAddingObservation, setIsAddingObservation] = useState(false);
+  const statusRef = useRef(false);
+  const observationRef = useRef(false);
 
   if (!order) {
     return (
@@ -31,22 +35,53 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
     );
   }
 
+  const handleUpdateStatus = async (status) => {
+    if (statusRef.current || order.status === status) return;
+
+    try {
+      statusRef.current = true;
+      setUpdatingStatus(status);
+      await onUpdateStatus(order.id, status);
+      Alert.alert("Confirmacion", "El estado fue actualizado correctamente.");
+    } catch (error) {
+      Alert.alert("Error", error.message || "No se pudo actualizar el estado.");
+    } finally {
+      statusRef.current = false;
+      setUpdatingStatus(null);
+    }
+  };
+
   const handleAddObservation = async () => {
+    if (observationRef.current) return;
+
     if (!observation.trim()) {
-      Alert.alert("Observación vacía", "Ingresa una observación válida.");
+      Alert.alert("Observacion vacia", "Ingresa una observacion valida.");
       return;
     }
 
-    await onAddObservation(order.id, observation.trim());
-    setObservation("");
-    Alert.alert("Confirmación", "La observación fue agregada correctamente.");
+    try {
+      observationRef.current = true;
+      setIsAddingObservation(true);
+      await onAddObservation(order.id, observation.trim());
+      setObservation("");
+      Alert.alert("Confirmacion", "La observacion fue agregada correctamente.");
+    } catch (error) {
+      Alert.alert("Error", error.message || "No se pudo agregar la observacion.");
+    } finally {
+      observationRef.current = false;
+      setIsAddingObservation(false);
+    }
   };
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton}>
+          <Pressable
+            onPress={onBack}
+            style={styles.backButton}
+            disabled={Boolean(updatingStatus) || isAddingObservation}
+          >
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
@@ -58,7 +93,7 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Información principal</Text>
+            <Text style={styles.sectionTitle}>Informacion principal</Text>
 
             <InfoRow label="Cliente" value={order.clientName} />
             <InfoRow label="Equipo" value={order.equipmentName} />
@@ -81,14 +116,16 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
                 return (
                   <Pressable
                     key={status}
-                    style={[styles.statusButton, active && styles.statusButtonActive]}
-                    onPress={async () => {
-                      await onUpdateStatus(order.id, status);
-                      Alert.alert("Confirmación", "El estado fue actualizado correctamente.");
-                    }}
+                    style={[
+                      styles.statusButton,
+                      active && styles.statusButtonActive,
+                      updatingStatus && styles.disabledButton,
+                    ]}
+                    onPress={() => handleUpdateStatus(status)}
+                    disabled={Boolean(updatingStatus)}
                   >
                     <Text style={[styles.statusButtonText, active && styles.statusButtonTextActive]}>
-                      {status}
+                      {updatingStatus === status ? "Actualizando..." : status}
                     </Text>
                   </Pressable>
                 );
@@ -106,19 +143,26 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
                 </View>
               ))
             ) : (
-              <Text style={styles.emptyText}>Aún no hay observaciones registradas.</Text>
+              <Text style={styles.emptyText}>Aun no hay observaciones registradas.</Text>
             )}
 
             <TextInput
               value={observation}
               onChangeText={setObservation}
-              placeholder="Agregar observación del servicio..."
+              placeholder="Agregar observacion del servicio..."
               multiline
               style={styles.input}
+              editable={!isAddingObservation}
             />
 
-            <Pressable style={styles.primaryButton} onPress={handleAddObservation}>
-              <Text style={styles.primaryButtonText}>Agregar observación</Text>
+            <Pressable
+              style={[styles.primaryButton, isAddingObservation && styles.disabledButton]}
+              onPress={handleAddObservation}
+              disabled={isAddingObservation}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isAddingObservation ? "Guardando..." : "Agregar observacion"}
+              </Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -261,5 +305,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "800",
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
 });

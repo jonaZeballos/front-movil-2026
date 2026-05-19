@@ -19,7 +19,12 @@ import {
 } from "../../features/auth";
 import { HomeScreen } from "../../features/home";
 import { OnboardingScreen } from "../../features/onboarding";
-import { SalesDashboardScreen } from "../../features/sales";
+import {
+  SalesDashboardScreen,
+  RegisterSaleScreen,
+  SaleSummaryScreen,
+  ElectronicReceiptScreen,
+} from "../../features/sales";
 import { SplashScreen } from "../../features/splash";
 import {
   CotizacionesScreen,
@@ -357,7 +362,40 @@ export function AppNavigator() {
               onLogout={() => confirmLogout(navigation)}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenInventory={() => navigation.navigate("Inventario")}
-              onOpenSales={() => {}}
+              onOpenSales={() => navigation.push("RegisterSale")}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="RegisterSale">
+          {({ navigation }) => (
+            <RegisterSaleScreen
+              clientes={clientes}
+              onBack={() => navigation.goBack()}
+              onContinue={(saleDraft) =>
+                navigation.push("SaleSummary", { saleDraft })
+              }
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="SaleSummary">
+          {({ navigation, route }) => (
+            <SaleSummaryScreen
+              saleDraft={route.params?.saleDraft}
+              onBack={() => navigation.goBack()}
+              onConfirm={(receipt) =>
+                navigation.replace("ElectronicReceipt", { receipt })
+              }
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="ElectronicReceipt">
+          {({ navigation, route }) => (
+            <ElectronicReceiptScreen
+              receipt={route.params?.receipt}
+              onBackToSales={() => navigation.navigate("SalesDashboard")}
             />
           )}
         </Stack.Screen>

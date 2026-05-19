@@ -19,7 +19,7 @@ import {
 } from "../../features/auth";
 import { HomeScreen } from "../../features/home";
 import { OnboardingScreen } from "../../features/onboarding";
-import { SalesDashboardScreen } from "../../features/sales";
+import { SalesDashboardScreen, SalesRegisterScreen } from "../../features/sales";
 import { SplashScreen } from "../../features/splash";
 import {
   CotizacionesScreen,
@@ -32,6 +32,7 @@ import { createUser as createUserRequest, listUsers } from "../../features/admin
 import { listClientes, createCliente } from "../../features/clientes/services/clientesApi";
 import { listEquipos, createEquipo } from "../../features/equipos/services/equiposApi";
 import { listOrdenes, createOrden, updateOrden } from "../../features/orders/services/ordersApi";
+import { createCotizacion } from "../../features/cotizaciones/services/cotizacionesApi";
 
 import {
   OrdersListScreen,
@@ -87,8 +88,8 @@ export function AppNavigator() {
   const refreshSprintData = async (role) => {
     const [clientesData, equiposData, ordenesData] = await Promise.all([
       listClientes(),
-      listEquipos(),
-      listOrdenes(),
+      role === "admin" || role === "tecnico" ? listEquipos() : Promise.resolve([]),
+      role === "admin" || role === "tecnico" ? listOrdenes() : Promise.resolve([]),
     ]);
 
     setClientes(clientesData);
@@ -309,12 +310,7 @@ export function AppNavigator() {
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenOrders={() => navigation.push("OrdersList")}
-              onOpenSales={() =>
-                Alert.alert(
-                  "Modulo no disponible",
-                  "El modulo de ventas para administrador aun no esta habilitado."
-                )
-              }
+              onOpenSales={() => navigation.push("SalesRegister")}
               onOpenInventory={() => navigation.navigate("Inventario")}
               onOpenQuotations={() => navigation.push("Cotizaciones")}
               onOpenRolesPermissions={() => navigation.push("RolesPermissions")}
@@ -357,8 +353,14 @@ export function AppNavigator() {
               onLogout={() => confirmLogout(navigation)}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenInventory={() => navigation.navigate("Inventario")}
-              onOpenSales={() => {}}
+              onOpenSales={() => navigation.push("SalesRegister")}
             />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="SalesRegister">
+          {({ navigation }) => (
+            <SalesRegisterScreen onBack={() => navigation.goBack()} />
           )}
         </Stack.Screen>
 
@@ -386,6 +388,7 @@ export function AppNavigator() {
         <Stack.Screen name="Cotizaciones">
           {({ navigation }) => (
             <CotizacionesScreen
+              orders={orders}
               onBack={() => navigation.goBack()}
               onGenerateQuotation={(order) =>
                 navigation.push("GenerateQuotation", { order })
@@ -400,9 +403,10 @@ export function AppNavigator() {
               order={route.params?.order}
               onBack={() => navigation.goBack()}
               onCancel={() => navigation.goBack()}
-              onSave={(quotation) =>
-                navigation.replace("QuotationSummary", { quotation })
-              }
+              onSave={async (quotation) => {
+                const savedQuotation = await createCotizacion(quotation);
+                navigation.replace("QuotationSummary", { quotation: savedQuotation });
+              }}
             />
           )}
         </Stack.Screen>

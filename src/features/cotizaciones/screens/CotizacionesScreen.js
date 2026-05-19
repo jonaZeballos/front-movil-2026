@@ -5,10 +5,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { OrderQuotationCard } from "../components/OrderQuotationCard";
-import { quotationOrdersMock } from "../data/quotationOrdersMock";
 
-export function CotizacionesScreen({ onBack, onGenerateQuotation }) {
+export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const quotationOrders = orders.map(mapOrderForQuotation);
 
   const handleGenerate = () => {
     if (!selectedOrder) {
@@ -34,7 +34,7 @@ export function CotizacionesScreen({ onBack, onGenerateQuotation }) {
         </View>
 
         <FlatList
-          data={quotationOrdersMock}
+          data={quotationOrders}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
@@ -45,6 +45,13 @@ export function CotizacionesScreen({ onBack, onGenerateQuotation }) {
               onSelect={() => setSelectedOrder(item)}
             />
           )}
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <Ionicons name="document-text-outline" size={42} color="#9CA3AF" />
+              <Text style={styles.emptyTitle}>No hay ordenes para cotizar</Text>
+              <Text style={styles.emptyText}>Crea una orden de servicio antes de generar cotizaciones.</Text>
+            </View>
+          }
         />
 
         <Pressable style={styles.createButton} onPress={handleGenerate}>
@@ -54,6 +61,18 @@ export function CotizacionesScreen({ onBack, onGenerateQuotation }) {
       </View>
     </ScreenContainer>
   );
+}
+
+function mapOrderForQuotation(order) {
+  return {
+    ...order,
+    codigo: order.code || `#${String(order.codigo || "").padStart(4, "0")}`,
+    cliente: order.clientName || "Cliente sin nombre",
+    equipo: order.equipmentName || "Equipo sin detalle",
+    falla: order.failure || order.diagnostico || "",
+    diagnostico: order.diagnostico || order.failure || "",
+    estado: order.status || order.estado || "Recibido",
+  };
 }
 
 const styles = StyleSheet.create({
@@ -107,5 +126,24 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
+  },
+  emptyBox: {
+    marginTop: 44,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyTitle: {
+    marginTop: 10,
+    color: "#111827",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  emptyText: {
+    marginTop: 4,
+    color: "#6B7280",
+    fontSize: 13,
+    textAlign: "center",
   },
 });

@@ -4,6 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../shared/theme/colors";
 
 export function QuotationSummaryCard({ quotation }) {
+  const order = normalizeOrder(quotation.order);
+
   return (
     <View style={styles.card}>
       <View style={styles.successIcon}>
@@ -13,17 +15,25 @@ export function QuotationSummaryCard({ quotation }) {
       <Text style={styles.successText}>Cotizacion generada correctamente</Text>
       <Text style={styles.number}>{quotation.numero}</Text>
 
-      <SummaryRow label="Codigo de orden" value={quotation.order.codigo} />
-      <SummaryRow label="Cliente" value={quotation.order.cliente} />
-      <SummaryRow label="Equipo" value={quotation.order.equipo} />
+      <SummaryRow label="Codigo de orden" value={order.codigo} />
+      <SummaryRow label="Cliente" value={order.cliente} />
+      <SummaryRow label="Equipo" value={order.equipo} />
       <SummaryRow label="Descripcion del trabajo" value={quotation.descripcion} />
-      <SummaryRow label="Mano de obra" value={`Bs. ${quotation.manoObra.toFixed(2)}`} />
-      <SummaryRow label="Repuestos" value={`Bs. ${quotation.repuestos.toFixed(2)}`} />
-      <SummaryRow label="Descuento" value={`Bs. ${quotation.descuento.toFixed(2)}`} />
-      <SummaryRow label="Total a pagar" value={`Bs. ${quotation.total.toFixed(2)}`} strong />
-      <SummaryRow label="Estado" value="Pendiente de aprobacion" />
+      <SummaryRow label="Mano de obra" value={`Bs. ${Number(quotation.manoObra || 0).toFixed(2)}`} />
+      <SummaryRow label="Repuestos" value={`Bs. ${Number(quotation.repuestos || 0).toFixed(2)}`} />
+      <SummaryRow label="Descuento" value={`Bs. ${Number(quotation.descuento || 0).toFixed(2)}`} />
+      <SummaryRow label="Total a pagar" value={`Bs. ${Number(quotation.total || 0).toFixed(2)}`} strong />
+      <SummaryRow label="Estado" value={quotation.estado || "Pendiente de aprobacion"} />
     </View>
   );
+}
+
+function normalizeOrder(order = {}) {
+  return {
+    codigo: order.codigo || order.code || "Sin codigo",
+    cliente: order.cliente || order.clientName || "Cliente sin nombre",
+    equipo: order.equipo || order.equipmentName || "Equipo sin detalle",
+  };
 }
 
 function SummaryRow({ label, value, strong = false }) {

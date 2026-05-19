@@ -1,20 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { InventarioManagementScreen, ProductoRegisterScreen } from "../screens";
+import { createProducto, listProductos } from "../services/productosApi";
 
 const Stack = createNativeStackNavigator();
 
 export function InventarioStack() {
 
   const [productos, setProductos] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddProducto = (producto) => {
-    const nuevo = {
-      id: Date.now(),
-      ...producto,
-    };
+  const refreshProductos = async () => {
+    setIsLoading(true);
+    try {
+      const data = await listProductos();
+      setProductos(data);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    refreshProductos().catch((error) => {
+      console.warn("No se pudo cargar el inventario.", error);
+    });
+  }, []);
+
+  const handleAddProducto = async (producto) => {
+    const nuevo = await createProducto(producto);
     setProductos((prev) => [nuevo, ...prev]);
   };
 
@@ -26,6 +40,8 @@ export function InventarioStack() {
           <InventarioManagementScreen
             navigation={navigation}
             productos={productos}
+            isLoading={isLoading}
+            onRefresh={refreshProductos}
           />
         )}
       </Stack.Screen>
@@ -34,8 +50,8 @@ export function InventarioStack() {
         {({ navigation }) => (
           <ProductoRegisterScreen
             navigation={navigation}
-            onGuardar={(data) => {
-              handleAddProducto(data);
+            onGuardar={async (data) => {
+              await handleAddProducto(data);
               navigation.goBack();
             }}
           />

@@ -1,7 +1,7 @@
 ﻿import React, { useState } from "react";
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
-export default function RegistroProducto({ onGuardar, onCancelar }) {
+export default function RegistroProducto({ onGuardar, onCancelar, isSaving = false }) {
   const [nombre, setNombre] = useState("");
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
@@ -9,13 +9,23 @@ export default function RegistroProducto({ onGuardar, onCancelar }) {
   const [stock, setStock] = useState("");
 
   const onSubmit = () => {
+    if (!nombre.trim()) {
+      Alert.alert("Nombre obligatorio", "Ingresa el nombre del producto.");
+      return;
+    }
+
+    if (!precio.trim()) {
+      Alert.alert("Precio obligatorio", "Ingresa el precio del producto.");
+      return;
+    }
+
     const producto = {
-      id: Date.now(),
-      nombre,
-      marca,
-      modelo,
-      precio,
+      nombre: nombre.trim(),
+      marca: marca.trim(),
+      modelo: modelo.trim(),
+      precio: Number(String(precio).replace(",", ".")) || 0,
       stock: Number(stock) || 0,
+      stockMinimo: 1,
     };
     onGuardar(producto);
   };
@@ -87,8 +97,10 @@ export default function RegistroProducto({ onGuardar, onCancelar }) {
           <Pressable style={[styles.button, styles.cancelButton]} onPress={onCancelar}>
             <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancelar</Text>
           </Pressable>
-          <Pressable style={[styles.button, styles.submitButton]} onPress={onSubmit}>
-            <Text style={[styles.buttonText, styles.submitButtonText]}>Guardar</Text>
+          <Pressable style={[styles.button, styles.submitButton]} onPress={onSubmit} disabled={isSaving}>
+            <Text style={[styles.buttonText, styles.submitButtonText]}>
+              {isSaving ? "Guardando..." : "Guardar"}
+            </Text>
           </Pressable>
         </View>
       </ScrollView>

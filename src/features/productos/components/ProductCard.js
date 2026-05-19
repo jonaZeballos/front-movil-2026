@@ -18,8 +18,12 @@ export function ProductCard({ product }) {
         </View>
       </View>
       <View style={styles.cardBottom}>
-        <Text style={styles.cardDetail}>Stock: {product.stock} unidades</Text>
-        <Text style={styles.priceText}>{product.precio}</Text>
+        <Text style={[styles.cardDetail, product.stockBajo && styles.lowStock]}>
+          Stock: {product.stock} unidades
+        </Text>
+        <Text style={styles.priceText}>
+          {product.precioTexto || `Bs. ${Number(product.precio || 0).toFixed(2)}`}
+        </Text>
       </View>
     </View>
   );
@@ -72,5 +76,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "900",
     color: colors.primary,
+  },
+  lowStock: {
+    color: "#DC2626",
+    fontWeight: "800",
   },
 });

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
@@ -7,42 +7,15 @@ import { ProductCard } from "./ProductCard";
 import { ProductListHeader } from "./ProductListHeader";
 import { ProductSearchBox } from "./ProductSearchBox";
 
-const fallbackProducts = [
-  {
-    id: 1,
-    nombre: "Laptop HP Pavilion 15",
-    marca: "HP",
-    modelo: "Pav-15",
-    precio: "Bs. 4.500",
-    stock: 5,
-  },
-  {
-    id: 2,
-    nombre: "PC Lenovo ThinkCentre",
-    marca: "Lenovo",
-    modelo: "TC-M70",
-    precio: "Bs. 6.200",
-    stock: 2,
-  },
-  {
-    id: 3,
-    nombre: "Laptop Asus Vivobook",
-    marca: "Asus",
-    modelo: "VB-14",
-    precio: "Bs. 3.800",
-    stock: 8,
-  },
-];
-
-export default function GestionInventario({ productos = [], onRegistrar }) {
+export default function GestionInventario({ productos = [], onRegistrar, isLoading = false, onRefresh }) {
   const [busqueda, setBusqueda] = useState("");
-  const productList = productos.length > 0 ? productos : fallbackProducts;
+  const productList = productos;
 
   const filtrados = productList.filter(
     (producto) =>
-      producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      producto.marca.toLowerCase().includes(busqueda.toLowerCase()) ||
-      producto.modelo.toLowerCase().includes(busqueda.toLowerCase())
+      producto.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      producto.marca?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      producto.modelo?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
@@ -66,7 +39,22 @@ export default function GestionInventario({ productos = [], onRegistrar }) {
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        refreshing={isLoading}
+        onRefresh={onRefresh}
         renderItem={({ item }) => <ProductCard product={item} />}
+        ListEmptyComponent={
+          <View style={styles.emptyBox}>
+            {isLoading ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <>
+                <Ionicons name="cube-outline" size={42} color="#9CA3AF" />
+                <Text style={styles.emptyTitle}>No hay productos registrados</Text>
+                <Text style={styles.emptyText}>Registra productos para controlar stock y ventas.</Text>
+              </>
+            )}
+          </View>
+        }
       />
 
       <Pressable style={styles.registerBtn} onPress={onRegistrar}>
@@ -83,6 +71,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dashboardBg,
     paddingHorizontal: 18,
     paddingTop: 14,
+  },
+  emptyBox: {
+    marginTop: 42,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyTitle: {
+    marginTop: 10,
+    color: "#111827",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  emptyText: {
+    marginTop: 4,
+    color: "#6B7280",
+    fontSize: 13,
+    textAlign: "center",
   },
   header: {
     flexDirection: "row",

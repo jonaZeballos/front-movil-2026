@@ -1,5 +1,15 @@
 import { useRef, useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -40,6 +50,10 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={onBack} style={styles.backButton} disabled={isCreating}>
@@ -57,6 +71,7 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => {
             const selected = selectedEquipmentId === item.id;
 
@@ -117,6 +132,7 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
           <Text style={styles.createButtonText}>{isCreating ? "Creando..." : "Crear orden"}</Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -126,6 +142,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 14,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",

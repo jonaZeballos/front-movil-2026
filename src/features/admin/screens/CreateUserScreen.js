@@ -1,5 +1,15 @@
 import { useRef, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -46,6 +56,10 @@ export function CreateUserScreen({ onBack, onSave }) {
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={onBack} style={styles.backButton} disabled={isSaving}>
@@ -58,7 +72,11 @@ export function CreateUserScreen({ onBack, onSave }) {
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.formCard}>
             <Field
               label="Nombre completo"
@@ -119,6 +137,7 @@ export function CreateUserScreen({ onBack, onSave }) {
           </Pressable>
         </ScrollView>
       </View>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -174,6 +193,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 14,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",

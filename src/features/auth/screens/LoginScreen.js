@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Text, View, useWindowDimensions } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 
 import { AppLogoFull } from "../../../shared/components/AppLogoFull";
 import { AppButton } from "../../../shared/components/buttons";
@@ -43,7 +50,20 @@ export function LoginScreen({ onBack, onLogin }) {
     <ScreenContainer backgroundColor={colors.surface}>
       <AuthTopBar title="Volver" onBack={onBack} />
 
-      <View style={[tw`flex-1 items-center`, { paddingHorizontal: horizontalPadding, paddingTop: 20 }]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          alignItems: "center",
+          paddingHorizontal: horizontalPadding,
+          paddingTop: 20,
+          paddingBottom: 32,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={{ width: contentWidth }}>
           <Text style={[textPresets.headingDark, { color: colors.black, marginBottom: 24 }]}>
             Inicio de sesión
@@ -87,7 +107,8 @@ export function LoginScreen({ onBack, onLogin }) {
             />
           </View>
         </View>
-      </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }

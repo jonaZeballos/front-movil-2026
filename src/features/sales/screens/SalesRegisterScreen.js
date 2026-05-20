@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -71,6 +81,10 @@ export function SalesRegisterScreen({ onBack }) {
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={onBack} style={styles.backButton} disabled={isSaving}>
@@ -96,6 +110,7 @@ export function SalesRegisterScreen({ onBack }) {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => {
             const quantity = selectedItems[item.id] || 0;
 
@@ -146,6 +161,7 @@ export function SalesRegisterScreen({ onBack }) {
           <Text style={styles.createButtonText}>{isSaving ? "Registrando..." : "Generar recibo"}</Text>
         </Pressable>
       </View>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -155,6 +171,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 14,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",

@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Image, Text, View, useWindowDimensions } from "react-native";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 
 import { AppButton } from "../../../shared/components/buttons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -43,7 +51,20 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
     <ScreenContainer backgroundColor={colors.surface}>
       <AuthTopBar title="Inicia Sesion" onBack={onBack} />
 
-      <View style={[tw`flex-1 items-center`, { paddingHorizontal: horizontalPadding, paddingTop: 20, paddingBottom: 24 }]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          alignItems: "center",
+          paddingHorizontal: horizontalPadding,
+          paddingTop: 20,
+          paddingBottom: 32,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={{ width: contentWidth }}>
           <Text style={[textPresets.headingDark, { fontSize: 22, lineHeight: 30, color: colors.black, marginBottom: 16 }]}>
             Crea tu cuenta
@@ -86,7 +107,8 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
             </Text>
           </View>
         </View>
-      </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }

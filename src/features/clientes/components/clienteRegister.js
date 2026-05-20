@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
@@ -10,6 +20,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
+  },
+  scrollContent: {
+    paddingBottom: 32,
   },
   header: {
     backgroundColor: colors.surface,
@@ -132,7 +145,15 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={onVolver} disabled={isSaving}>
           <Feather name="arrow-left" size={20} color="#111827" />
@@ -231,5 +252,6 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
         <Text style={styles.saveBtnText}>{isSaving ? "Guardando..." : "Guardar cliente"}</Text>
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

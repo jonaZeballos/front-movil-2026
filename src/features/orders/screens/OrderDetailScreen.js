@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -75,6 +77,10 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable
@@ -91,7 +97,11 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Informacion principal</Text>
 
@@ -167,6 +177,7 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
           </View>
         </ScrollView>
       </View>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -185,6 +196,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 14,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",

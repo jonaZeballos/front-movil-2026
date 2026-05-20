@@ -1,5 +1,16 @@
 ﻿import React, { useState } from "react";
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 export default function RegistroProducto({ onGuardar, onCancelar, isSaving = false }) {
   const [nombre, setNombre] = useState("");
@@ -47,7 +58,11 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Registrar nuevo producto</Text>
         <Text style={styles.subtitle}>Llena los campos para añadir un producto al inventario</Text>
 
@@ -127,6 +142,7 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
           </Pressable>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

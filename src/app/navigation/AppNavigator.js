@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Alert, BackHandler } from "react-native";
-import { NavigationContainer, useNavigationContainerRef } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  CommonActions,
+  useNavigationContainerRef,
+} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Asset } from "expo-asset";
 
@@ -31,12 +35,37 @@ import {
   GenerateQuotationScreen,
   QuotationSummaryScreen,
 } from "../../features/cotizaciones";
+import { ReportsStack } from "../../features/reports";
+import {
+  NotificationsStack,
+  addNotification,
+  buildOrderStatusNotification,
+  buildSaleNotification,
+  getInitialNotifications,
+  getUnreadNotificationsCount,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "../../features/notifications";
+
 import { onboardingPreloadAssets } from "../../shared/assets";
 import { login as loginRequest, logout } from "../../features/auth/services/authApi";
-import { createUser as createUserRequest, listUsers } from "../../features/admin/services/usersApi";
-import { listClientes, createCliente } from "../../features/clientes/services/clientesApi";
-import { listEquipos, createEquipo } from "../../features/equipos/services/equiposApi";
-import { listOrdenes, createOrden, updateOrden } from "../../features/orders/services/ordersApi";
+import {
+  createUser as createUserRequest,
+  listUsers,
+} from "../../features/admin/services/usersApi";
+import {
+  listClientes,
+  createCliente,
+} from "../../features/clientes/services/clientesApi";
+import {
+  listEquipos,
+  createEquipo,
+} from "../../features/equipos/services/equiposApi";
+import {
+  listOrdenes,
+  createOrden,
+  updateOrden,
+} from "../../features/orders/services/ordersApi";
 
 import {
   OrdersListScreen,
@@ -52,17 +81,25 @@ import { RegisterStack } from "../../features/clientes/navigation/RegisterStack"
 import { InventarioStack } from "../../features/productos/navigation/InventarioStack";
 
 const Stack = createNativeStackNavigator();
+
 const LOGOUT_CONFIRM_ROUTES = ["AdminDashboard", "SalesDashboard", "Home"];
 
 export function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
+
   const [isSplashVisible, setIsSplashVisible] = useState(true);
   const [session, setSession] = useState(null);
   const [currentRouteName, setCurrentRouteName] = useState(null);
+
   const [orders, setOrders] = useState([]);
   const [equipments, setEquipments] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [users, setUsers] = useState([]);
+
+  const [salesReports, setSalesReports] = useState([]);
+  const [notifications, setNotifications] = useState(getInitialNotifications);
+
+  const unreadNotificationsCount = getUnreadNotificationsCount(notifications);
 
   useEffect(() => {
     let isMounted = true;
@@ -139,17 +176,28 @@ export function AppNavigator() {
     }
   };
 
-  const handleLogout = (navigation) => {
+  const handleLogout = () => {
     logout();
+
     setSession(null);
     setUsers([]);
     setClientes([]);
     setEquipments([]);
     setOrders([]);
-    navigation.replace("Login");
+    setSalesReports([]);
+    setNotifications(getInitialNotifications());
+
+    if (navigationRef.isReady()) {
+      navigationRef.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: "Login" }],
+        })
+      );
+    }
   };
 
-  const confirmLogout = (navigation) => {
+  const confirmLogout = () => {
     Alert.alert(
       "Cerrar sesion",
       "Vas a salir de tu cuenta. ¿Deseas continuar?",
@@ -158,7 +206,7 @@ export function AppNavigator() {
         {
           text: "Salir",
           style: "destructive",
-          onPress: () => handleLogout(navigation),
+          onPress: handleLogout,
         },
       ]
     );
@@ -170,12 +218,28 @@ export function AppNavigator() {
         return false;
       }
 
-      confirmLogout(navigationRef);
+      confirmLogout();
       return true;
     });
 
     return () => subscription.remove();
-  }, [currentRouteName, navigationRef]);
+  }, [currentRouteName]);
+
+  const handleOpenNotifications = (navigation) => {
+    navigation.push("Notifications");
+  };
+
+  const handleMarkNotificationAsRead = (notificationId) => {
+    setNotifications((prevNotifications) =>
+      markNotificationAsRead(prevNotifications, notificationId)
+    );
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    setNotifications((prevNotifications) =>
+      markAllNotificationsAsRead(prevNotifications)
+    );
+  };
 
   const createServiceOrder = async (
     equipmentId,
@@ -193,6 +257,17 @@ export function AppNavigator() {
     });
 
     setOrders((prevOrders) => [newOrder, ...prevOrders]);
+
+    setNotifications((prevNotifications) =>
+      addNotification(prevNotifications, {
+        type: "order",
+        title: "Nueva orden registrada",
+        message: `Se creó una nueva orden de servicio ${newOrder.code || newOrder.codigo || ""}.`,
+        priority: "high",
+        payload: newOrder,
+      })
+    );
+
     navigation.replace("OrderDetail", { orderId: newOrder.id });
   };
 
@@ -201,6 +276,10 @@ export function AppNavigator() {
 
     setOrders((prevOrders) =>
       prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+    );
+
+    setNotifications((prevNotifications) =>
+      addNotification(prevNotifications, buildOrderStatusNotification(updatedOrder))
     );
   };
 
@@ -218,6 +297,16 @@ export function AppNavigator() {
 
     setEquipments((prevEquipments) => [equipmentWithFailure, ...prevEquipments]);
 
+    setNotifications((prevNotifications) =>
+      addNotification(prevNotifications, {
+        type: "system",
+        title: "Equipo registrado",
+        message: `Se registró un nuevo equipo ${equipmentWithFailure.type || equipmentWithFailure.tipo || ""}.`,
+        priority: "normal",
+        payload: equipmentWithFailure,
+      })
+    );
+
     return equipmentWithFailure;
   };
 
@@ -232,6 +321,16 @@ export function AppNavigator() {
     const savedCliente = await createCliente(clienteData);
 
     setClientes((prevClientes) => [savedCliente, ...prevClientes]);
+
+    setNotifications((prevNotifications) =>
+      addNotification(prevNotifications, {
+        type: "system",
+        title: "Cliente registrado",
+        message: `Se registró el cliente ${savedCliente.nombre || clienteData.nombre || "nuevo"}.`,
+        priority: "normal",
+        payload: savedCliente,
+      })
+    );
 
     return savedCliente;
   };
@@ -309,7 +408,9 @@ export function AppNavigator() {
           {({ navigation }) => (
             <AdminDashboardScreen
               user={session?.user}
-              onLogout={() => confirmLogout(navigation)}
+              unreadNotificationsCount={unreadNotificationsCount}
+              onOpenNotifications={() => handleOpenNotifications(navigation)}
+              onLogout={() => confirmLogout()}
               onOpenUsers={() => navigation.push("UsersManagement")}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
@@ -359,10 +460,13 @@ export function AppNavigator() {
           {({ navigation }) => (
             <SalesDashboardScreen
               user={session?.user}
-              onLogout={() => confirmLogout(navigation)}
+              unreadNotificationsCount={unreadNotificationsCount}
+              onOpenNotifications={() => handleOpenNotifications(navigation)}
+              onLogout={() => confirmLogout()}
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenInventory={() => navigation.navigate("Inventario")}
               onOpenSales={() => navigation.push("RegisterSale")}
+              onOpenReports={() => navigation.push("Reports")}
             />
           )}
         </Stack.Screen>
@@ -384,9 +488,15 @@ export function AppNavigator() {
             <SaleSummaryScreen
               saleDraft={route.params?.saleDraft}
               onBack={() => navigation.goBack()}
-              onConfirm={(receipt) =>
-                navigation.replace("ElectronicReceipt", { receipt })
-              }
+              onConfirm={(receipt) => {
+                setSalesReports((prevReports) => [receipt, ...prevReports]);
+
+                setNotifications((prevNotifications) =>
+                  addNotification(prevNotifications, buildSaleNotification(receipt))
+                );
+
+                navigation.replace("ElectronicReceipt", { receipt });
+              }}
             />
           )}
         </Stack.Screen>
@@ -400,11 +510,32 @@ export function AppNavigator() {
           )}
         </Stack.Screen>
 
+        <Stack.Screen name="Reports">
+          {() => (
+            <ReportsStack
+              ventas={salesReports}
+              ordenes={orders}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="Notifications">
+          {() => (
+            <NotificationsStack
+              notifications={notifications}
+              onMarkAsRead={handleMarkNotificationAsRead}
+              onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+            />
+          )}
+        </Stack.Screen>
+
         <Stack.Screen name="Home">
           {({ navigation }) => (
             <HomeScreen
               user={session?.user}
-              onBackToAuth={() => confirmLogout(navigation)}
+              unreadNotificationsCount={unreadNotificationsCount}
+              onOpenNotifications={() => handleOpenNotifications(navigation)}
+              onBackToAuth={() => confirmLogout()}
               onOpenOrders={() => navigation.push("OrdersList")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenClientes={() => navigation.push("Clientes")}
@@ -414,7 +545,14 @@ export function AppNavigator() {
         </Stack.Screen>
 
         <Stack.Screen name="Clientes">
-          {() => <RegisterStack clientes={clientes} onGuardarCliente={saveCliente} />}
+          {() => (
+            <RegisterStack
+              clientes={clientes}
+              ordenes={orders}
+              equipos={equipments}
+              onGuardarCliente={saveCliente}
+            />
+          )}
         </Stack.Screen>
 
         <Stack.Screen name="Inventario">

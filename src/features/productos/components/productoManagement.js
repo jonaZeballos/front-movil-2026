@@ -7,55 +7,44 @@ import { ProductCard } from "./ProductCard";
 import { ProductListHeader } from "./ProductListHeader";
 import { ProductSearchBox } from "./ProductSearchBox";
 
-const fallbackProducts = [
-  {
-    id: 1,
-    nombre: "Laptop HP Pavilion 15",
-    marca: "HP",
-    modelo: "Pav-15",
-    precio: "Bs. 4.500",
-    stock: 5,
-  },
-  {
-    id: 2,
-    nombre: "PC Lenovo ThinkCentre",
-    marca: "Lenovo",
-    modelo: "TC-M70",
-    precio: "Bs. 6.200",
-    stock: 2,
-  },
-  {
-    id: 3,
-    nombre: "Laptop Asus Vivobook",
-    marca: "Asus",
-    modelo: "VB-14",
-    precio: "Bs. 3.800",
-    stock: 8,
-  },
-];
-
-export default function GestionInventario({ productos = [], onRegistrar }) {
+export default function GestionInventario({
+  productos = [],
+  onRegistrar,
+  onOpenStockControl,
+  onVolver,
+}) {
   const [busqueda, setBusqueda] = useState("");
-  const productList = productos.length > 0 ? productos : fallbackProducts;
 
-  const filtrados = productList.filter(
+  const filtrados = productos.filter(
     (producto) =>
-      producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      producto.marca.toLowerCase().includes(busqueda.toLowerCase()) ||
-      producto.modelo.toLowerCase().includes(busqueda.toLowerCase())
+      producto.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      producto.marca?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      producto.modelo?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.backButton}>
+        <Pressable onPress={onVolver} style={styles.backButton}>
           <Ionicons name="arrow-back" size={22} color="#111827" />
-        </View>
+        </Pressable>
 
         <View style={styles.headerText}>
           <Text style={styles.title}>Gestion de inventario</Text>
-          <Text style={styles.subtitle}>Registro y lista de productos</Text>
+          <Text style={styles.subtitle}>Registro, lista y control de stock</Text>
         </View>
+      </View>
+
+      <View style={styles.actionRow}>
+        <Pressable style={styles.stockBtn} onPress={onOpenStockControl}>
+          <Ionicons name="cube-outline" size={20} color={colors.primary} />
+          <Text style={styles.stockBtnText}>Control de stock</Text>
+        </Pressable>
+
+        <Pressable style={styles.registerSmallBtn} onPress={onRegistrar}>
+          <Ionicons name="add" size={21} color="#FFFFFF" />
+          <Text style={styles.registerSmallBtnText}>Nuevo</Text>
+        </Pressable>
       </View>
 
       <ProductSearchBox value={busqueda} onChangeText={setBusqueda} />
@@ -67,6 +56,15 @@ export default function GestionInventario({ productos = [], onRegistrar }) {
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => <ProductCard product={item} />}
+        ListEmptyComponent={
+          <View style={styles.emptyCard}>
+            <Ionicons name="cube-outline" size={42} color="#9CA3AF" />
+            <Text style={styles.emptyTitle}>No hay productos</Text>
+            <Text style={styles.emptyText}>
+              Registra productos para empezar a gestionar el inventario.
+            </Text>
+          </View>
+        }
       />
 
       <Pressable style={styles.registerBtn} onPress={onRegistrar}>
@@ -111,9 +109,65 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#6B7280",
   },
+  actionRow: {
+    flexDirection: "row",
+    columnGap: 10,
+    marginBottom: 14,
+  },
+  stockBtn: {
+    flex: 1,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E7FF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    columnGap: 8,
+  },
+  stockBtnText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  registerSmallBtn: {
+    width: 110,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    columnGap: 6,
+  },
+  registerSmallBtnText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
+  },
   listContainer: {
     paddingTop: 10,
     paddingBottom: 16,
+  },
+  emptyCard: {
+    marginTop: 30,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 22,
+    alignItems: "center",
+    rowGap: 10,
+  },
+  emptyTitle: {
+    color: "#111827",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  emptyText: {
+    color: "#6B7280",
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
   },
   registerBtn: {
     height: 54,

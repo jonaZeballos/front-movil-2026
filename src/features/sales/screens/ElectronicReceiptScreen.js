@@ -14,6 +14,7 @@ import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { ElectronicReceiptCard } from "../components/ElectronicReceiptCard";
+import { SendReceiptWhatsappButton } from "../components/SendReceiptWhatsappButton";
 import { downloadReceiptPdf } from "../services/receiptPdf";
 
 export function ElectronicReceiptScreen({ receipt, onBackToSales }) {
@@ -64,6 +65,8 @@ export function ElectronicReceiptScreen({ receipt, onBackToSales }) {
             <Ionicons name="home-outline" size={20} color="#FFFFFF" />
             <Text style={styles.primaryButtonText}>Volver al panel de ventas</Text>
           </Pressable>
+
+          <SendReceiptWhatsappButton receipt={receipt} />
 
           <Pressable
             style={[styles.secondaryButton, isDownloading && styles.buttonDisabled]}

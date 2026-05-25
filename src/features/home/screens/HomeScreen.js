@@ -13,6 +13,7 @@ import EsferaSvg from "../../../../assets/images/esfera.svg";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
+import { NotificationBell } from "../../notifications";
 
 const serviceCards = [
   {
@@ -126,6 +127,8 @@ const recentOrders = [
 
 export function HomeScreen({
   user,
+  unreadNotificationsCount = 0,
+  onOpenNotifications,
   onBackToAuth,
   onOpenOrders,
   onOpenEquipos,
@@ -136,6 +139,7 @@ export function HomeScreen({
   const displayName = getUserDisplayName(user, "Tecnico");
   const initials = getInitials(displayName);
   const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "tecnico");
+
   const esferaUri =
     typeof EsferaSvg === "number"
       ? Image.resolveAssetSource(EsferaSvg)?.uri
@@ -170,11 +174,13 @@ export function HomeScreen({
       <View style={styles.root}>
         <View style={styles.hero}>
           <View style={styles.topGlow} />
+
           <View style={styles.avatarRow}>
             <View style={styles.avatarWrap}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>{initials}</Text>
               </View>
+
               <View>
                 <Text style={styles.userName}>{displayName}</Text>
                 <View style={styles.rolePill}>
@@ -183,13 +189,16 @@ export function HomeScreen({
               </View>
             </View>
 
-            <Pressable style={styles.notificationWrap} onPress={onBackToAuth}>
-              <Ionicons
-                name="log-out-outline"
-                size={21}
-                color="#FFFFFF"
+            <View style={styles.headerActions}>
+              <NotificationBell
+                unreadCount={unreadNotificationsCount}
+                onPress={onOpenNotifications}
               />
-            </Pressable>
+
+              <Pressable style={styles.logoutButton} onPress={onBackToAuth}>
+                <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
+              </Pressable>
+            </View>
           </View>
 
           <Text style={styles.salesAmount}>27</Text>
@@ -197,7 +206,9 @@ export function HomeScreen({
 
           <View style={styles.sphereWrap}>
             {typeof EsferaSvg === "number" ? (
-              esferaUri ? <SvgUri uri={esferaUri} width={258} height={258} /> : null
+              esferaUri ? (
+                <SvgUri uri={esferaUri} width={258} height={258} />
+              ) : null
             ) : (
               <EsferaSvg width={258} height={258} />
             )}
@@ -229,6 +240,7 @@ export function HomeScreen({
                     >
                       <IconPack name={item.iconName} size={16} color="#FFFFFF" />
                     </View>
+
                     <Text style={styles.serviceTitle}>{item.title}</Text>
                   </View>
 
@@ -242,8 +254,10 @@ export function HomeScreen({
                     >
                       {item.total}
                     </Text>
+
                     <Text style={styles.metricsSub}>{item.totalLabel}</Text>
                     <View style={styles.metricsDivider} />
+
                     <View>
                       <Text style={styles.metricsRight}>
                         <Text style={styles.metricsBlue}>{item.statPrimary}</Text>{" "}
@@ -270,6 +284,7 @@ export function HomeScreen({
           </View>
 
           <Text style={styles.sectionTitle}>Accesos rapidos</Text>
+
           <View style={styles.optionsGrid}>
             {options.map((item) => {
               const IconPack = item.iconPack;
@@ -305,6 +320,7 @@ export function HomeScreen({
             <Text style={styles.recentSectionTitle}>
               Ultimas ordenes asignadas
             </Text>
+
             <Pressable onPress={handleOpenOrders}>
               <Text style={styles.seeAll}>Ver todas</Text>
             </Pressable>
@@ -321,6 +337,7 @@ export function HomeScreen({
                   onPress={handleOpenOrders}
                 >
                   <Text style={styles.recentStatus}>{order.status}</Text>
+
                   <View
                     style={[
                       styles.recentIconWrap,
@@ -329,6 +346,7 @@ export function HomeScreen({
                   >
                     <IconPack name={order.iconName} size={15} color="#FFFFFF" />
                   </View>
+
                   <Text style={styles.recentCode}>{order.code}</Text>
                   <Text style={styles.recentName}>{order.name}</Text>
                 </Pressable>
@@ -344,16 +362,26 @@ export function HomeScreen({
           ]}
         >
           <Ionicons name="home-outline" size={20} color="#D8D7FF" />
-          <MaterialCommunityIcons
-            name="briefcase-account-outline"
-            size={20}
-            color="#D8D7FF"
-          />
+
+          <Pressable onPress={handleOpenClientes}>
+            <MaterialCommunityIcons
+              name="briefcase-account-outline"
+              size={20}
+              color="#D8D7FF"
+            />
+          </Pressable>
+
           <Pressable style={styles.centerBtn} onPress={handleOpenOrders}>
             <Ionicons name="add" size={36} color="#FFFFFF" />
           </Pressable>
-          <Feather name="tag" size={18} color="#D8D7FF" />
-          <Ionicons name="person" size={20} color="#D8D7FF" />
+
+          <Pressable onPress={handleOpenQuotations}>
+            <Feather name="tag" size={18} color="#D8D7FF" />
+          </Pressable>
+
+          <Pressable onPress={handleOpenEquipos}>
+            <Ionicons name="person" size={20} color="#D8D7FF" />
+          </Pressable>
         </View>
       </View>
     </ScreenContainer>
@@ -362,6 +390,7 @@ export function HomeScreen({
 
 function getUserDisplayName(user, fallback) {
   const fullName = [user?.nombres, user?.apellidos].filter(Boolean).join(" ").trim();
+
   return fullName || user?.username || user?.email || fallback;
 }
 
@@ -377,6 +406,7 @@ function getRoleLabel(role) {
   if (role === "admin") return "Admin";
   if (role === "tecnico") return "Tecnico";
   if (role === "ventas") return "Ventas";
+
   return role || "Usuario";
 }
 
@@ -415,6 +445,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 9,
+    flex: 1,
   },
   avatar: {
     width: 34,
@@ -450,6 +481,19 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontFamily: fontFamilies.medium,
     fontSize: 9,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+  },
+  logoutButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   notificationWrap: {
     width: 32,

@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
+import { NotificationBell } from "../../notifications";
 import { SalesChartCard } from "../components/SalesChartCard";
 import { SalesMetricCard } from "../components/SalesMetricCard";
 import { SalesNoteCard } from "../components/SalesNoteCard";
@@ -67,16 +68,26 @@ const options = [
     iconName: "cart-outline",
     iconColor: "#2386F5",
   },
+  {
+    id: "reportes",
+    label: "Reportes",
+    iconPack: Ionicons,
+    iconName: "analytics-outline",
+    iconColor: "#7C3AED",
+  },
 ];
 
 const chartData = [42, 68, 50, 78, 62, 90, 74];
 
 export function SalesDashboardScreen({
   user,
+  unreadNotificationsCount = 0,
+  onOpenNotifications,
   onLogout,
   onOpenClientes,
   onOpenInventory,
   onOpenSales,
+  onOpenReports,
 }) {
   const insets = useSafeAreaInsets();
   const displayName = getUserDisplayName(user, "Ventas");
@@ -87,6 +98,7 @@ export function SalesDashboardScreen({
     if (id === "clientes") onOpenClientes?.();
     if (id === "inventario") onOpenInventory?.();
     if (id === "ventas") onOpenSales?.();
+    if (id === "reportes") onOpenReports?.();
   };
 
   return (
@@ -109,9 +121,16 @@ export function SalesDashboardScreen({
               </View>
             </View>
 
-            <Pressable style={styles.notificationWrap} onPress={onLogout}>
-              <Ionicons name="log-out-outline" size={21} color="#FFFFFF" />
-            </Pressable>
+            <View style={styles.headerActions}>
+              <NotificationBell
+                unreadCount={unreadNotificationsCount}
+                onPress={onOpenNotifications}
+              />
+
+              <Pressable style={styles.logoutButton} onPress={onLogout}>
+                <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
+              </Pressable>
+            </View>
           </View>
 
           <Text style={styles.mainAmount}>Bs 920</Text>
@@ -152,12 +171,26 @@ export function SalesDashboardScreen({
           ]}
         >
           <Ionicons name="home-outline" size={20} color="#D8D7FF" />
-          <Ionicons name="cart-outline" size={20} color="#D8D7FF" />
+
+          <Pressable onPress={onOpenSales}>
+            <Ionicons name="cart-outline" size={20} color="#D8D7FF" />
+          </Pressable>
+
           <Pressable style={styles.centerBtn} onPress={onOpenSales}>
             <Ionicons name="add" size={36} color="#FFFFFF" />
           </Pressable>
-          <MaterialCommunityIcons name="archive-outline" size={20} color="#D8D7FF" />
-          <Ionicons name="person" size={20} color="#D8D7FF" />
+
+          <Pressable onPress={onOpenInventory}>
+            <MaterialCommunityIcons
+              name="archive-outline"
+              size={20}
+              color="#D8D7FF"
+            />
+          </Pressable>
+
+          <Pressable onPress={onOpenReports}>
+            <Ionicons name="analytics-outline" size={20} color="#D8D7FF" />
+          </Pressable>
         </View>
       </View>
     </ScreenContainer>
@@ -219,6 +252,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 9,
+    flex: 1,
   },
   avatar: {
     width: 34,
@@ -253,6 +287,19 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontFamily: fontFamilies.medium,
     fontSize: 9,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+  },
+  logoutButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   notificationWrap: {
     width: 32,
@@ -323,7 +370,9 @@ const styles = StyleSheet.create({
   },
   optionsGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
+    rowGap: 10,
     marginBottom: 14,
   },
   bottomBar: {

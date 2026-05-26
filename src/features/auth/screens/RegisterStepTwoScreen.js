@@ -30,7 +30,7 @@ export function RegisterStepTwoScreen({ onBack, onFinish }) {
   const contentWidth = Math.min(screenWidth - horizontalPadding * 2, 360);
   const isDisabled = !password.trim() || !repeatPassword.trim() || !acceptedTerms;
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const trimmedPassword = password.trim();
     const trimmedRepeatPassword = repeatPassword.trim();
 
@@ -41,7 +41,10 @@ export function RegisterStepTwoScreen({ onBack, onFinish }) {
     if (!acceptedTerms) return setErrorMessage("Debes aceptar los términos y condiciones.");
 
     setErrorMessage("");
-    onFinish?.({ password: trimmedPassword, repeatPassword: trimmedRepeatPassword, acceptedTerms });
+    const result = await onFinish?.({ password: trimmedPassword, repeatPassword: trimmedRepeatPassword, acceptedTerms });
+    if (result && result.success === false) {
+      setErrorMessage(result.message || "No se pudo completar el registro.");
+    }
   };
 
   return (

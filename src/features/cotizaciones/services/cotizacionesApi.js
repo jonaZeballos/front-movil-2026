@@ -1,30 +1,45 @@
 import { apiRequest } from "../../../shared/api/client";
 
-export function listCotizaciones(search = "") {
+export async function listCotizaciones(search = "") {
   const query = search ? `?buscar=${encodeURIComponent(search)}` : "";
-  return apiRequest(`/api/cotizaciones${query}`).then((cotizaciones) =>
-    cotizaciones.map(mapCotizacion)
-  );
+  const cotizaciones = await apiRequest(`/api/cotizaciones${query}`);
+  return cotizaciones.map(mapCotizacion);
 }
 
-export function createCotizacion(cotizacionData) {
-  return apiRequest("/api/cotizaciones", {
+export async function createCotizacion(data) {
+  const cotizacion = await apiRequest("/api/cotizaciones", {
     method: "POST",
     body: JSON.stringify({
-      ordenId: cotizacionData.ordenId || cotizacionData.order?.id,
-      descripcion: cotizacionData.descripcion,
-      manoObra: cotizacionData.manoObra,
-      repuestos: cotizacionData.repuestos,
-      descuento: cotizacionData.descuento || 0,
-      observaciones: cotizacionData.observaciones,
+      ordenId: data.ordenId || data.idOrden || data.order?.id,
+      descripcion: data.descripcion,
+      manoObra: data.manoObra,
+      repuestos: data.repuestos,
+      descuento: data.descuento,
+      observaciones: data.observaciones,
     }),
-  }).then(mapCotizacion);
+  });
+
+  return mapCotizacion(cotizacion);
 }
 
-function mapCotizacion(cotizacion) {
+export async function getCotizacionWhatsapp(id) {
+  return apiRequest(`/api/cotizaciones/${id}/whatsapp`);
+}
+
+export function mapCotizacion(cotizacion) {
   return {
     ...cotizacion,
-    order: cotizacion.order || cotizacion.orden,
+    id: cotizacion.id,
+    numero: cotizacion.numero || cotizacion.codigo || `COT-${cotizacion.numeroInterno || ""}`,
+    descripcion: cotizacion.descripcion,
+    manoObra: Number(cotizacion.manoObra || 0),
+    repuestos: Number(cotizacion.repuestos || 0),
+    descuento: Number(cotizacion.descuento || 0),
     total: Number(cotizacion.total || 0),
+    estado: cotizacion.estado || "Pendiente",
+    order: cotizacion.order || cotizacion.orden,
+    orden: cotizacion.orden || cotizacion.order,
+    cliente: cotizacion.cliente || cotizacion.orden?.cliente,
+    equipo: cotizacion.equipo || cotizacion.orden?.equipo,
   };
 }

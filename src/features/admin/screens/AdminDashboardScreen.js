@@ -14,6 +14,7 @@ import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { MODULES } from "../../../shared/permissions/permissions";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
+import { NotificationBell } from "../../notifications";
 
 const summaryCards = [
   {
@@ -106,6 +107,9 @@ const options = [
 
 export function AdminDashboardScreen({
   user,
+  stats = {},
+  unreadNotificationsCount = 0,
+  onOpenNotifications,
   onLogout,
   onOpenUsers,
   onOpenClientes,
@@ -120,6 +124,35 @@ export function AdminDashboardScreen({
   const displayName = getUserDisplayName(user, "Administrador");
   const initials = getInitials(displayName);
   const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "admin");
+  const summaryCards = [
+    {
+      id: "users",
+      title: "Usuarios\nactivos",
+      total: String(stats.users ?? 0),
+      label: "Total",
+      iconPack: Feather,
+      iconName: "users",
+      iconBg: "#5655B9",
+    },
+    {
+      id: "orders",
+      title: "Ordenes\nactivas",
+      total: String(stats.orders ?? 0),
+      label: "Total",
+      iconPack: MaterialCommunityIcons,
+      iconName: "clipboard-list-outline",
+      iconBg: "#F5AA29",
+    },
+    {
+      id: "sales",
+      title: "Ventas\ndel dia",
+      total: String(stats.sales ?? 0),
+      label: "Total",
+      iconPack: FontAwesome5,
+      iconName: "cash-register",
+      iconBg: "#58D2B8",
+    },
+  ];
 
   const esferaUri =
     typeof EsferaSvg === "number"
@@ -157,9 +190,16 @@ export function AdminDashboardScreen({
               </View>
             </View>
 
-            <Pressable style={styles.notificationWrap} onPress={onLogout}>
-              <Ionicons name="log-out-outline" size={21} color="#FFFFFF" />
-            </Pressable>
+            <View style={styles.headerActions}>
+              <NotificationBell
+                unreadCount={unreadNotificationsCount}
+                onPress={onOpenNotifications}
+              />
+
+              <Pressable style={styles.logoutButton} onPress={onLogout}>
+                <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
+              </Pressable>
+            </View>
           </View>
 
           <Text style={styles.salesAmount}>Panel</Text>
@@ -317,6 +357,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 9,
+    flex: 1,
   },
   avatar: {
     width: 34,
@@ -351,6 +392,19 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontFamily: fontFamilies.medium,
     fontSize: 9,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+  },
+  logoutButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   notificationWrap: {
     width: 32,

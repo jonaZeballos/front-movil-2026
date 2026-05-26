@@ -5,6 +5,7 @@ import { AppButton } from "../../../shared/components/buttons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { QuotationSummaryCard } from "../components/QuotationSummaryCard";
+import { ShareQuotationButton } from "../components/ShareQuotationButton";
 
 export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail }) {
   if (!quotation) {
@@ -48,6 +49,8 @@ export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail
           <QuotationSummaryCard quotation={quotation} />
 
           <View style={styles.actions}>
+            <ShareQuotationButton quotation={quotation} />
+
             <AppButton
               title="Volver a ordenes"
               onPress={onBackToOrders}
@@ -55,6 +58,7 @@ export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail
               borderRadius={18}
               minHeight={52}
             />
+
             <AppButton
               title="Enviar por WhatsApp"
               onPress={() => {

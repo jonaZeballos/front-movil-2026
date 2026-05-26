@@ -8,7 +8,10 @@ import { OrderQuotationCard } from "../components/OrderQuotationCard";
 
 export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const quotationOrders = orders.map(mapOrderForQuotation);
+  const quoteableOrders = orders.filter((order) => {
+    const status = String(order.status || order.estado || "").toLowerCase();
+    return status !== "entregado" && status !== "sin solucion";
+  });
 
   const handleGenerate = () => {
     if (!selectedOrder) {
@@ -34,7 +37,7 @@ export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation })
         </View>
 
         <FlatList
-          data={quotationOrders}
+          data={quoteableOrders}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
@@ -46,10 +49,10 @@ export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation })
             />
           )}
           ListEmptyComponent={
-            <View style={styles.emptyBox}>
+            <View style={styles.emptyCard}>
               <Ionicons name="document-text-outline" size={42} color="#9CA3AF" />
               <Text style={styles.emptyTitle}>No hay ordenes para cotizar</Text>
-              <Text style={styles.emptyText}>Crea una orden de servicio antes de generar cotizaciones.</Text>
+              <Text style={styles.emptyText}>Registra ordenes de servicio para generar cotizaciones.</Text>
             </View>
           }
         />
@@ -127,23 +130,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
-  emptyBox: {
-    marginTop: 44,
+  emptyCard: {
+    marginTop: 30,
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 24,
+    padding: 22,
     alignItems: "center",
+    rowGap: 10,
   },
   emptyTitle: {
-    marginTop: 10,
     color: "#111827",
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 18,
+    fontWeight: "900",
   },
   emptyText: {
-    marginTop: 4,
     color: "#6B7280",
     fontSize: 13,
+    lineHeight: 19,
     textAlign: "center",
   },
 });

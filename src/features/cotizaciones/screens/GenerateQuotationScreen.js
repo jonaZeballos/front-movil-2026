@@ -50,8 +50,6 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
   };
 
   const handleSave = async () => {
-    if (isSavingRef.current) return;
-
     const validationErrors = validateQuotation(form, amounts);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -59,12 +57,12 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
       return;
     }
 
+    setIsSaving(true);
     try {
-      isSavingRef.current = true;
-      setIsSaving(true);
       await onSave?.({
-        ordenId: order.id,
+        numero: "COT-001",
         order,
+        ordenId: order.id,
         descripcion: form.descripcion.trim(),
         manoObra: amounts.manoObra,
         repuestos: amounts.repuestos,
@@ -73,9 +71,8 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
         total: amounts.total,
       });
     } catch (error) {
-      Alert.alert("Error", error.message || "No se pudo generar la cotizacion.");
+      Alert.alert("No se pudo guardar", error.message || "Intenta nuevamente.");
     } finally {
-      isSavingRef.current = false;
       setIsSaving(false);
     }
   };

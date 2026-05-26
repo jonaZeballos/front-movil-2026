@@ -35,11 +35,25 @@ export function updateOrden(orderId, data) {
 }
 
 function mapOrden(orden) {
+  const equipmentName = orden.equipmentName || orden.equipoNombre || orden.equipo?.nombre || orden.equipo?.modelo || "Equipo";
+  const clientName = orden.clientName || orden.clienteNombre || orden.cliente?.nombre || orden.equipo?.cliente?.nombre || "Cliente";
+  const status = orden.status || orden.estado;
+  const failure = orden.failure || orden.diagnostico;
+
   return {
     ...orden,
     code: orden.code || `#${String(orden.codigo).padStart(4, "0")}`,
-    status: orden.status || orden.estado,
-    failure: orden.failure || orden.diagnostico,
+    codigo: orden.codigo || orden.code,
+    status,
+    estado: status,
+    failure,
+    falla: failure,
+    diagnostico: orden.diagnostico || failure,
+    clientName,
+    cliente: clientName,
+    equipmentName,
+    equipo: equipmentName,
+    equipmentSerial: orden.equipmentSerial || orden.equipo?.nroSerie || orden.equipo?.serial,
     observations: orden.observaciones || [],
   };
 }

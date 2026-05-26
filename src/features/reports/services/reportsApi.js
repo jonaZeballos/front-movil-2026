@@ -1,3 +1,35 @@
+import { apiRequest } from "../../../shared/api/client";
+
+export async function getReportsSummary() {
+  return apiRequest("/api/reportes/resumen");
+}
+
+export async function getSalesReport(params = {}) {
+  const query = buildQuery(params);
+  return apiRequest(`/api/reportes/ventas${query}`);
+}
+
+export async function getServicesReport(params = {}) {
+  const query = buildQuery(params);
+  return apiRequest(`/api/reportes/servicios${query}`);
+}
+
+export async function getInventoryReport() {
+  return apiRequest("/api/reportes/inventario");
+}
+
+function buildQuery(params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, value);
+    }
+  });
+
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : "";
+}
+
 export function formatReportCurrency(value) {
   const number = Number(value || 0);
   return `Bs ${number.toFixed(2)}`;

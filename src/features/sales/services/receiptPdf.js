@@ -1,7 +1,7 @@
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 
-import { formatCurrency } from "../data/salesMock";
+import { formatCurrency } from "../services/salesApi";
 
 export async function downloadReceiptPdf(receipt) {
   if (!receipt) {

@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { fontFamilies } from "../../../shared/theme/fonts";
-import { paymentMethods } from "../data/salesMock";
+import { paymentMethods } from "../services/salesApi";
 
 export function PaymentMethodSelector({ value, onChange }) {
   return (

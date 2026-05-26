@@ -1,4 +1,67 @@
+import { apiRequest } from "../../../shared/api/client";
+
 export const MIN_STOCK_DEFAULT = 5;
+
+export async function listProductos(search = "") {
+  const query = search ? `?buscar=${encodeURIComponent(search)}` : "";
+  const productos = await apiRequest(`/api/productos${query}`);
+  return productos.map(mapProducto);
+}
+
+export async function createProducto(productoData) {
+  const producto = await apiRequest("/api/productos", {
+    method: "POST",
+    body: JSON.stringify({
+      nombre: productoData.nombre,
+      marca: productoData.marca,
+      modelo: productoData.modelo,
+      descripcion: productoData.descripcion,
+      precio: parseMoney(productoData.precio),
+      stock: parseInteger(productoData.stock),
+      stockMinimo: parseInteger(productoData.stockMinimo ?? productoData.stock_minimo ?? 1),
+    }),
+  });
+
+  return mapProducto(producto);
+}
+
+export async function updateProductoStock(productId, stock) {
+  const producto = await apiRequest(`/api/productos/${productId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ stock: parseInteger(stock) }),
+  });
+
+  return mapProducto(producto);
+}
+
+function mapProducto(producto) {
+  return {
+    ...producto,
+    nombre: producto.nombre,
+    name: producto.name || producto.nombre,
+    marca: producto.marca || "",
+    modelo: producto.modelo || "",
+    descripcion: producto.descripcion || "",
+    precio: Number(producto.precio || 0),
+    price: Number(producto.price || producto.precio || 0),
+    stock: Number(producto.stock || 0),
+    stockMinimo: Number(producto.stockMinimo || producto.stock_minimo || 1),
+  };
+}
+
+function parseMoney(value) {
+  const cleanValue = String(value ?? "0")
+    .replace(/Bs\.?/gi, "")
+    .replace(/\s/g, "")
+    .replace(",", ".");
+  const number = Number(cleanValue);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function parseInteger(value) {
+  const number = Number(String(value ?? "0").replace(",", "."));
+  return Number.isFinite(number) ? Math.max(0, Math.trunc(number)) : 0;
+}
 
 export function getProductStock(product) {
   const stock = Number(product?.stock ?? product?.cantidad ?? 0);

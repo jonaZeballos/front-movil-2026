@@ -1,3 +1,9 @@
+import { apiRequest } from "../../../shared/api/client";
+
+export async function getClientHistory(clienteId) {
+  return apiRequest(`/api/clientes/${clienteId}/historial`);
+}
+
 export function getClienteName(cliente) {
   return (
     cliente?.nombre ||

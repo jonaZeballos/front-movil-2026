@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { fontFamilies } from "../../../shared/theme/fonts";
-import { formatCurrency } from "../data/salesMock";
+import { formatCurrency } from "../services/salesApi";
 
 export function SaleSummaryBox({ subtotal, discount, total }) {
   return (

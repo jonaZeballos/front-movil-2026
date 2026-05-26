@@ -107,6 +107,7 @@ const options = [
 
 export function AdminDashboardScreen({
   user,
+  stats = {},
   unreadNotificationsCount = 0,
   onOpenNotifications,
   onLogout,
@@ -123,6 +124,35 @@ export function AdminDashboardScreen({
   const displayName = getUserDisplayName(user, "Administrador");
   const initials = getInitials(displayName);
   const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "admin");
+  const summaryCards = [
+    {
+      id: "users",
+      title: "Usuarios\nactivos",
+      total: String(stats.users ?? 0),
+      label: "Total",
+      iconPack: Feather,
+      iconName: "users",
+      iconBg: "#5655B9",
+    },
+    {
+      id: "orders",
+      title: "Ordenes\nactivas",
+      total: String(stats.orders ?? 0),
+      label: "Total",
+      iconPack: MaterialCommunityIcons,
+      iconName: "clipboard-list-outline",
+      iconBg: "#F5AA29",
+    },
+    {
+      id: "sales",
+      title: "Ventas\ndel dia",
+      total: String(stats.sales ?? 0),
+      label: "Total",
+      iconPack: FontAwesome5,
+      iconName: "cash-register",
+      iconBg: "#58D2B8",
+    },
+  ];
 
   const esferaUri =
     typeof EsferaSvg === "number"

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import {
@@ -8,53 +8,58 @@ import {
   StockMovementScreen,
   LowStockScreen,
 } from "../screens";
-import { applyStockMovement } from "../services";
+import {
+  applyStockMovement,
+  createProducto,
+  listProductos,
+  updateProductoStock,
+} from "../services";
 
 const Stack = createNativeStackNavigator();
 
-const initialProducts = [
-  {
-    id: 1,
-    nombre: "Laptop HP Pavilion 15",
-    marca: "HP",
-    modelo: "Pav-15",
-    precio: "Bs. 4.500",
-    stock: 5,
-  },
-  {
-    id: 2,
-    nombre: "PC Lenovo ThinkCentre",
-    marca: "Lenovo",
-    modelo: "TC-M70",
-    precio: "Bs. 6.200",
-    stock: 2,
-  },
-  {
-    id: 3,
-    nombre: "Laptop Asus Vivobook",
-    marca: "Asus",
-    modelo: "VB-14",
-    precio: "Bs. 3.800",
-    stock: 8,
-  },
-];
-
-export function InventarioStack() {
-  const [productos, setProductos] = useState(initialProducts);
+export function InventarioStack({ onProductsChange }) {
+  const [productos, setProductos] = useState([]);
   const [stockMovements, setStockMovements] = useState([]);
 
-  const handleAddProducto = (producto) => {
-    const nuevo = {
-      id: Date.now(),
-      ...producto,
-      stock: normalizeStock(producto.stock),
-    };
+  const refreshProductos = useCallback(async () => {
+    const data = await listProductos();
+    setProductos(data);
+    onProductsChange?.(data);
+  }, [onProductsChange]);
 
-    setProductos((prev) => [nuevo, ...prev]);
+  useEffect(() => {
+    refreshProductos().catch((error) => {
+      console.warn("No se pudo cargar inventario.", error);
+    });
+  }, [refreshProductos]);
+
+  const handleAddProducto = async (producto) => {
+    const nuevo = await createProducto(producto);
+    setProductos((prev) => {
+      const next = [nuevo, ...prev];
+      onProductsChange?.(next);
+      return next;
+    });
   };
 
-  const handleSaveMovement = (movement) => {
-    setProductos((prevProductos) => applyStockMovement(prevProductos, movement));
+  const handleSaveMovement = async (movement) => {
+    let updatedProduct = null;
+    const currentProduct = findProductById(movement.productId);
+    const nextProducts = applyStockMovement(productos, movement);
+    const nextProduct = nextProducts.find((product) => String(product.id) === String(movement.productId));
+
+    if (currentProduct && nextProduct) {
+      updatedProduct = await updateProductoStock(currentProduct.id, nextProduct.stock);
+    }
+
+    setProductos((prevProductos) => {
+      const localNext = applyStockMovement(prevProductos, movement);
+      const finalNext = updatedProduct
+        ? localNext.map((product) => (product.id === updatedProduct.id ? updatedProduct : product))
+        : localNext;
+      onProductsChange?.(finalNext);
+      return finalNext;
+    });
     setStockMovements((prevMovements) => [movement, ...prevMovements]);
   };
 
@@ -80,8 +85,8 @@ export function InventarioStack() {
         {({ navigation }) => (
           <ProductoRegisterScreen
             navigation={navigation}
-            onGuardar={(data) => {
-              handleAddProducto(data);
+            onGuardar={async (data) => {
+              await handleAddProducto(data);
               navigation.goBack();
             }}
           />
@@ -129,9 +134,4 @@ export function InventarioStack() {
       </Stack.Screen>
     </Stack.Navigator>
   );
-}
-
-function normalizeStock(value) {
-  const stock = Number(String(value || "0").replace(",", "."));
-  return Number.isFinite(stock) ? stock : 0;
 }

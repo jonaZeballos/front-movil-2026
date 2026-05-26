@@ -10,14 +10,13 @@ import {
   calculateServicesReport,
   formatReportCurrency,
 } from "../services";
-import { demoSalesReports } from "../data/reportsMock";
 
 export function ReportsDashboardScreen({
   navigation,
   ventas = [],
   ordenes = [],
 }) {
-  const ventasData = ventas.length > 0 ? ventas : demoSalesReports;
+  const ventasData = ventas;
   const salesStats = calculateSalesReport(ventasData);
   const servicesStats = calculateServicesReport(ordenes);
 

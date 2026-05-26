@@ -16,9 +16,9 @@ import { fontFamilies } from "../../../shared/theme/fonts";
 import { SaleProductItem } from "../components/SaleProductItem";
 import { SaleSummaryBox } from "../components/SaleSummaryBox";
 import { PaymentMethodSelector } from "../components/PaymentMethodSelector";
-import { paymentMethods, salesProductsMock } from "../data/salesMock";
+import { paymentMethods } from "../services/salesApi";
 
-export function RegisterSaleScreen({ clientes = [], onBack, onContinue }) {
+export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onContinue }) {
   const clientesOptions = useMemo(() => {
     if (clientes.length > 0) return clientes;
 
@@ -41,15 +41,17 @@ export function RegisterSaleScreen({ clientes = [], onBack, onContinue }) {
     (client) => client.id === selectedClientId
   );
 
-  const selectedProducts = salesProductsMock
+  const selectedProducts = productos
     .map((product) => {
       const quantity = quantities[product.id] || 0;
-      const total = quantity * product.price;
+      const unitPrice = Number(product.price || product.precio || 0);
+      const total = quantity * unitPrice;
 
       return {
         ...product,
+        name: product.name || product.nombre,
         quantity,
-        unitPrice: product.price,
+        unitPrice,
         total,
       };
     })
@@ -157,10 +159,14 @@ export function RegisterSaleScreen({ clientes = [], onBack, onContinue }) {
 
           <Text style={styles.sectionTitle}>Productos y servicios</Text>
 
-          {salesProductsMock.map((product) => (
+          {productos.length === 0 ? (
+            <Text style={{ color: "#777782", fontFamily: fontFamilies.medium, fontSize: 13 }}>
+              No hay productos registrados en inventario.
+            </Text>
+          ) : productos.map((product) => (
             <SaleProductItem
               key={product.id}
-              product={product}
+              product={{ ...product, name: product.name || product.nombre, price: product.price || product.precio }}
               quantity={quantities[product.id] || 0}
               onIncrement={() => updateQuantity(product.id, "increment")}
               onDecrement={() => updateQuantity(product.id, "decrement")}

@@ -5,11 +5,10 @@ import RegistroProducto from "../components/productoRegister";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 
 export default function ProductoRegisterScreen({ navigation, onGuardar }) {
-
-  const handleGuardar = (productoData) => {
+  const handleGuardar = async (productoData) => {
     if (onGuardar) {
-      onGuardar(productoData);
-      Alert.alert("Éxito", "Producto registrado");
+      await onGuardar(productoData);
+      Alert.alert("Exito", "Producto registrado");
     }
   };
 

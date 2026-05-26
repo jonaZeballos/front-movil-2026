@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { fontFamilies } from "../../../shared/theme/fonts";
-import { formatCurrency } from "../data/salesMock";
+import { formatCurrency } from "../services/salesApi";
 
 export function ElectronicReceiptCard({ receipt }) {
   if (!receipt) return null;

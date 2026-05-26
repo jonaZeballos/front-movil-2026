@@ -1,7 +1,21 @@
-import { notificationTypes, notificationsMock } from "../data/notificationsMock";
+import { apiRequest } from "../../../shared/api/client";
+import { notificationTypes } from "../data/notificationsMock";
+
+export async function fetchNotifications() {
+  const notifications = await apiRequest("/api/notificaciones");
+  return notifications.map(mapNotification);
+}
+
+export async function markNotificationAsReadRemote(notificationId) {
+  const notification = await apiRequest(`/api/notificaciones/${notificationId}/leida`, {
+    method: "PATCH",
+  });
+
+  return mapNotification(notification);
+}
 
 export function getInitialNotifications() {
-  return notificationsMock;
+  return [];
 }
 
 export function getUnreadNotificationsCount(notifications = []) {
@@ -112,4 +126,18 @@ export function getNotificationConfig(type) {
 function formatNotificationCurrency(value) {
   const number = Number(value || 0);
   return `Bs ${number.toFixed(2)}`;
+}
+
+function mapNotification(notification) {
+  return {
+    ...notification,
+    id: notification.id,
+    type: notification.type || notification.tipo || notificationTypes.SYSTEM,
+    title: notification.title || notification.titulo || "Notificacion",
+    message: notification.message || notification.mensaje || "",
+    createdAt: notification.createdAt || notification.fechaCreacion,
+    read: Boolean(notification.read ?? notification.leida),
+    priority: notification.priority || "normal",
+    payload: notification.payload || null,
+  };
 }

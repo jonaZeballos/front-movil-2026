@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
@@ -10,6 +10,7 @@ import { ClientTimelineItem } from "../components/ClientTimelineItem";
 import {
   buildClientHistory,
   filterClientHistory,
+  getClientHistory,
   getClientStats,
   getClienteName,
 } from "../services/clientHistoryApi";
@@ -21,15 +22,24 @@ export function ClientHistoryScreen({
   equipos = [],
 }) {
   const [filter, setFilter] = useState("todos");
+  const [remoteHistory, setRemoteHistory] = useState(null);
+
+  useEffect(() => {
+    if (!cliente?.id) return;
+
+    getClientHistory(cliente.id)
+      .then(setRemoteHistory)
+      .catch(() => setRemoteHistory(null));
+  }, [cliente?.id]);
 
   const stats = useMemo(
-    () => getClientStats(cliente, ordenes, equipos),
-    [cliente, ordenes, equipos]
+    () => remoteHistory?.resumen || getClientStats(cliente, ordenes, equipos),
+    [cliente, ordenes, equipos, remoteHistory]
   );
 
   const history = useMemo(
-    () => buildClientHistory(cliente, ordenes, equipos),
-    [cliente, ordenes, equipos]
+    () => buildRemoteHistory(remoteHistory) || buildClientHistory(cliente, ordenes, equipos),
+    [cliente, ordenes, equipos, remoteHistory]
   );
 
   const filteredHistory = useMemo(
@@ -194,3 +204,43 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 });
+
+function buildRemoteHistory(historial) {
+  if (!historial) return null;
+
+  const equipos = (historial.equipos || []).map((equipo) => ({
+    id: `equipo-${equipo.id}`,
+    type: "equipo",
+    title: "Equipo registrado",
+    description: equipo.nombre || [equipo.tipo, equipo.marca, equipo.modelo].filter(Boolean).join(" "),
+    date: equipo.fechaRegistro,
+    status: "Registrado",
+    raw: equipo,
+  }));
+
+  const ordenes = (historial.ordenes || []).map((orden) => ({
+    id: `orden-${orden.id}`,
+    type: "orden",
+    title: "Orden de servicio",
+    description: orden.diagnostico || orden.failure || "Servicio registrado",
+    date: orden.fechaRecepcion || orden.fechaEntrega,
+    status: orden.estado || orden.status || "Pendiente",
+    raw: orden,
+  }));
+
+  const ventas = (historial.ventas || []).map((venta) => ({
+    id: `venta-${venta.id}`,
+    type: "venta",
+    title: "Venta registrada",
+    description: `${venta.reciboCodigo || venta.codigo || "Recibo"} - Bs ${Number(venta.total || 0).toFixed(2)}`,
+    date: venta.fechaCreacion,
+    status: "Emitido",
+    raw: venta,
+  }));
+
+  return [...equipos, ...ordenes, ...ventas].sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    return dateB - dateA;
+  });
+}

@@ -43,12 +43,18 @@ import {
   buildSaleNotification,
   getInitialNotifications,
   getUnreadNotificationsCount,
+  fetchNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
+  markNotificationAsReadRemote,
 } from "../../features/notifications";
 
 import { onboardingPreloadAssets } from "../../shared/assets";
-import { login as loginRequest, logout } from "../../features/auth/services/authApi";
+import {
+  login as loginRequest,
+  logout,
+  registerBusinessOwner,
+} from "../../features/auth/services/authApi";
 import {
   createUser as createUserRequest,
   listUsers,
@@ -66,6 +72,9 @@ import {
   createOrden,
   updateOrden,
 } from "../../features/orders/services/ordersApi";
+import { listProductos } from "../../features/productos/services";
+import { listVentas } from "../../features/sales/services/salesApi";
+import { createCotizacion } from "../../features/cotizaciones/services";
 
 import {
   OrdersListScreen,
@@ -95,6 +104,8 @@ export function AppNavigator() {
   const [equipments, setEquipments] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [registerDraft, setRegisterDraft] = useState(null);
 
   const [salesReports, setSalesReports] = useState([]);
   const [notifications, setNotifications] = useState(getInitialNotifications);
@@ -127,19 +138,53 @@ export function AppNavigator() {
   }, []);
 
   const refreshSprintData = async (role) => {
-    const [clientesData, equiposData, ordenesData] = await Promise.all([
-      listClientes(),
-      listEquipos(),
-      listOrdenes(),
+    const [
+      clientesData,
+      equiposData,
+      ordenesData,
+      productsData,
+      ventasData,
+      notificationsData,
+    ] = await Promise.all([
+      listClientes().catch(() => []),
+      listEquipos().catch(() => []),
+      listOrdenes().catch(() => []),
+      listProductos().catch(() => []),
+      listVentas().catch(() => []),
+      fetchNotifications().catch(() => []),
     ]);
 
     setClientes(clientesData);
     setEquipments(equiposData);
     setOrders(ordenesData);
+    setProducts(productsData);
+    setSalesReports(ventasData);
+    setNotifications(notificationsData);
 
     if (role === "admin") {
       const usersData = await listUsers();
       setUsers(usersData);
+    }
+  };
+
+  const handleRegisterOwner = async (passwordData, navigation) => {
+    if (!registerDraft) {
+      return { success: false, message: "Completa primero la informacion principal." };
+    }
+
+    try {
+      await registerBusinessOwner({
+        ...registerDraft,
+        password: passwordData.password,
+      });
+      setRegisterDraft(null);
+      navigation.replace("RegisterSuccess");
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "No se pudo registrar la cuenta.",
+      };
     }
   };
 
@@ -184,6 +229,7 @@ export function AppNavigator() {
     setClientes([]);
     setEquipments([]);
     setOrders([]);
+    setProducts([]);
     setSalesReports([]);
     setNotifications(getInitialNotifications());
 
@@ -233,6 +279,7 @@ export function AppNavigator() {
     setNotifications((prevNotifications) =>
       markNotificationAsRead(prevNotifications, notificationId)
     );
+    markNotificationAsReadRemote(notificationId).catch(() => {});
   };
 
   const handleMarkAllNotificationsAsRead = () => {
@@ -383,7 +430,10 @@ export function AppNavigator() {
           {({ navigation }) => (
             <RegisterStepOneScreen
               onBack={() => navigation.goBack()}
-              onNext={() => navigation.push("RegisterStepTwo")}
+              onNext={(data) => {
+                setRegisterDraft(data);
+                navigation.push("RegisterStepTwo");
+              }}
               onGoToLogin={() => navigation.push("Login")}
             />
           )}
@@ -393,7 +443,7 @@ export function AppNavigator() {
           {({ navigation }) => (
             <RegisterStepTwoScreen
               onBack={() => navigation.goBack()}
-              onFinish={() => navigation.replace("RegisterSuccess")}
+              onFinish={(data) => handleRegisterOwner(data, navigation)}
             />
           )}
         </Stack.Screen>
@@ -408,6 +458,11 @@ export function AppNavigator() {
           {({ navigation }) => (
             <AdminDashboardScreen
               user={session?.user}
+              stats={{
+                users: users.length,
+                orders: orders.length,
+                sales: salesReports.length,
+              }}
               unreadNotificationsCount={unreadNotificationsCount}
               onOpenNotifications={() => handleOpenNotifications(navigation)}
               onLogout={() => confirmLogout()}
@@ -415,12 +470,7 @@ export function AppNavigator() {
               onOpenClientes={() => navigation.push("Clientes")}
               onOpenEquipos={() => navigation.push("EquipmentList")}
               onOpenOrders={() => navigation.push("OrdersList")}
-              onOpenSales={() =>
-                Alert.alert(
-                  "Modulo no disponible",
-                  "El modulo de ventas para administrador aun no esta habilitado."
-                )
-              }
+              onOpenSales={() => navigation.push("RegisterSale")}
               onOpenInventory={() => navigation.navigate("Inventario")}
               onOpenQuotations={() => navigation.push("Cotizaciones")}
               onOpenRolesPermissions={() => navigation.push("RolesPermissions")}
@@ -475,6 +525,7 @@ export function AppNavigator() {
           {({ navigation }) => (
             <RegisterSaleScreen
               clientes={clientes}
+              productos={products}
               onBack={() => navigation.goBack()}
               onContinue={(saleDraft) =>
                 navigation.push("SaleSummary", { saleDraft })
@@ -490,6 +541,7 @@ export function AppNavigator() {
               onBack={() => navigation.goBack()}
               onConfirm={(receipt) => {
                 setSalesReports((prevReports) => [receipt, ...prevReports]);
+                listProductos().then(setProducts).catch(() => {});
 
                 setNotifications((prevNotifications) =>
                   addNotification(prevNotifications, buildSaleNotification(receipt))
@@ -556,12 +608,13 @@ export function AppNavigator() {
         </Stack.Screen>
 
         <Stack.Screen name="Inventario">
-          {() => <InventarioStack />}
+          {() => <InventarioStack onProductsChange={setProducts} />}
         </Stack.Screen>
 
         <Stack.Screen name="Cotizaciones">
           {({ navigation }) => (
             <CotizacionesScreen
+              orders={orders}
               onBack={() => navigation.goBack()}
               onGenerateQuotation={(order) =>
                 navigation.push("GenerateQuotation", { order })
@@ -576,9 +629,10 @@ export function AppNavigator() {
               order={route.params?.order}
               onBack={() => navigation.goBack()}
               onCancel={() => navigation.goBack()}
-              onSave={(quotation) =>
-                navigation.replace("QuotationSummary", { quotation })
-              }
+              onSave={async (quotation) => {
+                const savedQuotation = await createCotizacion(quotation);
+                navigation.replace("QuotationSummary", { quotation: savedQuotation });
+              }}
             />
           )}
         </Stack.Screen>

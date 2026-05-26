@@ -7,7 +7,6 @@ import { colors } from "../../../shared/theme/colors";
 import { ReportFilter } from "../components/ReportFilter";
 import { ReportSummaryCard } from "../components/ReportSummaryCard";
 import { SalesReportList } from "../components/SalesReportList";
-import { demoSalesReports } from "../data/reportsMock";
 import {
   calculateSalesReport,
   filterReportItemsByPeriod,
@@ -17,7 +16,7 @@ import {
 
 export function SalesReportScreen({ navigation, ventas = [] }) {
   const [period, setPeriod] = useState("todos");
-  const ventasData = ventas.length > 0 ? ventas : demoSalesReports;
+  const ventasData = ventas;
 
   const filteredVentas = useMemo(
     () => filterReportItemsByPeriod(ventasData, period, getSaleDate),

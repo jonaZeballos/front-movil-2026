@@ -14,8 +14,12 @@ import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { SaleSummaryBox } from "../components/SaleSummaryBox";
-import { createSale, generateReceipt } from "../services/salesApi";
-import { buildElectronicReceipt, formatCurrency } from "../data/salesMock";
+import {
+  buildElectronicReceipt,
+  createSale,
+  formatCurrency,
+  generateReceipt,
+} from "../services/salesApi";
 
 export function SaleSummaryScreen({ saleDraft, onBack, onConfirm }) {
   const [isSaving, setIsSaving] = useState(false);
@@ -29,36 +33,29 @@ export function SaleSummaryScreen({ saleDraft, onBack, onConfirm }) {
     setIsSaving(true);
 
     try {
-      let savedSale = null;
-      let receipt = null;
+      const savedSale = await createSale({
+        clienteId: saleDraft.cliente?.id,
+        clienteNombre: getClientName(saleDraft.cliente),
+        productos: saleDraft.productos.map((item) => ({
+          productoId: item.productoId || item.id,
+          cantidad: item.quantity,
+          precioUnitario: item.unitPrice,
+          subtotal: item.total,
+        })),
+        metodoPago: saleDraft.metodoPago?.id,
+        subtotal: saleDraft.subtotal,
+        descuento: saleDraft.descuento,
+        total: saleDraft.total,
+      });
 
-      try {
-        savedSale = await createSale({
-          clienteId: saleDraft.cliente?.id,
-          productos: saleDraft.productos.map((item) => ({
-            productoId: item.id,
-            cantidad: item.quantity,
-            precioUnitario: item.unitPrice,
-            subtotal: item.total,
-          })),
-          metodoPago: saleDraft.metodoPago?.id,
-          subtotal: saleDraft.subtotal,
-          descuento: saleDraft.descuento,
-          total: saleDraft.total,
-        });
+      const saleId = savedSale?.id || savedSale?.ventaId;
+      const receipt = saleId ? await generateReceipt(saleId) : null;
 
-        const saleId = savedSale?.id || savedSale?.ventaId;
-
-        if (saleId) {
-          receipt = await generateReceipt(saleId);
-        }
-      } catch (error) {
-        console.warn("Backend de ventas no disponible, se genera recibo local.", error);
-      }
-
-      const finalReceipt = receipt || buildElectronicReceipt(saleDraft, savedSale || {});
+      const finalReceipt = receipt || buildElectronicReceipt(saleDraft, savedSale);
 
       onConfirm?.(finalReceipt);
+    } catch (error) {
+      Alert.alert("No se pudo registrar la venta", error.message || "Intenta nuevamente.");
     } finally {
       setIsSaving(false);
     }

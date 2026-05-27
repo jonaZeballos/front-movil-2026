@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -8,10 +8,14 @@ import { colors } from "../../../shared/theme/colors";
 export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
   const [diagnostico, setDiagnostico] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const submitLockRef = useRef(false);
 
   const selectedEquipment = equipments.find((item) => item.id === selectedEquipmentId);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    if (submitLockRef.current || isSaving) return;
+
     if (!selectedEquipmentId) {
       Alert.alert("Equipo obligatorio", "Selecciona un equipo registrado para crear la orden.");
       return;
@@ -22,11 +26,21 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
       return;
     }
 
-    onCreateOrder(selectedEquipmentId, diagnostico.trim());
+    submitLockRef.current = true;
+    setIsSaving(true);
+
+    try {
+      await onCreateOrder(selectedEquipmentId, diagnostico.trim());
+    } catch (error) {
+      Alert.alert("No se pudo crear la orden", error.message || "Intenta nuevamente.");
+    } finally {
+      submitLockRef.current = false;
+      setIsSaving(false);
+    }
   };
 
   return (
-    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={onBack} style={styles.backButton}>
@@ -43,6 +57,7 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
           data={equipments}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => {
             const selected = selectedEquipmentId === item.id;
@@ -93,8 +108,16 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
           </View>
         ) : null}
 
-        <Pressable style={styles.createButton} onPress={handleCreate}>
-          <Text style={styles.createButtonText}>Crear orden</Text>
+        <Pressable
+          style={[styles.createButton, isSaving && styles.disabledButton]}
+          onPress={handleCreate}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.createButtonText}>Crear orden</Text>
+          )}
         </Pressable>
       </View>
     </ScreenContainer>
@@ -135,7 +158,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   listContent: {
-    paddingBottom: 16,
+    paddingBottom: 120,
   },
   equipmentCard: {
     backgroundColor: "#FFFFFF",
@@ -222,5 +245,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 });

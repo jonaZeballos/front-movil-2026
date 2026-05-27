@@ -115,7 +115,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
   }
 
   return (
-    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={handleCancel} style={styles.backButton}>
@@ -128,7 +128,11 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
+        >
           <QuotationOrderInfoCard order={order} />
           <QuotationForm form={form} errors={errors} onChange={handleChange} />
           <TotalQuotationBox total={Math.max(amounts.total, 0)} />
@@ -238,7 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   content: {
-    paddingBottom: 28,
+    paddingBottom: 140,
   },
   totalError: {
     marginTop: -8,

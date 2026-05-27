@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
@@ -10,6 +21,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
+  },
+  scrollContent: {
+    paddingBottom: 140,
   },
   header: {
     backgroundColor: colors.surface,
@@ -93,9 +107,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
+  disabledButton: {
+    opacity: 0.7,
+  },
 });
 
-export default function RegistrarCliente({ onVolver, onGuardar }) {
+export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false }) {
   const [form, setForm] = useState({
     nombre: "",
     numeroDocumento: "",
@@ -109,6 +126,8 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
   };
 
   const handleGuardar = () => {
+    if (isSaving) return;
+
     if (!form.nombre || !form.numeroDocumento || !form.telefono || !form.correo) {
       Alert.alert("Error", "Por favor completa nombre, documento, telefono y correo.");
       return;
@@ -117,7 +136,11 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={onVolver}>
           <Feather name="arrow-left" size={20} color="#111827" />
@@ -208,9 +231,18 @@ export default function RegistrarCliente({ onVolver, onGuardar }) {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.saveBtn} onPress={handleGuardar}>
-        <Text style={styles.saveBtnText}>Guardar cliente</Text>
+      <TouchableOpacity
+        style={[styles.saveBtn, isSaving && styles.disabledButton]}
+        onPress={handleGuardar}
+        disabled={isSaving}
+      >
+        {isSaving ? (
+          <ActivityIndicator color={colors.surface} />
+        ) : (
+          <Text style={styles.saveBtnText}>Guardar cliente</Text>
+        )}
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

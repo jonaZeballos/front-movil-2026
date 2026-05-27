@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -7,7 +7,17 @@ import { colors } from "../../../shared/theme/colors";
 
 const equipmentTypeOptions = ["Laptop", "PC Escritorio", "Impresora"];
 
-function SelectField({ label, value, placeholder, icon, options, isOpen, onToggle, onSelect }) {
+function SelectField({
+  label,
+  value,
+  placeholder,
+  icon,
+  options,
+  isOpen,
+  onToggle,
+  onSelect,
+  emptyText = "No hay opciones disponibles.",
+}) {
   return (
     <View style={styles.fieldBlock}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -21,7 +31,9 @@ function SelectField({ label, value, placeholder, icon, options, isOpen, onToggl
 
       {isOpen ? (
         <View style={styles.dropdownMenu}>
-          {options.map((option) => {
+          {options.length === 0 ? (
+            <Text style={styles.dropdownEmptyText}>{emptyText}</Text>
+          ) : options.map((option) => {
             const optionLabel = option.nombre || option.label || option;
             const optionKey = option.id || optionLabel;
 
@@ -80,7 +92,14 @@ function MultiLineField({ label, value, onChangeText, placeholder }) {
   );
 }
 
-export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreateOrder, onBack }) {
+export function RegisterEquipmentScreen({
+  clientes = [],
+  onSave,
+  onSaveAndCreateOrder,
+  onBack,
+  onCreateClient,
+  onRefreshClientes,
+}) {
   const [selectedClientId, setSelectedClientId] = useState("");
   const [selectedClientName, setSelectedClientName] = useState("");
   const [selectedType, setSelectedType] = useState("");
@@ -89,6 +108,14 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
   const [serial, setSerial] = useState("");
   const [problem, setProblem] = useState("");
   const [openField, setOpenField] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const submitLockRef = useRef(false);
+
+  useEffect(() => {
+    if (clientes.length === 0) {
+      onRefreshClientes?.().catch(() => {});
+    }
+  }, [clientes.length, onRefreshClientes]);
 
   const equipmentPayload = {
     clienteId: selectedClientId,
@@ -109,26 +136,33 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
     problem.trim(),
   ].every(Boolean);
 
-  const handleSave = () => {
+  const runSubmit = async (submitAction) => {
+    if (submitLockRef.current || isSaving) return;
+
     if (!isFormValid) {
       Alert.alert("Formulario incompleto", "Completa todos los campos antes de continuar.");
       return;
     }
 
-    onSave?.(equipmentPayload);
-  };
+    submitLockRef.current = true;
+    setIsSaving(true);
 
-  const handleSaveAndCreateOrder = () => {
-    if (!isFormValid) {
-      Alert.alert("Formulario incompleto", "Completa todos los campos antes de continuar.");
-      return;
+    try {
+      await submitAction(equipmentPayload);
+    } catch (error) {
+      Alert.alert("No se pudo registrar", error.message || "Intenta nuevamente.");
+    } finally {
+      submitLockRef.current = false;
+      setIsSaving(false);
     }
-
-    onSaveAndCreateOrder?.(equipmentPayload);
   };
+
+  const handleSave = () => runSubmit(onSave);
+
+  const handleSaveAndCreateOrder = () => runSubmit(onSaveAndCreateOrder);
 
   return (
-    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={onBack} style={styles.backButton}>
@@ -141,7 +175,11 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+        >
           <View style={styles.formCard}>
             <SelectField
               label="CLIENTE"
@@ -149,6 +187,7 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
               placeholder="Selecciona un cliente"
               icon="user"
               options={clientes}
+              emptyText="Todavia no hay clientes registrados."
               isOpen={openField === "client"}
               onToggle={() => setOpenField((current) => (current === "client" ? null : "client"))}
               onSelect={(option) => {
@@ -157,6 +196,21 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
                 setOpenField(null);
               }}
             />
+
+            {clientes.length === 0 ? (
+              <View style={styles.emptyClientBox}>
+                <Feather name="user-plus" size={22} color={colors.primary} />
+                <View style={styles.emptyClientTextBox}>
+                  <Text style={styles.emptyClientTitle}>Primero registra un cliente</Text>
+                  <Text style={styles.emptyClientText}>
+                    El equipo necesita estar asociado a un cliente para crear historial y ordenes.
+                  </Text>
+                </View>
+                <Pressable style={styles.emptyClientButton} onPress={onCreateClient}>
+                  <Text style={styles.emptyClientButtonText}>Registrar</Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             <SelectField
               label="TIPO DE EQUIPO"
@@ -205,15 +259,21 @@ export function RegisterEquipmentScreen({ clientes = [], onSave, onSaveAndCreate
           </View>
 
           <Pressable
-            style={styles.primaryButton}
+            style={[styles.primaryButton, isSaving && styles.disabledButton]}
             onPress={handleSave}
+            disabled={isSaving}
           >
-            <Text style={styles.primaryButtonText}>Guardar equipo</Text>
+            {isSaving ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.primaryButtonText}>Guardar equipo</Text>
+            )}
           </Pressable>
 
           <Pressable
-            style={styles.secondaryButton}
+            style={[styles.secondaryButton, isSaving && styles.disabledButton]}
             onPress={handleSaveAndCreateOrder}
+            disabled={isSaving}
           >
             <Text style={styles.secondaryButtonText}>Guardar y crear orden</Text>
           </Pressable>
@@ -257,7 +317,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 140,
   },
   formCard: {
     backgroundColor: "#FFFFFF",
@@ -321,6 +381,49 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#111827",
   },
+  dropdownEmptyText: {
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    color: "#6B7280",
+    fontSize: 13,
+  },
+  emptyClientBox: {
+    marginTop: -4,
+    marginBottom: 16,
+    borderRadius: 16,
+    backgroundColor: "#EEF2FF",
+    borderWidth: 1,
+    borderColor: "#C7D2FE",
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
+  },
+  emptyClientTextBox: {
+    flex: 1,
+  },
+  emptyClientTitle: {
+    color: "#111827",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  emptyClientText: {
+    marginTop: 2,
+    color: "#6B7280",
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  emptyClientButton: {
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  emptyClientButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+  },
   input: {
     flex: 1,
     fontSize: 15,
@@ -363,6 +466,9 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "800",
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
   pressed: {
     opacity: 0.85,

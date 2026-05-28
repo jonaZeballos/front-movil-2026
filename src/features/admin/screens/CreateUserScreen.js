@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -12,23 +12,37 @@ export function CreateUserScreen({ onBack, onSave }) {
     password: "",
     role: "tecnico",
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const submitLockRef = useRef(false);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (submitLockRef.current || isSaving) return;
+
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
-      Alert.alert("Error", "Completa nombre, correo y contraseña.");
+      Alert.alert("Error", "Completa nombre, correo y contrasena.");
       return;
     }
 
-    onSave?.({
-      ...form,
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password.trim(),
-    });
+    submitLockRef.current = true;
+    setIsSaving(true);
+
+    try {
+      await onSave?.({
+        ...form,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password.trim(),
+      });
+    } catch (error) {
+      Alert.alert("No se pudo guardar", error.message || "Intenta nuevamente.");
+    } finally {
+      submitLockRef.current = false;
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -41,7 +55,7 @@ export function CreateUserScreen({ onBack, onSave }) {
 
           <View style={styles.headerText}>
             <Text style={styles.title}>Crear usuario</Text>
-            <Text style={styles.subtitle}>Asigna acceso a técnico o ventas</Text>
+            <Text style={styles.subtitle}>Asigna acceso a tecnico o ventas</Text>
           </View>
         </View>
 
@@ -66,9 +80,9 @@ export function CreateUserScreen({ onBack, onSave }) {
             />
 
             <Field
-              label="Contraseña"
+              label="Contrasena"
               icon="lock-closed-outline"
-              placeholder="Contraseña inicial"
+              placeholder="Contrasena inicial"
               value={form.password}
               secureTextEntry
               onChangeText={(value) => handleChange("password", value)}
@@ -78,7 +92,7 @@ export function CreateUserScreen({ onBack, onSave }) {
 
             <View style={styles.rolesRow}>
               <RoleButton
-                label="Técnico"
+                label="Tecnico"
                 active={form.role === "tecnico"}
                 onPress={() => handleChange("role", "tecnico")}
               />
@@ -90,8 +104,16 @@ export function CreateUserScreen({ onBack, onSave }) {
             </View>
           </View>
 
-          <Pressable style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Guardar usuario</Text>
+          <Pressable
+            style={[styles.saveButton, isSaving && styles.disabledButton]}
+            onPress={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>Guardar usuario</Text>
+            )}
           </Pressable>
         </ScrollView>
       </View>
@@ -177,7 +199,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 120,
   },
   formCard: {
     backgroundColor: "#FFFFFF",
@@ -250,5 +272,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "800",
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 });

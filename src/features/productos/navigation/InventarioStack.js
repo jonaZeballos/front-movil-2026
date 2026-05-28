@@ -34,12 +34,8 @@ export function InventarioStack({ onProductsChange }) {
   }, [refreshProductos]);
 
   const handleAddProducto = async (producto) => {
-    const nuevo = await createProducto(producto);
-    setProductos((prev) => {
-      const next = [nuevo, ...prev];
-      onProductsChange?.(next);
-      return next;
-    });
+    await createProducto(producto);
+    await refreshProductos();
   };
 
   const handleSaveMovement = async (movement) => {

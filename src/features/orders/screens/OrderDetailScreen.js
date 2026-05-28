@@ -43,7 +43,7 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
   };
 
   return (
-    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={onBack} style={styles.backButton}>
@@ -56,7 +56,11 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+        >
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Información principal</Text>
 
@@ -170,7 +174,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 140,
   },
   card: {
     backgroundColor: "#FFFFFF",

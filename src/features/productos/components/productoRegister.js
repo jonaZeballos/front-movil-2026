@@ -1,7 +1,18 @@
 ﻿import React, { useState } from "react";
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
-export default function RegistroProducto({ onGuardar, onCancelar }) {
+export default function RegistroProducto({ onGuardar, onCancelar, isSaving = false }) {
   const [nombre, setNombre] = useState("");
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
@@ -9,8 +20,9 @@ export default function RegistroProducto({ onGuardar, onCancelar }) {
   const [stock, setStock] = useState("");
 
   const onSubmit = () => {
+    if (isSaving) return;
+
     const producto = {
-      id: Date.now(),
       nombre,
       marca,
       modelo,
@@ -22,9 +34,13 @@ export default function RegistroProducto({ onGuardar, onCancelar }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Registrar nuevo producto</Text>
-        <Text style={styles.subtitle}>Llena los campos para añadir un producto al inventario</Text>
+      <KeyboardAvoidingView
+        style={styles.keyboardArea}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+          <Text style={styles.title}>Registrar nuevo producto</Text>
+          <Text style={styles.subtitle}>Llena los campos para añadir un producto al inventario</Text>
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Nombre del producto</Text>
@@ -87,11 +103,20 @@ export default function RegistroProducto({ onGuardar, onCancelar }) {
           <Pressable style={[styles.button, styles.cancelButton]} onPress={onCancelar}>
             <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancelar</Text>
           </Pressable>
-          <Pressable style={[styles.button, styles.submitButton]} onPress={onSubmit}>
-            <Text style={[styles.buttonText, styles.submitButtonText]}>Guardar</Text>
+          <Pressable
+            style={[styles.button, styles.submitButton, isSaving && styles.disabledButton]}
+            onPress={onSubmit}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={[styles.buttonText, styles.submitButtonText]}>Guardar</Text>
+            )}
           </Pressable>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -101,10 +126,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f6f7fb",
   },
+  keyboardArea: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: 18,
     paddingTop: 22,
-    paddingBottom: 32,
+    paddingBottom: 140,
   },
   title: {
     fontSize: 22,
@@ -155,6 +183,9 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: "#534AB7",
     marginLeft: 10,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
   buttonText: {
     fontSize: 14,

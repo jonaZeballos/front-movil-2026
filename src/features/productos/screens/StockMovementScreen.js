@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -25,11 +25,18 @@ export default function StockMovementScreen({
   const [type, setType] = useState("entrada");
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const submitLockRef = useRef(false);
 
   const currentStock = getProductStock(product);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (submitLockRef.current || isSaving) return;
+
     try {
+      submitLockRef.current = true;
+      setIsSaving(true);
+
       const movement = createStockMovement({
         product,
         type,
@@ -37,7 +44,7 @@ export default function StockMovementScreen({
         reason,
       });
 
-      onSaveMovement?.(movement);
+      await onSaveMovement?.(movement);
 
       Alert.alert("Stock actualizado", "El movimiento fue registrado correctamente.", [
         {
@@ -47,6 +54,9 @@ export default function StockMovementScreen({
       ]);
     } catch (error) {
       Alert.alert("No se pudo actualizar", error.message);
+    } finally {
+      submitLockRef.current = false;
+      setIsSaving(false);
     }
   };
 
@@ -71,7 +81,7 @@ export default function StockMovementScreen({
   }
 
   return (
-    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -84,7 +94,11 @@ export default function StockMovementScreen({
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
+        >
           <View style={styles.productCard}>
             <Text style={styles.productName}>{product.nombre}</Text>
             <Text style={styles.productDetail}>
@@ -147,11 +161,12 @@ export default function StockMovementScreen({
           </View>
 
           <AppButton
-            title="Guardar movimiento"
+            title={isSaving ? "Guardando..." : "Guardar movimiento"}
             onPress={handleSave}
             backgroundColor={colors.primary}
             borderRadius={18}
             minHeight={54}
+            disabled={isSaving}
           />
         </ScrollView>
       </View>
@@ -193,7 +208,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   content: {
-    paddingBottom: 30,
+    paddingBottom: 140,
   },
   productCard: {
     backgroundColor: "#FFFFFF",

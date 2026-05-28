@@ -6,36 +6,32 @@ import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 
 export function RegisterScreen({ navigation, onGuardar }) {
   const [isSaving, setIsSaving] = useState(false);
-  const isSavingRef = useRef(false);
+  const submitLockRef = useRef(false);
 
   const handleGuardar = async (clienteData) => {
-    if (!onGuardar || isSavingRef.current) return;
+    if (submitLockRef.current || isSaving) return;
+
+    submitLockRef.current = true;
+    setIsSaving(true);
 
     try {
-      isSavingRef.current = true;
-      setIsSaving(true);
-      await onGuardar(clienteData);
+      await onGuardar?.(clienteData);
       Alert.alert("Exito", `Cliente ${clienteData.nombre} registrado.`);
     } catch (error) {
-      Alert.alert("Error", error.message || "No se pudo registrar el cliente.");
-      isSavingRef.current = false;
+      Alert.alert("No se pudo registrar", error.message || "Intenta nuevamente.");
+    } finally {
+      submitLockRef.current = false;
       setIsSaving(false);
     }
   };
 
   const handleVolver = () => {
-    if (!isSavingRef.current) {
-      navigation.goBack();
-    }
+    navigation.goBack();
   };
 
   return (
     <ScreenContainer>
-      <RegistrarCliente
-        onGuardar={handleGuardar}
-        onVolver={handleVolver}
-        isSaving={isSaving}
-      />
+      <RegistrarCliente onGuardar={handleGuardar} onVolver={handleVolver} isSaving={isSaving} />
     </ScreenContainer>
   );
 }

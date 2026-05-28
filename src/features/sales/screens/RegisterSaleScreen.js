@@ -106,7 +106,7 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
   };
 
   return (
-    <ScreenContainer backgroundColor={colors.primary} edges={["top"]}>
+    <ScreenContainer backgroundColor={colors.primary} edges={["top"]} keyboardAvoiding>
       <View style={styles.root}>
         <View style={styles.header}>
           <Pressable style={styles.backButton} onPress={onBack}>
@@ -127,6 +127,7 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
           style={styles.content}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.sectionTitle}>Cliente</Text>
 
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 34,
+    paddingBottom: 140,
   },
   sectionTitle: {
     marginTop: 14,

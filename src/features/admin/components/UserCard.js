@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export function UserCard({ user, onPress }) {
-  const roleLabel = user.role === "tecnico" ? "Técnico" : "Ventas";
+  const roleConfig = getRoleConfig(user.role);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -13,14 +13,48 @@ export function UserCard({ user, onPress }) {
       <View style={styles.info}>
         <Text style={styles.name}>{user.name}</Text>
         <Text style={styles.email}>{user.email}</Text>
-        <View style={styles.roleBadge}>
-          <Text style={styles.roleText}>{roleLabel}</Text>
+        <View style={[styles.roleBadge, { backgroundColor: roleConfig.backgroundColor }]}>
+          <Text style={[styles.roleText, { color: roleConfig.color }]}>{roleConfig.label}</Text>
         </View>
       </View>
 
       <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
     </Pressable>
   );
+}
+
+function getRoleConfig(value) {
+  const role = String(value || "").toLowerCase();
+
+  if (role === "admin") {
+    return {
+      label: "Admin",
+      color: "#047857",
+      backgroundColor: "#D1FAE5",
+    };
+  }
+
+  if (role === "tecnico") {
+    return {
+      label: "Tecnico",
+      color: "#5655B9",
+      backgroundColor: "#EEF2FF",
+    };
+  }
+
+  if (role === "ventas") {
+    return {
+      label: "Ventas",
+      color: "#0F766E",
+      backgroundColor: "#DCFDF4",
+    };
+  }
+
+  return {
+    label: role || "Usuario",
+    color: "#64748B",
+    backgroundColor: "#F1F5F9",
+  };
 }
 
 const styles = StyleSheet.create({
@@ -61,7 +95,6 @@ const styles = StyleSheet.create({
   },
   roleBadge: {
     marginTop: 8,
-    backgroundColor: "#F5F5F7",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -70,6 +103,5 @@ const styles = StyleSheet.create({
   roleText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#5655B9",
   },
 });

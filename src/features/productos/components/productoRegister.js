@@ -1,6 +1,6 @@
 ﻿import React, { useState } from "react";
 import {
-  Alert,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -22,36 +22,12 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
   const onSubmit = () => {
     if (isSaving) return;
 
-    if (!nombre.trim()) {
-      Alert.alert("Nombre obligatorio", "Ingresa el nombre del producto.");
-      return;
-    }
-
-    if (!precio.trim()) {
-      Alert.alert("Precio obligatorio", "Ingresa el precio del producto.");
-      return;
-    }
-
-    const precioNumber = Number(String(precio).replace(",", "."));
-    const stockNumber = Number(stock || 0);
-
-    if (!Number.isFinite(precioNumber) || precioNumber < 0) {
-      Alert.alert("Precio invalido", "Ingresa un precio mayor o igual a 0.");
-      return;
-    }
-
-    if (!Number.isInteger(stockNumber) || stockNumber < 0) {
-      Alert.alert("Stock invalido", "Ingresa un stock entero mayor o igual a 0.");
-      return;
-    }
-
     const producto = {
-      nombre: nombre.trim(),
-      marca: marca.trim(),
-      modelo: modelo.trim(),
-      precio: precioNumber,
-      stock: stockNumber,
-      stockMinimo: 1,
+      nombre,
+      marca,
+      modelo,
+      precio,
+      stock: Number(stock) || 0,
     };
     onGuardar(producto);
   };
@@ -59,12 +35,12 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        style={styles.container}
+        style={styles.keyboardArea}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Registrar nuevo producto</Text>
-        <Text style={styles.subtitle}>Llena los campos para añadir un producto al inventario</Text>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+          <Text style={styles.title}>Registrar nuevo producto</Text>
+          <Text style={styles.subtitle}>Llena los campos para añadir un producto al inventario</Text>
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Nombre del producto</Text>
@@ -124,11 +100,7 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
         </View>
 
         <View style={styles.actions}>
-          <Pressable
-            style={[styles.button, styles.cancelButton, isSaving && styles.disabledButton]}
-            onPress={onCancelar}
-            disabled={isSaving}
-          >
+          <Pressable style={[styles.button, styles.cancelButton]} onPress={onCancelar}>
             <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancelar</Text>
           </Pressable>
           <Pressable
@@ -136,12 +108,14 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
             onPress={onSubmit}
             disabled={isSaving}
           >
-            <Text style={[styles.buttonText, styles.submitButtonText]}>
-              {isSaving ? "Guardando..." : "Guardar"}
-            </Text>
+            {isSaving ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={[styles.buttonText, styles.submitButtonText]}>Guardar</Text>
+            )}
           </Pressable>
         </View>
-      </ScrollView>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -152,10 +126,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f6f7fb",
   },
+  keyboardArea: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: 18,
     paddingTop: 22,
-    paddingBottom: 32,
+    paddingBottom: 140,
   },
   title: {
     fontSize: 22,
@@ -207,6 +184,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#534AB7",
     marginLeft: 10,
   },
+  disabledButton: {
+    opacity: 0.7,
+  },
   buttonText: {
     fontSize: 14,
     fontWeight: "700",
@@ -216,8 +196,5 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: "#ffffff",
-  },
-  disabledButton: {
-    opacity: 0.65,
   },
 });

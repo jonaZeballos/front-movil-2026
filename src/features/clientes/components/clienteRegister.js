@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  Alert,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
@@ -22,7 +23,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 140,
   },
   header: {
     backgroundColor: colors.surface,
@@ -106,8 +107,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
-  disabledBtn: {
-    opacity: 0.65,
+  disabledButton: {
+    opacity: 0.7,
   },
 });
 
@@ -127,21 +128,11 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
   const handleGuardar = () => {
     if (isSaving) return;
 
-    if (!form.nombre.trim() || !form.numeroDocumento.trim() || !form.telefono.trim() || !form.correo.trim()) {
+    if (!form.nombre || !form.numeroDocumento || !form.telefono || !form.correo) {
       Alert.alert("Error", "Por favor completa nombre, documento, telefono y correo.");
       return;
     }
-
-    if (onGuardar) {
-      onGuardar({
-        ...form,
-        nombre: form.nombre.trim(),
-        numeroDocumento: form.numeroDocumento.trim(),
-        telefono: form.telefono.trim(),
-        correo: form.correo.trim(),
-        direccion: form.direccion.trim(),
-      });
-    }
+    if (onGuardar) onGuardar(form);
   };
 
   return (
@@ -149,13 +140,9 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
-    >
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={onVolver} disabled={isSaving}>
+        <TouchableOpacity style={styles.backBtn} onPress={onVolver}>
           <Feather name="arrow-left" size={20} color="#111827" />
         </TouchableOpacity>
         <View>
@@ -245,13 +232,17 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
       </View>
 
       <TouchableOpacity
-        style={[styles.saveBtn, isSaving && styles.disabledBtn]}
+        style={[styles.saveBtn, isSaving && styles.disabledButton]}
         onPress={handleGuardar}
         disabled={isSaving}
       >
-        <Text style={styles.saveBtnText}>{isSaving ? "Guardando..." : "Guardar cliente"}</Text>
+        {isSaving ? (
+          <ActivityIndicator color={colors.surface} />
+        ) : (
+          <Text style={styles.saveBtnText}>Guardar cliente</Text>
+        )}
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }

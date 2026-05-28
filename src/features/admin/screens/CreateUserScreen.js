@@ -1,15 +1,5 @@
 import { useRef, useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -23,67 +13,59 @@ export function CreateUserScreen({ onBack, onSave }) {
     role: "tecnico",
   });
   const [isSaving, setIsSaving] = useState(false);
-  const isSavingRef = useRef(false);
+  const submitLockRef = useRef(false);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
-    if (isSavingRef.current) return;
+    if (submitLockRef.current || isSaving) return;
 
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
-      Alert.alert("Error", "Completa nombre, correo y contraseña.");
+      Alert.alert("Error", "Completa nombre, correo y contrasena.");
       return;
     }
 
+    submitLockRef.current = true;
+    setIsSaving(true);
+
     try {
-      isSavingRef.current = true;
-      setIsSaving(true);
       await onSave?.({
         ...form,
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password.trim(),
       });
-      Alert.alert("Confirmacion", "Usuario registrado correctamente.");
     } catch (error) {
-      Alert.alert("Error", error.message || "No se pudo registrar el usuario.");
-      isSavingRef.current = false;
+      Alert.alert("No se pudo guardar", error.message || "Intenta nuevamente.");
+    } finally {
+      submitLockRef.current = false;
       setIsSaving(false);
     }
   };
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton} disabled={isSaving}>
+          <Pressable onPress={onBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
           <View style={styles.headerText}>
             <Text style={styles.title}>Crear usuario</Text>
-            <Text style={styles.subtitle}>Asigna acceso a técnico o ventas</Text>
+            <Text style={styles.subtitle}>Asigna acceso a tecnico o ventas</Text>
           </View>
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.formCard}>
             <Field
               label="Nombre completo"
               icon="person-outline"
               placeholder="Ingresa el nombre"
               value={form.name}
-              editable={!isSaving}
               onChangeText={(value) => handleChange("name", value)}
             />
 
@@ -94,17 +76,15 @@ export function CreateUserScreen({ onBack, onSave }) {
               value={form.email}
               keyboardType="email-address"
               autoCapitalize="none"
-              editable={!isSaving}
               onChangeText={(value) => handleChange("email", value)}
             />
 
             <Field
-              label="Contraseña"
+              label="Contrasena"
               icon="lock-closed-outline"
-              placeholder="Contraseña inicial"
+              placeholder="Contrasena inicial"
               value={form.password}
               secureTextEntry
-              editable={!isSaving}
               onChangeText={(value) => handleChange("password", value)}
             />
 
@@ -112,18 +92,14 @@ export function CreateUserScreen({ onBack, onSave }) {
 
             <View style={styles.rolesRow}>
               <RoleButton
-                label="Técnico"
+                label="Tecnico"
                 active={form.role === "tecnico"}
-                onPress={() => {
-                  if (!isSaving) handleChange("role", "tecnico");
-                }}
+                onPress={() => handleChange("role", "tecnico")}
               />
               <RoleButton
                 label="Ventas"
                 active={form.role === "ventas"}
-                onPress={() => {
-                  if (!isSaving) handleChange("role", "ventas");
-                }}
+                onPress={() => handleChange("role", "ventas")}
               />
             </View>
           </View>
@@ -133,11 +109,14 @@ export function CreateUserScreen({ onBack, onSave }) {
             onPress={handleSave}
             disabled={isSaving}
           >
-            <Text style={styles.saveButtonText}>{isSaving ? "Guardando..." : "Guardar usuario"}</Text>
+            {isSaving ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>Guardar usuario</Text>
+            )}
           </Pressable>
         </ScrollView>
       </View>
-      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -151,7 +130,6 @@ function Field({
   keyboardType = "default",
   autoCapitalize = "sentences",
   secureTextEntry = false,
-  editable = true,
 }) {
   return (
     <View style={styles.fieldGroup}>
@@ -167,7 +145,6 @@ function Field({
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           secureTextEntry={secureTextEntry}
-          editable={editable}
           style={styles.input}
         />
       </View>
@@ -193,9 +170,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 14,
-  },
-  keyboardContainer: {
-    flex: 1,
   },
   header: {
     flexDirection: "row",
@@ -225,7 +199,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 120,
   },
   formCard: {
     backgroundColor: "#FFFFFF",
@@ -300,6 +274,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   disabledButton: {
-    opacity: 0.65,
+    opacity: 0.7,
   },
 });

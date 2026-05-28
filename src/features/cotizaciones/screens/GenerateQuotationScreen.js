@@ -1,14 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useMemo, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppButton } from "../../../shared/components/buttons";
@@ -30,7 +21,6 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const isSavingRef = useRef(false);
 
   const amounts = useMemo(() => {
     const manoObra = parseAmount(form.manoObra);
@@ -83,7 +73,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
 
   const handleCancel = () => {
     if (!hasFormChanges) {
-      if (!isSavingRef.current) onCancel?.();
+      onCancel?.();
       return;
     }
 
@@ -95,9 +85,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
         {
           text: "Salir",
           style: "destructive",
-          onPress: () => {
-            if (!isSavingRef.current) onCancel?.();
-          },
+          onPress: onCancel,
         },
       ]
     );
@@ -127,11 +115,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
   }
 
   return (
-    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={handleCancel} style={styles.backButton}>
@@ -146,8 +130,8 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.content}
         >
           <QuotationOrderInfoCard order={order} />
           <QuotationForm form={form} errors={errors} onChange={handleChange} />
@@ -165,10 +149,9 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
               borderRadius={18}
               minHeight={52}
               width="48%"
-              disabled={isSaving}
             />
             <AppButton
-              title={isSaving ? "Generando..." : "Generar"}
+              title={isSaving ? "Guardando..." : "Guardar"}
               onPress={handleSave}
               backgroundColor={colors.primary}
               borderRadius={18}
@@ -179,7 +162,6 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
           </View>
         </ScrollView>
       </View>
-      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -232,9 +214,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 14,
   },
-  keyboardContainer: {
-    flex: 1,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -263,7 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   content: {
-    paddingBottom: 28,
+    paddingBottom: 140,
   },
   totalError: {
     marginTop: -8,

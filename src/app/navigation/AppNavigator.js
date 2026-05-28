@@ -357,6 +357,12 @@ export function AppNavigator() {
     return equipmentWithFailure;
   };
 
+  const refreshClientes = async () => {
+    const clientesData = await listClientes();
+    setClientes(clientesData);
+    return clientesData;
+  };
+
   const saveUser = async (userData) => {
     await createUserRequest(userData);
     const usersData = await listUsers();
@@ -697,7 +703,10 @@ export function AppNavigator() {
           {({ navigation }) => (
             <EquipmentListScreen
               equipments={equipments}
-              onRegister={() => navigation.push("RegisterEquipment")}
+              onRegister={async () => {
+                await refreshClientes().catch(() => {});
+                navigation.push("RegisterEquipment");
+              }}
               onBack={() => navigation.goBack()}
               onOpenEquipment={(equipment) =>
                 navigation.push("EquipmentDetail", { equipmentId: equipment.id })
@@ -726,6 +735,8 @@ export function AppNavigator() {
             <RegisterEquipmentScreen
               clientes={clientes}
               onBack={() => navigation.goBack()}
+              onCreateClient={() => navigation.navigate("Clientes")}
+              onRefreshClientes={refreshClientes}
               onSave={async (equipmentData) => {
                 await saveEquipment(equipmentData);
                 navigation.replace("EquipmentList");

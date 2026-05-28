@@ -1,8 +1,6 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,10 +17,6 @@ import { orderStatuses } from "../services/ordersApi";
 
 export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservation }) {
   const [observation, setObservation] = useState("");
-  const [updatingStatus, setUpdatingStatus] = useState(null);
-  const [isAddingObservation, setIsAddingObservation] = useState(false);
-  const statusRef = useRef(false);
-  const observationRef = useRef(false);
 
   if (!order) {
     return (
@@ -37,57 +31,22 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
     );
   }
 
-  const handleUpdateStatus = async (status) => {
-    if (statusRef.current || order.status === status) return;
-
-    try {
-      statusRef.current = true;
-      setUpdatingStatus(status);
-      await onUpdateStatus(order.id, status);
-      Alert.alert("Confirmacion", "El estado fue actualizado correctamente.");
-    } catch (error) {
-      Alert.alert("Error", error.message || "No se pudo actualizar el estado.");
-    } finally {
-      statusRef.current = false;
-      setUpdatingStatus(null);
-    }
-  };
-
   const handleAddObservation = async () => {
-    if (observationRef.current) return;
-
     if (!observation.trim()) {
-      Alert.alert("Observacion vacia", "Ingresa una observacion valida.");
+      Alert.alert("Observación vacía", "Ingresa una observación válida.");
       return;
     }
 
-    try {
-      observationRef.current = true;
-      setIsAddingObservation(true);
-      await onAddObservation(order.id, observation.trim());
-      setObservation("");
-      Alert.alert("Confirmacion", "La observacion fue agregada correctamente.");
-    } catch (error) {
-      Alert.alert("Error", error.message || "No se pudo agregar la observacion.");
-    } finally {
-      observationRef.current = false;
-      setIsAddingObservation(false);
-    }
+    await onAddObservation(order.id, observation.trim());
+    setObservation("");
+    Alert.alert("Confirmación", "La observación fue agregada correctamente.");
   };
 
   return (
-    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            disabled={Boolean(updatingStatus) || isAddingObservation}
-          >
+          <Pressable onPress={onBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
@@ -99,11 +58,11 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Informacion principal</Text>
+            <Text style={styles.sectionTitle}>Información principal</Text>
 
             <InfoRow label="Cliente" value={order.clientName} />
             <InfoRow label="Equipo" value={order.equipmentName} />
@@ -126,16 +85,14 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
                 return (
                   <Pressable
                     key={status}
-                    style={[
-                      styles.statusButton,
-                      active && styles.statusButtonActive,
-                      updatingStatus && styles.disabledButton,
-                    ]}
-                    onPress={() => handleUpdateStatus(status)}
-                    disabled={Boolean(updatingStatus)}
+                    style={[styles.statusButton, active && styles.statusButtonActive]}
+                    onPress={async () => {
+                      await onUpdateStatus(order.id, status);
+                      Alert.alert("Confirmación", "El estado fue actualizado correctamente.");
+                    }}
                   >
                     <Text style={[styles.statusButtonText, active && styles.statusButtonTextActive]}>
-                      {updatingStatus === status ? "Actualizando..." : status}
+                      {status}
                     </Text>
                   </Pressable>
                 );
@@ -153,31 +110,23 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
                 </View>
               ))
             ) : (
-              <Text style={styles.emptyText}>Aun no hay observaciones registradas.</Text>
+              <Text style={styles.emptyText}>Aún no hay observaciones registradas.</Text>
             )}
 
             <TextInput
               value={observation}
               onChangeText={setObservation}
-              placeholder="Agregar observacion del servicio..."
+              placeholder="Agregar observación del servicio..."
               multiline
               style={styles.input}
-              editable={!isAddingObservation}
             />
 
-            <Pressable
-              style={[styles.primaryButton, isAddingObservation && styles.disabledButton]}
-              onPress={handleAddObservation}
-              disabled={isAddingObservation}
-            >
-              <Text style={styles.primaryButtonText}>
-                {isAddingObservation ? "Guardando..." : "Agregar observacion"}
-              </Text>
+            <Pressable style={styles.primaryButton} onPress={handleAddObservation}>
+              <Text style={styles.primaryButtonText}>Agregar observación</Text>
             </Pressable>
           </View>
         </ScrollView>
       </View>
-      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -196,9 +145,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 14,
-  },
-  keyboardContainer: {
-    flex: 1,
   },
   header: {
     flexDirection: "row",
@@ -228,7 +174,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 140,
   },
   card: {
     backgroundColor: "#FFFFFF",
@@ -319,8 +265,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "800",
-  },
-  disabledButton: {
-    opacity: 0.65,
   },
 });

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View, useWindowDimensions } from "react-native";
 
+import { AppLogoFull } from "../../../shared/components/AppLogoFull";
 import { AppButton } from "../../../shared/components/buttons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import tw from "../../../shared/styles/tw";
@@ -18,22 +19,15 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
   const [username, setUsername] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errors, setErrors] = useState({});
 
   const horizontalPadding = screenWidth < 380 ? 20 : 24;
   const contentWidth = Math.min(screenWidth - horizontalPadding * 2, 360);
-  const isDisabled =
-    !nombres.trim() ||
-    !apellidos.trim() ||
-    !email.trim() ||
-    !username.trim() ||
-    !businessName.trim() ||
-    !phone.trim();
 
-  const isValidEmail = (value) => /\S+@\S+\.\S+/.test(value);
-
-  const clearError = () => {
-    if (errorMessage) setErrorMessage("");
+  const clearFieldError = (field) => {
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
   };
 
   const handleNext = () => {
@@ -43,23 +37,43 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
     const trimmedUsername = username.trim();
     const trimmedBusinessName = businessName.trim();
     const trimmedPhone = phone.replace(/\D/g, "");
+    const nextErrors = {};
 
-    if (!trimmedNombres) return setErrorMessage("El nombre es obligatorio.");
-    if (trimmedNombres.length < 2) return setErrorMessage("El nombre debe tener al menos 2 caracteres.");
-    if (!trimmedApellidos) return setErrorMessage("El apellido es obligatorio.");
-    if (trimmedApellidos.length < 2) return setErrorMessage("El apellido debe tener al menos 2 caracteres.");
-    if (!trimmedEmail) return setErrorMessage("El email es obligatorio.");
-    if (!isValidEmail(trimmedEmail)) return setErrorMessage("Ingresa un correo electronico valido.");
-    if (!trimmedUsername) return setErrorMessage("El nombre de usuario es obligatorio.");
-    if (trimmedUsername.length < 4) return setErrorMessage("El nombre de usuario debe tener al menos 4 caracteres.");
-    if (!/^[a-zA-Z0-9._-]+$/.test(trimmedUsername)) {
-      return setErrorMessage("El nombre de usuario solo puede usar letras, numeros, punto, guion o guion bajo.");
+    if (!trimmedNombres || trimmedNombres.length < 2) {
+      nextErrors.nombres = "Ingrese al menos 2 caracteres.";
     }
-    if (!trimmedBusinessName) return setErrorMessage("El nombre del negocio es obligatorio.");
-    if (!trimmedPhone) return setErrorMessage("El telefono es obligatorio.");
-    if (!/^\d{8}$/.test(trimmedPhone)) return setErrorMessage("El telefono debe tener 8 digitos numericos.");
 
-    setErrorMessage("");
+    if (!trimmedApellidos || trimmedApellidos.length < 2) {
+      nextErrors.apellidos = "Ingrese al menos 2 caracteres.";
+    }
+
+    if (!trimmedEmail) {
+      nextErrors.email = "Ingrese un correo electronico.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      nextErrors.email = "Ingrese un correo valido, ejemplo: usuario@correo.com.";
+    }
+
+    if (!trimmedUsername) {
+      nextErrors.username = "Ingrese un nombre de usuario.";
+    } else if (!/^[a-zA-Z0-9._-]+$/.test(trimmedUsername)) {
+      nextErrors.username = "Use solo letras, numeros, punto, guion o guion bajo.";
+    } else if (trimmedUsername.length < 4) {
+      nextErrors.username = "Ingrese al menos 4 caracteres.";
+    }
+
+    if (!trimmedBusinessName) {
+      nextErrors.businessName = "Ingrese el nombre de su negocio.";
+    }
+
+    if (!trimmedPhone) {
+      nextErrors.phone = "Ingrese un numero de telefono.";
+    } else if (!/^\d{8}$/.test(trimmedPhone)) {
+      nextErrors.phone = "Ingrese un telefono boliviano valido de 8 digitos.";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
     onNext?.({
       nombres: trimmedNombres,
       apellidos: trimmedApellidos,
@@ -78,63 +92,61 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[tw`items-center`, { flexGrow: 1, paddingHorizontal: horizontalPadding, paddingTop: 20, paddingBottom: 96 }]}
-      >
-        <View style={{ width: contentWidth }}>
-          <Text style={[textPresets.headingDark, { fontSize: 22, lineHeight: 30, color: colors.black, marginBottom: 16 }]}>
-            Crea tu cuenta
-          </Text>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[
+            tw`items-center`,
+            { flexGrow: 1, paddingHorizontal: horizontalPadding, paddingTop: 18, paddingBottom: 96 },
+          ]}
+        >
+          <View style={{ width: contentWidth }}>
+            <View style={[tw`items-center`, { marginBottom: 14 }]}>
+              <AppLogoFull width={176} height={36} color={colors.black} />
+            </View>
 
-          <View style={[tw`items-center`, { marginBottom: 18 }]}>
-            <Image
-              source={require("../../../../assets/images/register-personal.png")}
-              style={{ width: 184, height: 143 }}
-              resizeMode="contain"
-            />
-          </View>
-
-          <Text style={[textPresets.bodyDark, { color: colors.black, fontWeight: "700", marginBottom: 16 }]}>
-            Informacion principal
-          </Text>
-
-          <View style={{ rowGap: 14 }}>
-            <AuthInput value={nombres} onChangeText={(text) => { setNombres(text); clearError(); }} placeholder="Nombres" icon="user" />
-            <AuthInput value={apellidos} onChangeText={(text) => { setApellidos(text); clearError(); }} placeholder="Apellidos" icon="user" />
-            <AuthInput value={email} onChangeText={(text) => { setEmail(text); clearError(); }} placeholder="Email" icon="mail" keyboardType="email-address" autoCapitalize="none" />
-            <AuthInput value={username} onChangeText={(text) => { setUsername(text); clearError(); }} placeholder="Nombre de usuario" icon="smile" autoCapitalize="none" />
-            <AuthInput value={businessName} onChangeText={(text) => { setBusinessName(text); clearError(); }} placeholder="Nombre del negocio" icon="briefcase" />
-            <AuthInput
-              value={phone}
-              onChangeText={(text) => { setPhone(text.replace(/\D/g, "").slice(0, 8)); clearError(); }}
-              placeholder="Telefono boliviano (8 digitos)"
-              icon="phone"
-              keyboardType="number-pad"
-              maxLength={8}
-            />
-          </View>
-
-          {!!errorMessage && (
-            <Text style={[textPresets.bodyMuted, { color: "#D14343", marginTop: 14, lineHeight: 20 }]}>
-              {errorMessage}
+            <Text style={[textPresets.headingDark, { fontSize: 22, lineHeight: 30, color: colors.black, marginBottom: 6 }]}>
+              Crea tu cuenta
             </Text>
-          )}
 
-          <View style={{ marginTop: 28 }}>
-            <AppButton title="Siguiente" onPress={handleNext} backgroundColor={isDisabled ? "#B8B8B8" : colors.primary} minHeight={54} disabled={isDisabled} />
-          </View>
+            <Text style={[textPresets.bodyMuted, { color: "#6B7280", marginBottom: 18, lineHeight: 20 }]}>
+              Registra tu negocio y la cuenta administradora.
+            </Text>
 
-          <View style={[tw`items-center`, { marginTop: 22 }]}>
-            <Text style={[textPresets.bodyMuted, { color: "#7B7B7B" }]}>
-              Tienes una cuenta?{" "}
-              <Text onPress={onGoToLogin} style={{ color: colors.black, fontWeight: "700" }}>
-                Inicia Sesion
+            <Text style={[textPresets.bodyDark, { color: colors.black, fontWeight: "700", marginBottom: 14 }]}>
+              Informacion principal
+            </Text>
+
+            <View style={{ rowGap: 12 }}>
+              <AuthInput value={nombres} onChangeText={(text) => { setNombres(text); clearFieldError("nombres"); }} placeholder="Nombres" icon="user" error={errors.nombres} />
+              <AuthInput value={apellidos} onChangeText={(text) => { setApellidos(text); clearFieldError("apellidos"); }} placeholder="Apellidos" icon="user" error={errors.apellidos} />
+              <AuthInput value={email} onChangeText={(text) => { setEmail(text); clearFieldError("email"); }} placeholder="Email" icon="mail" keyboardType="email-address" autoCapitalize="none" error={errors.email} />
+              <AuthInput value={username} onChangeText={(text) => { setUsername(text); clearFieldError("username"); }} placeholder="Nombre de usuario" icon="smile" autoCapitalize="none" error={errors.username} />
+              <AuthInput value={businessName} onChangeText={(text) => { setBusinessName(text); clearFieldError("businessName"); }} placeholder="Nombre del negocio" icon="briefcase" error={errors.businessName} />
+              <AuthInput
+                value={phone}
+                onChangeText={(text) => { setPhone(text.replace(/\D/g, "").slice(0, 8)); clearFieldError("phone"); }}
+                placeholder="Telefono boliviano (8 digitos)"
+                icon="phone"
+                keyboardType="number-pad"
+                maxLength={8}
+                error={errors.phone}
+              />
+            </View>
+
+            <View style={{ marginTop: 24 }}>
+              <AppButton title="Siguiente" onPress={handleNext} backgroundColor={colors.primary} minHeight={54} />
+            </View>
+
+            <View style={[tw`items-center`, { marginTop: 20 }]}>
+              <Text style={[textPresets.bodyMuted, { color: "#7B7B7B" }]}>
+                Tienes una cuenta?{" "}
+                <Text onPress={onGoToLogin} style={{ color: colors.black, fontWeight: "700" }}>
+                  Inicia Sesion
+                </Text>
               </Text>
-            </Text>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
       </KeyboardAvoidingView>
     </ScreenContainer>
   );

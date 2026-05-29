@@ -8,7 +8,7 @@ import { colors } from "../../../shared/theme/colors";
 import { textPresets } from "../../../shared/theme/typography";
 import tw from "../../../shared/styles/tw";
 
-export function AuthEntryScreen({ onLogin, onRegister, onGoogle, onFacebook }) {
+export function AuthEntryScreen({ onLogin, onRegister }) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isCompactHeight = screenHeight < 760;
   const isVeryCompactHeight = screenHeight < 690;
@@ -91,61 +91,6 @@ export function AuthEntryScreen({ onLogin, onRegister, onGoogle, onFacebook }) {
             textColor="#B8B8B8"
             minHeight={54}
           />
-        </View>
-
-        <View
-          style={[
-            tw`items-center`,
-            {
-              width: contentWidth,
-              marginTop: isVeryCompactHeight ? 28 : 40,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              textPresets.bodyMuted,
-              {
-                fontSize: 16,
-                lineHeight: 22,
-                color: "#C7CBD4",
-              },
-            ]}
-          >
-            continua con
-          </Text>
-
-          <View
-            style={{
-              width: "100%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginTop: 18,
-              columnGap: 12,
-            }}
-          >
-            <AppButton
-              title="GOOGLE"
-              onPress={onGoogle}
-              backgroundColor="#F7D9D6"
-              textColor="#E2583E"
-              width={(contentWidth - 12) / 2}
-              minHeight={50}
-              style={{ paddingVertical: 14 }}
-              textStyle={{ fontSize: 14, lineHeight: 18, letterSpacing: 2.4 }}
-            />
-
-            <AppButton
-              title="FACEBOOK"
-              onPress={onFacebook}
-              backgroundColor="#D8E1F4"
-              textColor="#4C6FB8"
-              width={(contentWidth - 12) / 2}
-              minHeight={50}
-              style={{ paddingVertical: 14 }}
-              textStyle={{ fontSize: 14, lineHeight: 18, letterSpacing: 2.1 }}
-            />
-          </View>
         </View>
       </View>
     </ScreenContainer>

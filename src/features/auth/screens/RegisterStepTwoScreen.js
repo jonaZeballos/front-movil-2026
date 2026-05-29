@@ -25,12 +25,15 @@ export function RegisterStepTwoScreen({ onBack, onFinish }) {
   const [repeatPassword, setRepeatPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const horizontalPadding = screenWidth < 380 ? 20 : 24;
   const contentWidth = Math.min(screenWidth - horizontalPadding * 2, 360);
-  const isDisabled = !password.trim() || !repeatPassword.trim() || !acceptedTerms;
+  const isDisabled = !password.trim() || !repeatPassword.trim() || !acceptedTerms || isSubmitting;
 
   const handleFinish = async () => {
+    if (isSubmitting) return;
+
     const trimmedPassword = password.trim();
     const trimmedRepeatPassword = repeatPassword.trim();
 
@@ -41,9 +44,17 @@ export function RegisterStepTwoScreen({ onBack, onFinish }) {
     if (!acceptedTerms) return setErrorMessage("Debes aceptar los términos y condiciones.");
 
     setErrorMessage("");
-    const result = await onFinish?.({ password: trimmedPassword, repeatPassword: trimmedRepeatPassword, acceptedTerms });
-    if (result && result.success === false) {
-      setErrorMessage(result.message || "No se pudo completar el registro.");
+    setIsSubmitting(true);
+
+    try {
+      const result = await onFinish?.({ password: trimmedPassword, repeatPassword: trimmedRepeatPassword, acceptedTerms });
+      if (result && result.success === false) {
+        setErrorMessage(result.message || "No se pudo completar el registro.");
+      }
+    } catch (error) {
+      setErrorMessage(error.message || "No se pudo completar el registro.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -61,7 +72,7 @@ export function RegisterStepTwoScreen({ onBack, onFinish }) {
           alignItems: "center",
           paddingHorizontal: horizontalPadding,
           paddingTop: 20,
-          paddingBottom: 32,
+          paddingBottom: 96,
         }}
         keyboardShouldPersistTaps="handled"
       >
@@ -121,7 +132,13 @@ export function RegisterStepTwoScreen({ onBack, onFinish }) {
           )}
 
           <View style={{ marginTop: 28 }}>
-            <AppButton title="Terminar Registro" onPress={handleFinish} backgroundColor={isDisabled ? "#B8B8B8" : colors.primary} minHeight={54} />
+            <AppButton
+              title={isSubmitting ? "Registrando..." : "Terminar Registro"}
+              onPress={handleFinish}
+              backgroundColor={isDisabled ? "#B8B8B8" : colors.primary}
+              minHeight={54}
+              disabled={isDisabled}
+            />
           </View>
         </View>
       </ScrollView>

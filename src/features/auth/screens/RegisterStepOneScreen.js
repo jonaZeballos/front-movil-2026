@@ -12,7 +12,8 @@ import { AuthTopBar } from "../components/AuthTopBar";
 export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
   const { width: screenWidth } = useWindowDimensions();
 
-  const [names, setNames] = useState("");
+  const [nombres, setNombres] = useState("");
+  const [apellidos, setApellidos] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -22,7 +23,12 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
   const horizontalPadding = screenWidth < 380 ? 20 : 24;
   const contentWidth = Math.min(screenWidth - horizontalPadding * 2, 360);
   const isDisabled =
-    !names.trim() || !email.trim() || !username.trim() || !businessName.trim() || !phone.trim();
+    !nombres.trim() ||
+    !apellidos.trim() ||
+    !email.trim() ||
+    !username.trim() ||
+    !businessName.trim() ||
+    !phone.trim();
 
   const isValidEmail = (value) => /\S+@\S+\.\S+/.test(value);
 
@@ -31,24 +37,32 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
   };
 
   const handleNext = () => {
-    const trimmedNames = names.trim();
+    const trimmedNombres = nombres.trim();
+    const trimmedApellidos = apellidos.trim();
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedUsername = username.trim();
     const trimmedBusinessName = businessName.trim();
     const trimmedPhone = phone.replace(/\D/g, "");
 
-    if (!trimmedNames) return setErrorMessage("Los nombres son obligatorios.");
-    if (trimmedNames.length < 3) return setErrorMessage("Los nombres deben tener al menos 3 caracteres.");
+    if (!trimmedNombres) return setErrorMessage("El nombre es obligatorio.");
+    if (trimmedNombres.length < 2) return setErrorMessage("El nombre debe tener al menos 2 caracteres.");
+    if (!trimmedApellidos) return setErrorMessage("El apellido es obligatorio.");
+    if (trimmedApellidos.length < 2) return setErrorMessage("El apellido debe tener al menos 2 caracteres.");
     if (!trimmedEmail) return setErrorMessage("El email es obligatorio.");
     if (!isValidEmail(trimmedEmail)) return setErrorMessage("Ingresa un correo electronico valido.");
     if (!trimmedUsername) return setErrorMessage("El nombre de usuario es obligatorio.");
     if (trimmedUsername.length < 4) return setErrorMessage("El nombre de usuario debe tener al menos 4 caracteres.");
+    if (!/^[a-zA-Z0-9._-]+$/.test(trimmedUsername)) {
+      return setErrorMessage("El nombre de usuario solo puede usar letras, numeros, punto, guion o guion bajo.");
+    }
     if (!trimmedBusinessName) return setErrorMessage("El nombre del negocio es obligatorio.");
     if (!trimmedPhone) return setErrorMessage("El telefono es obligatorio.");
+    if (!/^\d{8}$/.test(trimmedPhone)) return setErrorMessage("El telefono debe tener 8 digitos numericos.");
 
     setErrorMessage("");
     onNext?.({
-      names: trimmedNames,
+      nombres: trimmedNombres,
+      apellidos: trimmedApellidos,
       email: trimmedEmail,
       username: trimmedUsername,
       negocioNombre: trimmedBusinessName,
@@ -66,7 +80,7 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
       >
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[tw`items-center`, { paddingHorizontal: horizontalPadding, paddingTop: 20, paddingBottom: 24 }]}
+        contentContainerStyle={[tw`items-center`, { flexGrow: 1, paddingHorizontal: horizontalPadding, paddingTop: 20, paddingBottom: 96 }]}
       >
         <View style={{ width: contentWidth }}>
           <Text style={[textPresets.headingDark, { fontSize: 22, lineHeight: 30, color: colors.black, marginBottom: 16 }]}>
@@ -86,11 +100,19 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
           </Text>
 
           <View style={{ rowGap: 14 }}>
-            <AuthInput value={names} onChangeText={(text) => { setNames(text); clearError(); }} placeholder="Ingrese nombre completo" icon="user" />
+            <AuthInput value={nombres} onChangeText={(text) => { setNombres(text); clearError(); }} placeholder="Nombres" icon="user" />
+            <AuthInput value={apellidos} onChangeText={(text) => { setApellidos(text); clearError(); }} placeholder="Apellidos" icon="user" />
             <AuthInput value={email} onChangeText={(text) => { setEmail(text); clearError(); }} placeholder="Email" icon="mail" keyboardType="email-address" autoCapitalize="none" />
             <AuthInput value={username} onChangeText={(text) => { setUsername(text); clearError(); }} placeholder="Nombre de usuario" icon="smile" autoCapitalize="none" />
             <AuthInput value={businessName} onChangeText={(text) => { setBusinessName(text); clearError(); }} placeholder="Nombre del negocio" icon="briefcase" />
-            <AuthInput value={phone} onChangeText={(text) => { setPhone(text); clearError(); }} placeholder="Telefono" icon="phone" keyboardType="phone-pad" />
+            <AuthInput
+              value={phone}
+              onChangeText={(text) => { setPhone(text.replace(/\D/g, "").slice(0, 8)); clearError(); }}
+              placeholder="Telefono boliviano (8 digitos)"
+              icon="phone"
+              keyboardType="number-pad"
+              maxLength={8}
+            />
           </View>
 
           {!!errorMessage && (
@@ -100,7 +122,7 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
           )}
 
           <View style={{ marginTop: 28 }}>
-            <AppButton title="Siguiente" onPress={handleNext} backgroundColor={isDisabled ? "#B8B8B8" : colors.primary} minHeight={54} />
+            <AppButton title="Siguiente" onPress={handleNext} backgroundColor={isDisabled ? "#B8B8B8" : colors.primary} minHeight={54} disabled={isDisabled} />
           </View>
 
           <View style={[tw`items-center`, { marginTop: 22 }]}>

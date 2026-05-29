@@ -10,6 +10,7 @@ export function AuthInput({
   icon = "user",
   keyboardType = "default",
   autoCapitalize = "sentences",
+  ...textInputProps
 }) {
   return (
     <View
@@ -36,6 +37,7 @@ export function AuthInput({
         placeholderTextColor="#B8B8B8"
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
+        {...textInputProps}
         style={{
           flex: 1,
           color: colors.black,

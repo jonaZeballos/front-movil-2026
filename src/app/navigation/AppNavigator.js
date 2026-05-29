@@ -189,6 +189,15 @@ export function AppNavigator() {
     }
   };
 
+  const resetToRoute = (navigation, routeName, params) => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: routeName, params }],
+      })
+    );
+  };
+
   const handleLogin = async ({ email, password }, navigation) => {
     try {
       const loginData = await loginRequest({ email, password });
@@ -205,13 +214,10 @@ export function AppNavigator() {
         console.warn("No se pudo cargar la informacion inicial.", error);
       });
 
-      if (role === "admin") {
-        navigation.replace("AdminDashboard");
-      } else if (role === "ventas") {
-        navigation.replace("SalesDashboard");
-      } else {
-        navigation.replace("Home");
-      }
+      const dashboardRoute =
+        role === "admin" ? "AdminDashboard" : role === "ventas" ? "SalesDashboard" : "Home";
+
+      resetToRoute(navigation, dashboardRoute);
 
       return { success: true };
     } catch (error) {
@@ -429,7 +435,7 @@ export function AppNavigator() {
           {({ navigation }) => (
             <LoginScreen
               onLogin={(credentials) => handleLogin(credentials, navigation)}
-              onBack={() => navigation.goBack()}
+              onBack={() => resetToRoute(navigation, "AuthEntry")}
             />
           )}
         </Stack.Screen>
@@ -437,12 +443,12 @@ export function AppNavigator() {
         <Stack.Screen name="RegisterStepOne">
           {({ navigation }) => (
             <RegisterStepOneScreen
-              onBack={() => navigation.goBack()}
+              onBack={() => resetToRoute(navigation, "Login")}
               onNext={(data) => {
                 setRegisterDraft(data);
                 navigation.push("RegisterStepTwo");
               }}
-              onGoToLogin={() => navigation.push("Login")}
+              onGoToLogin={() => resetToRoute(navigation, "Login")}
             />
           )}
         </Stack.Screen>
@@ -450,7 +456,7 @@ export function AppNavigator() {
         <Stack.Screen name="RegisterStepTwo">
           {({ navigation }) => (
             <RegisterStepTwoScreen
-              onBack={() => navigation.goBack()}
+              onBack={() => navigation.navigate("RegisterStepOne")}
               onFinish={(data) => handleRegisterOwner(data, navigation)}
             />
           )}

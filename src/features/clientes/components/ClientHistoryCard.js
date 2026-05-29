@@ -3,6 +3,7 @@ import { Feather } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
 import {
+  getClienteAddress,
   getClienteDocument,
   getClienteEmail,
   getClienteName,
@@ -33,6 +34,11 @@ export function ClientHistoryCard({ cliente, stats }) {
           <Feather name="mail" size={15} color="#6B7280" />
           <Text style={styles.contactText}>{getClienteEmail(cliente)}</Text>
         </View>
+
+        <View style={styles.contactRow}>
+          <Feather name="map-pin" size={15} color="#6B7280" />
+          <Text style={styles.contactText}>{getClienteAddress(cliente)}</Text>
+        </View>
       </View>
 
       <View style={styles.statsRow}>
@@ -43,7 +49,7 @@ export function ClientHistoryCard({ cliente, stats }) {
 
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{stats?.totalOrdenes || 0}</Text>
-          <Text style={styles.statLabel}>Órdenes</Text>
+          <Text style={styles.statLabel}>Ordenes</Text>
         </View>
 
         <View style={styles.statItem}>

@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
@@ -14,8 +13,226 @@ import {
 import { Feather } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
-import { textPresets } from "../../../shared/theme/typography";
-import tw from "../../../shared/styles/tw";
+
+const EMAIL_REGEX = /\S+@\S+\.\S+/;
+
+export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false }) {
+  const [form, setForm] = useState({
+    nombres: "",
+    apellidos: "",
+    numeroDocumento: "",
+    telefono: "",
+    correo: "",
+    direccion: "",
+  });
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (campo, value) => {
+    setForm((prev) => ({ ...prev, [campo]: value }));
+    setErrors((prev) => {
+      if (!prev[campo]) return prev;
+      const next = { ...prev };
+      delete next[campo];
+      return next;
+    });
+  };
+
+  const validate = () => {
+    const nextErrors = {};
+    const nombres = form.nombres.trim();
+    const apellidos = form.apellidos.trim();
+    const documentoRaw = form.numeroDocumento.trim();
+    const documento = documentoRaw.replace(/\D/g, "");
+    const telefonoRaw = form.telefono.trim();
+    const telefono = telefonoRaw.replace(/\D/g, "");
+    const correo = form.correo.trim();
+    const direccion = form.direccion.trim();
+
+    if (nombres.length < 2) {
+      nextErrors.nombres = "Ingrese nombres validos.";
+    }
+
+    if (apellidos.length < 2) {
+      nextErrors.apellidos = "Ingrese apellidos validos.";
+    }
+
+    if (!documentoRaw) {
+      nextErrors.numeroDocumento = "Ingrese un documento CI/NIT valido.";
+    } else if (documentoRaw !== documento) {
+      nextErrors.numeroDocumento = "El documento debe contener solo numeros.";
+    } else if (documento.length < 5 || documento.length > 15) {
+      nextErrors.numeroDocumento = "Ingrese un documento CI/NIT valido.";
+    }
+
+    if (!telefonoRaw || telefonoRaw !== telefono || !/^\d{8}$/.test(telefono)) {
+      nextErrors.telefono = "Ingrese un telefono boliviano valido de 8 digitos.";
+    }
+
+    if (!correo || !EMAIL_REGEX.test(correo)) {
+      nextErrors.correo = "Ingrese un correo valido, ejemplo: cliente@correo.com.";
+    }
+
+    if (direccion && direccion.length < 5) {
+      nextErrors.direccion = "La direccion debe tener al menos 5 caracteres.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleGuardar = () => {
+    if (isSaving) return;
+    if (!validate()) return;
+
+    const documento = form.numeroDocumento.trim();
+    const telefono = form.telefono.trim();
+    const nombres = form.nombres.trim();
+    const apellidos = form.apellidos.trim();
+    const nombre = [nombres, apellidos].join(" ");
+
+    onGuardar?.({
+      ...form,
+      nombres,
+      apellidos,
+      nombre,
+      razonSocial: nombre,
+      numeroDocumento: documento,
+      telefono,
+      correo: form.correo.trim().toLowerCase(),
+      direccion: form.direccion.trim(),
+    });
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={onVolver}>
+            <Feather name="arrow-left" size={20} color="#111827" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.headerTitle}>Registrar cliente</Text>
+            <Text style={styles.headerSubtitle}>
+              Completa el formulario para registrar{"\n"}un nuevo cliente
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.formCard}>
+          <Field
+            label="Nombres"
+            icon="user"
+            placeholder="Ingrese nombres"
+            value={form.nombres}
+            error={errors.nombres}
+            onChangeText={(value) => handleChange("nombres", value)}
+          />
+
+          <Field
+            label="Apellidos"
+            icon="user"
+            placeholder="Ingrese apellidos"
+            value={form.apellidos}
+            error={errors.apellidos}
+            onChangeText={(value) => handleChange("apellidos", value)}
+          />
+
+          <Field
+            label="Documento CI/NIT"
+            icon="credit-card"
+            placeholder="Ingrese CI o NIT"
+            keyboardType="number-pad"
+            value={form.numeroDocumento}
+            error={errors.numeroDocumento}
+            onChangeText={(value) => handleChange("numeroDocumento", value)}
+          />
+
+          <Field
+            label="Telefono"
+            icon="phone"
+            placeholder="Ingrese telefono boliviano de 8 digitos"
+            keyboardType="phone-pad"
+            value={form.telefono}
+            error={errors.telefono}
+            onChangeText={(value) => handleChange("telefono", value)}
+          />
+
+          <Field
+            label="Correo electronico"
+            icon="mail"
+            placeholder="cliente@correo.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={form.correo}
+            error={errors.correo}
+            onChangeText={(value) => handleChange("correo", value)}
+          />
+
+          <Field
+            label="Direccion"
+            optional
+            icon="map-pin"
+            placeholder="Ingrese la direccion"
+            value={form.direccion}
+            error={errors.direccion}
+            onChangeText={(value) => handleChange("direccion", value)}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.saveBtn, isSaving && styles.disabledButton]}
+          onPress={handleGuardar}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color={colors.surface} />
+              <Text style={styles.saveBtnText}>Guardando cliente...</Text>
+            </View>
+          ) : (
+            <Text style={styles.saveBtnText}>Guardar cliente</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+function Field({
+  label,
+  optional = false,
+  icon,
+  placeholder,
+  value,
+  error,
+  onChangeText,
+  keyboardType = "default",
+  autoCapitalize = "sentences",
+}) {
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.fieldLabel}>
+        {label} {optional ? <Text style={styles.optionalTag}>(opcional)</Text> : null}
+      </Text>
+      <View style={[styles.inputRow, !!error && styles.inputRowError]}>
+        <Feather name={icon} size={18} color={error ? "#D14343" : "#8C8C8C"} />
+        <TextInput
+          style={styles.input}
+          placeholder={placeholder}
+          placeholderTextColor="#8C8C8C"
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          value={value}
+          onChangeText={onChangeText}
+        />
+      </View>
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -62,6 +279,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 16,
   },
+  fieldGroup: {
+    marginBottom: 16,
+  },
   fieldLabel: {
     fontSize: 12,
     fontWeight: "700",
@@ -88,10 +308,20 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: "#e5e5e5",
   },
+  inputRowError: {
+    borderColor: "#D14343",
+    backgroundColor: "#FFF7F7",
+  },
   input: {
     flex: 1,
     fontSize: 15,
     color: colors.black,
+  },
+  errorText: {
+    marginTop: 6,
+    color: "#D14343",
+    fontSize: 12,
+    lineHeight: 16,
   },
   saveBtn: {
     marginHorizontal: 14,
@@ -107,161 +337,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
+  },
   disabledButton: {
     opacity: 0.7,
   },
 });
-
-export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false }) {
-  const [form, setForm] = useState({
-    nombre: "",
-    numeroDocumento: "",
-    telefono: "",
-    correo: "",
-    direccion: "",
-  });
-
-  const handleChange = (campo, value) => {
-    setForm({ ...form, [campo]: value });
-  };
-
-  const handleGuardar = () => {
-    if (isSaving) return;
-
-    const documento = form.numeroDocumento.replace(/\D/g, "");
-    const telefono = form.telefono.replace(/\D/g, "");
-
-    if (!form.nombre.trim() || !documento || !telefono || !form.correo.trim()) {
-      Alert.alert("Error", "Por favor completa nombre, documento, telefono y correo.");
-      return;
-    }
-
-    if (documento.length < 5 || documento.length > 12) {
-      Alert.alert("Documento invalido", "El CI/NIT debe contener solo numeros y tener entre 5 y 12 digitos.");
-      return;
-    }
-
-    if (!/^[67]\d{7}$/.test(telefono)) {
-      Alert.alert("Telefono invalido", "Ingresa un telefono boliviano de 8 digitos que empiece en 6 o 7.");
-      return;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(form.correo.trim())) {
-      Alert.alert("Correo invalido", "Ingresa un correo electronico valido.");
-      return;
-    }
-
-    if (onGuardar) onGuardar({ ...form, numeroDocumento: documento, telefono, correo: form.correo.trim() });
-  };
-
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={onVolver}>
-          <Feather name="arrow-left" size={20} color="#111827" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.headerTitle}>Registrar cliente</Text>
-          <Text style={styles.headerSubtitle}>
-            Completa el formulario para registrar{"\n"}un nuevo cliente
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.formCard}>
-        <View>
-          <Text style={styles.fieldLabel}>Nombre completo</Text>
-          <View style={styles.inputRow}>
-            <Feather name="user" size={18} color="#8C8C8C" />
-            <TextInput
-              style={styles.input}
-              placeholder="Ingresa el nombre completo"
-              placeholderTextColor="#8C8C8C"
-              value={form.nombre}
-              onChangeText={(value) => handleChange("nombre", value)}
-            />
-          </View>
-        </View>
-
-        <View style={{ marginTop: 16 }}>
-          <Text style={styles.fieldLabel}>Documento</Text>
-          <View style={styles.inputRow}>
-            <Feather name="credit-card" size={18} color="#8C8C8C" />
-            <TextInput
-              style={styles.input}
-              placeholder="Ingresa CI o NIT"
-              placeholderTextColor="#8C8C8C"
-              keyboardType="number-pad"
-              value={form.numeroDocumento}
-              onChangeText={(value) => handleChange("numeroDocumento", value)}
-            />
-          </View>
-        </View>
-
-        <View style={{ marginTop: 16 }}>
-          <Text style={styles.fieldLabel}>Teléfono</Text>
-          <View style={styles.inputRow}>
-            <Feather name="phone" size={18} color="#8C8C8C" />
-            <TextInput
-              style={styles.input}
-              placeholder="Ingresa el teléfono"
-              placeholderTextColor="#8C8C8C"
-              keyboardType="phone-pad"
-              value={form.telefono}
-              onChangeText={(value) => handleChange("telefono", value)}
-            />
-          </View>
-        </View>
-
-        <View style={{ marginTop: 16 }}>
-          <Text style={styles.fieldLabel}>Correo electrónico</Text>
-          <View style={styles.inputRow}>
-            <Feather name="mail" size={18} color="#8C8C8C" />
-            <TextInput
-              style={styles.input}
-              placeholder="Ingresa el correo electrónico"
-              placeholderTextColor="#8C8C8C"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={form.correo}
-              onChangeText={(value) => handleChange("correo", value)}
-            />
-          </View>
-        </View>
-
-        <View style={{ marginTop: 16 }}>
-          <Text style={styles.fieldLabel}>
-            Dirección <Text style={styles.optionalTag}>(opcional)</Text>
-          </Text>
-          <View style={styles.inputRow}>
-            <Feather name="map-pin" size={18} color="#8C8C8C" />
-            <TextInput
-              style={styles.input}
-              placeholder="Ingresa la dirección"
-              placeholderTextColor="#8C8C8C"
-              value={form.direccion}
-              onChangeText={(value) => handleChange("direccion", value)}
-            />
-          </View>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.saveBtn, isSaving && styles.disabledButton]}
-        onPress={handleGuardar}
-        disabled={isSaving}
-      >
-        {isSaving ? (
-          <ActivityIndicator color={colors.surface} />
-        ) : (
-          <Text style={styles.saveBtnText}>Guardar cliente</Text>
-        )}
-      </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
-}

@@ -12,33 +12,6 @@ import { Feather } from "@expo/vector-icons";
 import { colors } from "../../../shared/theme/colors";
 import { getClientStats } from "../services/clientHistoryApi";
 
-const fallbackClientes = [
-  {
-    id: 1,
-    nombre: "Juan Soliz",
-    correo: "juan.soliz@email.com",
-    telefono: "+591 70011223",
-    direccion: "Calle Libertad 45",
-    iniciales: "JS",
-  },
-  {
-    id: 2,
-    nombre: "Pedro Perez",
-    correo: "pedro.perez@gmail.com",
-    telefono: "+591 71234567",
-    direccion: "Av. Busch 120",
-    iniciales: "PP",
-  },
-  {
-    id: 3,
-    nombre: "Maria Lopez",
-    correo: "maria.lopez@hotmail.com",
-    telefono: "+591 76543210",
-    direccion: "Calle Murillo 8",
-    iniciales: "ML",
-  },
-];
-
 export default function GestionClientes({
   clientes = [],
   ordenes = [],
@@ -49,18 +22,26 @@ export default function GestionClientes({
   onOpenHistory,
 }) {
   const [busqueda, setBusqueda] = useState("");
-  const clientList = clientes.length > 0 ? clientes : fallbackClientes;
+  const clientList = Array.isArray(clientes) ? clientes : [];
 
   const filtrados = clientList.filter((cliente) => {
     const nombre = String(cliente.nombre || "").toLowerCase();
+    const razonSocial = String(cliente.razonSocial || "").toLowerCase();
     const telefono = String(cliente.telefono || "");
-    const correo = String(cliente.correo || "").toLowerCase();
-    const term = busqueda.toLowerCase();
+    const correo = String(cliente.correo || cliente.email || "").toLowerCase();
+    const documento = String(cliente.numeroDocumento || cliente.documento || "");
+    const direccion = String(cliente.direccion || "").toLowerCase();
+    const term = busqueda.trim().toLowerCase();
+    const rawTerm = busqueda.trim();
 
     return (
+      !term ||
       nombre.includes(term) ||
-      telefono.includes(busqueda) ||
-      correo.includes(term)
+      razonSocial.includes(term) ||
+      telefono.includes(rawTerm) ||
+      correo.includes(term) ||
+      documento.includes(rawTerm) ||
+      direccion.includes(term)
     );
   });
 
@@ -78,12 +59,12 @@ export default function GestionClientes({
 
           <View style={{ flex: 1 }}>
             <Text style={styles.cardName}>{item.nombre || "Cliente sin nombre"}</Text>
-            <Text style={styles.cardEmail}>{item.correo || "Sin correo"}</Text>
+            <Text style={styles.cardEmail}>{item.correo || item.email || "Sin correo"}</Text>
           </View>
         </View>
 
         <Text style={styles.cardDetail}>
-          {item.telefono || "Sin teléfono"} · {item.direccion || "Sin dirección"}
+          {item.telefono || "Sin telefono"} · {item.direccion || "Sin direccion"}
         </Text>
 
         <View style={styles.statsRow}>
@@ -94,7 +75,7 @@ export default function GestionClientes({
 
           <View style={styles.statChip}>
             <Text style={styles.statNumber}>{stats.totalOrdenes}</Text>
-            <Text style={styles.statText}>Órdenes</Text>
+            <Text style={styles.statText}>Ordenes</Text>
           </View>
 
           <View style={styles.statChip}>
@@ -134,7 +115,7 @@ export default function GestionClientes({
         </Pressable>
 
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>Gestión de clientes</Text>
+          <Text style={styles.headerTitle}>Gestion de clientes</Text>
           <Text style={styles.headerSubtitle}>
             Registro, detalle e historial de clientes
           </Text>
@@ -148,7 +129,7 @@ export default function GestionClientes({
           <Feather name="search" size={18} color="#8C8C8C" />
           <TextInput
             style={styles.inputText}
-            placeholder="Por nombre, teléfono o correo"
+            placeholder="Por nombre, telefono, correo, documento o direccion"
             placeholderTextColor="#8C8C8C"
             value={busqueda}
             onChangeText={setBusqueda}
@@ -170,9 +151,9 @@ export default function GestionClientes({
         ListEmptyComponent={
           <View style={styles.emptyCard}>
             <Feather name="users" size={38} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>No hay clientes</Text>
+            <Text style={styles.emptyTitle}>No hay clientes registrados</Text>
             <Text style={styles.emptyText}>
-              Registra clientes para consultar su historial.
+              Este negocio todavia no tiene clientes. Registra el primero para consultar su historial.
             </Text>
           </View>
         }

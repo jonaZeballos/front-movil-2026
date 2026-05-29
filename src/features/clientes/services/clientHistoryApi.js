@@ -24,6 +24,10 @@ export function getClienteEmail(cliente) {
   return cliente?.correo || cliente?.email || "Sin correo";
 }
 
+export function getClienteAddress(cliente) {
+  return cliente?.direccion || cliente?.address || cliente?.domicilio || "Sin direccion";
+}
+
 export function getClienteDocument(cliente) {
   return cliente?.numeroDocumento || cliente?.documento || cliente?.ci || cliente?.nit || "No registrado";
 }

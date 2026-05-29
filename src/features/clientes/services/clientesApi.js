@@ -9,10 +9,13 @@ export function createCliente(clienteData) {
   return apiRequest("/api/clientes", {
     method: "POST",
     body: JSON.stringify({
+      nombres: clienteData.nombres,
+      apellidos: clienteData.apellidos,
       razonSocial: clienteData.razonSocial || clienteData.nombre,
       numeroDocumento: clienteData.numeroDocumento,
       numero: clienteData.numero || clienteData.telefono,
       email: clienteData.email || clienteData.correo,
+      direccion: clienteData.direccion,
     }),
   }).then(mapCliente);
 }

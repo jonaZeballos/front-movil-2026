@@ -18,7 +18,11 @@ export function RegisterScreen({ navigation, onGuardar }) {
       await onGuardar?.(clienteData);
       Alert.alert("Exito", `Cliente ${clienteData.nombre} registrado.`);
     } catch (error) {
-      Alert.alert("No se pudo registrar", error.message || "Intenta nuevamente.");
+      console.warn("Error al registrar cliente", error);
+      Alert.alert(
+        "No se pudo registrar el cliente",
+        getClientRegisterErrorMessage(error)
+      );
     } finally {
       submitLockRef.current = false;
       setIsSaving(false);
@@ -34,4 +38,31 @@ export function RegisterScreen({ navigation, onGuardar }) {
       <RegistrarCliente onGuardar={handleGuardar} onVolver={handleVolver} isSaving={isSaving} />
     </ScreenContainer>
   );
+}
+
+function getClientRegisterErrorMessage(error) {
+  const message = String(error?.message || "").trim();
+
+  if (!message) {
+    return "No se pudo registrar el cliente. Intenta nuevamente.";
+  }
+
+  if (message.includes("documento en este negocio")) {
+    return "Ya existe un cliente con ese documento en este negocio.";
+  }
+
+  if (message.includes("correo en este negocio")) {
+    return "Ya existe un cliente con ese correo en este negocio.";
+  }
+
+  if (
+    message.includes("Invalid `prisma") ||
+    message.includes("Prisma") ||
+    message.includes("Unique constraint") ||
+    message.includes("does not exist")
+  ) {
+    return "No se pudo registrar el cliente. Intenta nuevamente.";
+  }
+
+  return message;
 }

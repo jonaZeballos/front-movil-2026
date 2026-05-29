@@ -210,6 +210,14 @@ export function AppNavigator() {
         role,
       });
 
+      setUsers([]);
+      setClientes([]);
+      setEquipments([]);
+      setOrders([]);
+      setProducts([]);
+      setSalesReports([]);
+      setNotifications([]);
+
       refreshSprintData(role).catch((error) => {
         console.warn("No se pudo cargar la informacion inicial.", error);
       });

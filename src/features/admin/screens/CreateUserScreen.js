@@ -13,6 +13,7 @@ export function CreateUserScreen({ onBack, onSave }) {
     role: "tecnico",
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const submitLockRef = useRef(false);
 
   const handleChange = (field, value) => {
@@ -24,6 +25,16 @@ export function CreateUserScreen({ onBack, onSave }) {
 
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
       Alert.alert("Error", "Completa nombre, correo y contrasena.");
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(form.email.trim())) {
+      Alert.alert("Correo invalido", "Ingresa un correo electronico valido.");
+      return;
+    }
+
+    if (form.password.trim().length < 6) {
+      Alert.alert("Contrasena invalida", "La contrasena debe tener al menos 6 caracteres.");
       return;
     }
 
@@ -64,7 +75,7 @@ export function CreateUserScreen({ onBack, onSave }) {
             <Field
               label="Nombre completo"
               icon="person-outline"
-              placeholder="Ingresa el nombre"
+              placeholder="Ingrese nombre completo"
               value={form.name}
               onChangeText={(value) => handleChange("name", value)}
             />
@@ -84,7 +95,9 @@ export function CreateUserScreen({ onBack, onSave }) {
               icon="lock-closed-outline"
               placeholder="Contrasena inicial"
               value={form.password}
-              secureTextEntry
+              secureTextEntry={!showPassword}
+              rightIcon={showPassword ? "eye-outline" : "eye-off-outline"}
+              onPressRightIcon={() => setShowPassword((value) => !value)}
               onChangeText={(value) => handleChange("password", value)}
             />
 
@@ -130,6 +143,8 @@ function Field({
   keyboardType = "default",
   autoCapitalize = "sentences",
   secureTextEntry = false,
+  rightIcon,
+  onPressRightIcon,
 }) {
   return (
     <View style={styles.fieldGroup}>
@@ -147,6 +162,11 @@ function Field({
           secureTextEntry={secureTextEntry}
           style={styles.input}
         />
+        {rightIcon ? (
+          <Pressable onPress={onPressRightIcon} hitSlop={10}>
+            <Ionicons name={rightIcon} size={18} color="#8C8C8C" />
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );

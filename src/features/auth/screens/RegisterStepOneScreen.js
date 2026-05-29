@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View, useWindowDimensions } from "react-native";
 
 import { AppButton } from "../../../shared/components/buttons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -60,6 +60,10 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
     <ScreenContainer backgroundColor={colors.surface}>
       <AuthTopBar title="Inicia Sesion" onBack={onBack} />
 
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[tw`items-center`, { paddingHorizontal: horizontalPadding, paddingTop: 20, paddingBottom: 24 }]}
@@ -82,7 +86,7 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
           </Text>
 
           <View style={{ rowGap: 14 }}>
-            <AuthInput value={names} onChangeText={(text) => { setNames(text); clearError(); }} placeholder="Nombres" icon="user" />
+            <AuthInput value={names} onChangeText={(text) => { setNames(text); clearError(); }} placeholder="Ingrese nombre completo" icon="user" />
             <AuthInput value={email} onChangeText={(text) => { setEmail(text); clearError(); }} placeholder="Email" icon="mail" keyboardType="email-address" autoCapitalize="none" />
             <AuthInput value={username} onChangeText={(text) => { setUsername(text); clearError(); }} placeholder="Nombre de usuario" icon="smile" autoCapitalize="none" />
             <AuthInput value={businessName} onChangeText={(text) => { setBusinessName(text); clearError(); }} placeholder="Nombre del negocio" icon="briefcase" />
@@ -109,6 +113,7 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
           </View>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }

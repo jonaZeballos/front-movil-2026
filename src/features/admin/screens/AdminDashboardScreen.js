@@ -97,6 +97,13 @@ const options = [
     iconColor: "#E29217",
   },
   {
+    id: MODULES.REPORTES,
+    label: "Reportes",
+    iconPack: Feather,
+    iconName: "bar-chart-2",
+    iconColor: "#7C3AED",
+  },
+  {
     id: MODULES.ROLES_PERMISOS,
     label: "Roles y permisos",
     iconPack: MaterialCommunityIcons,
@@ -118,6 +125,7 @@ export function AdminDashboardScreen({
   onOpenSales,
   onOpenInventory,
   onOpenQuotations,
+  onOpenReports,
   onOpenRolesPermissions,
 }) {
   const insets = useSafeAreaInsets();
@@ -167,6 +175,7 @@ export function AdminDashboardScreen({
     if (id === MODULES.VENTAS) onOpenSales?.();
     if (id === MODULES.COTIZACIONES) onOpenQuotations?.();
     if (id === MODULES.INVENTARIO) onOpenInventory?.();
+    if (id === MODULES.REPORTES) onOpenReports?.();
     if (id === MODULES.ROLES_PERMISOS) onOpenRolesPermissions?.();
   };
 

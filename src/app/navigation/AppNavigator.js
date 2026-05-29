@@ -46,6 +46,7 @@ import {
   fetchNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
+  markAllNotificationsAsReadRemote,
   markNotificationAsReadRemote,
 } from "../../features/notifications";
 
@@ -286,6 +287,7 @@ export function AppNavigator() {
     setNotifications((prevNotifications) =>
       markAllNotificationsAsRead(prevNotifications)
     );
+    markAllNotificationsAsReadRemote().catch(() => {});
   };
 
   const createServiceOrder = async (
@@ -479,6 +481,7 @@ export function AppNavigator() {
               onOpenSales={() => navigation.push("RegisterSale")}
               onOpenInventory={() => navigation.navigate("Inventario")}
               onOpenQuotations={() => navigation.push("Cotizaciones")}
+              onOpenReports={() => navigation.push("Reports")}
               onOpenRolesPermissions={() => navigation.push("RolesPermissions")}
             />
           )}
@@ -516,6 +519,11 @@ export function AppNavigator() {
           {({ navigation }) => (
             <SalesDashboardScreen
               user={session?.user}
+              stats={{
+                ventas: salesReports.length,
+                ingresos: salesReports.reduce((sum, venta) => sum + Number(venta.total || 0), 0),
+                stockBajo: products.filter((product) => Number(product.stock || 0) <= Number(product.stockMinimo || 1)).length,
+              }}
               unreadNotificationsCount={unreadNotificationsCount}
               onOpenNotifications={() => handleOpenNotifications(navigation)}
               onLogout={() => confirmLogout()}
@@ -597,6 +605,11 @@ export function AppNavigator() {
           {({ navigation }) => (
             <HomeScreen
               user={session?.user}
+              stats={{
+                ordenes: orders.length,
+                equipos: equipments.length,
+                clientes: clientes.length,
+              }}
               unreadNotificationsCount={unreadNotificationsCount}
               onOpenNotifications={() => handleOpenNotifications(navigation)}
               onBackToAuth={() => confirmLogout()}
@@ -643,6 +656,19 @@ export function AppNavigator() {
               onCancel={() => navigation.goBack()}
               onSave={async (quotation) => {
                 const savedQuotation = await createCotizacion(quotation);
+                setOrders((prevOrders) =>
+                  prevOrders.map((order) =>
+                    order.id === savedQuotation.ordenId
+                      ? {
+                          ...order,
+                          cotizacion: savedQuotation,
+                          cotizaciones: [savedQuotation, ...(order.cotizaciones || [])],
+                          status: "Cotizado",
+                          estado: "Cotizado",
+                        }
+                      : order
+                  )
+                );
                 navigation.replace("QuotationSummary", { quotation: savedQuotation });
               }}
             />

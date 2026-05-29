@@ -68,37 +68,35 @@ const options = [
     iconName: "cart-outline",
     iconColor: "#2386F5",
   },
-  {
-    id: "reportes",
-    label: "Reportes",
-    iconPack: Ionicons,
-    iconName: "analytics-outline",
-    iconColor: "#7C3AED",
-  },
 ];
 
 const chartData = [42, 68, 50, 78, 62, 90, 74];
 
 export function SalesDashboardScreen({
   user,
+  stats = {},
   unreadNotificationsCount = 0,
   onOpenNotifications,
   onLogout,
   onOpenClientes,
   onOpenInventory,
   onOpenSales,
-  onOpenReports,
 }) {
   const insets = useSafeAreaInsets();
   const displayName = getUserDisplayName(user, "Ventas");
   const initials = getInitials(displayName);
   const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "ventas");
+  const dynamicSalesCards = salesCards.map((item) => {
+    if (item.id === "today") return { ...item, value: String(stats.ventas ?? 0), label: "Total" };
+    if (item.id === "income") return { ...item, value: `Bs ${Number(stats.ingresos || 0).toFixed(0)}` };
+    if (item.id === "stock") return { ...item, value: String(stats.stockBajo ?? 0) };
+    return item;
+  });
 
   const handleOptionPress = (id) => {
     if (id === "clientes") onOpenClientes?.();
     if (id === "inventario") onOpenInventory?.();
     if (id === "ventas") onOpenSales?.();
-    if (id === "reportes") onOpenReports?.();
   };
 
   return (
@@ -133,8 +131,8 @@ export function SalesDashboardScreen({
             </View>
           </View>
 
-          <Text style={styles.mainAmount}>Bs 920</Text>
-          <Text style={styles.mainLabel}>Ventas registradas hoy</Text>
+          <Text style={styles.mainAmount}>Bs {Number(stats.ingresos || 0).toFixed(0)}</Text>
+          <Text style={styles.mainLabel}>Ventas registradas</Text>
 
           <View style={styles.heroIcon}>
             <Ionicons name="cart" size={92} color="rgba(255,255,255,0.18)" />
@@ -143,7 +141,7 @@ export function SalesDashboardScreen({
 
         <View style={styles.content}>
           <View style={styles.cardsRow}>
-            {salesCards.map((item) => (
+            {dynamicSalesCards.map((item) => (
               <SalesMetricCard key={item.id} item={item} />
             ))}
           </View>
@@ -188,9 +186,7 @@ export function SalesDashboardScreen({
             />
           </Pressable>
 
-          <Pressable onPress={onOpenReports}>
-            <Ionicons name="analytics-outline" size={20} color="#D8D7FF" />
-          </Pressable>
+          <Ionicons name="receipt-outline" size={20} color="#D8D7FF" />
         </View>
       </View>
     </ScreenContainer>

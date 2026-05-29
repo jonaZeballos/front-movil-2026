@@ -22,6 +22,8 @@ export function createOrden(orderData) {
       equipoId: orderData.equipoId,
       diagnostico: orderData.diagnostico || orderData.failure,
       prioridad: orderData.prioridad || "Normal",
+      estado: orderData.estado || "Recibido",
+      observaciones: orderData.observaciones,
       garantiaDias: orderData.garantiaDias || 0,
     }),
   }).then(mapOrden);
@@ -55,5 +57,7 @@ function mapOrden(orden) {
     equipo: equipmentName,
     equipmentSerial: orden.equipmentSerial || orden.equipo?.nroSerie || orden.equipo?.serial,
     observations: orden.observaciones || [],
+    cotizaciones: orden.cotizaciones || [],
+    cotizacion: orden.cotizacion || orden.cotizaciones?.[0] || null,
   };
 }

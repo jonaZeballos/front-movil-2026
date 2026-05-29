@@ -20,11 +20,17 @@ const Stack = createNativeStackNavigator();
 export function InventarioStack({ onProductsChange }) {
   const [productos, setProductos] = useState([]);
   const [stockMovements, setStockMovements] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const refreshProductos = useCallback(async () => {
-    const data = await listProductos();
-    setProductos(data);
-    onProductsChange?.(data);
+    setIsLoading(true);
+    try {
+      const data = await listProductos();
+      setProductos(data);
+      onProductsChange?.(data);
+    } finally {
+      setIsLoading(false);
+    }
   }, [onProductsChange]);
 
   useEffect(() => {

@@ -14,19 +14,28 @@ import {
   getSaleDate,
 } from "../services";
 
-export function SalesReportScreen({ navigation, ventas = [] }) {
+export function SalesReportScreen({ navigation, ventas = [], salesReport }) {
   const [period, setPeriod] = useState("todos");
-  const ventasData = ventas;
+  const ventasData = salesReport?.ventas || ventas;
 
   const filteredVentas = useMemo(
     () => filterReportItemsByPeriod(ventasData, period, getSaleDate),
     [ventasData, period]
   );
 
-  const stats = useMemo(
-    () => calculateSalesReport(filteredVentas),
-    [filteredVentas]
-  );
+  const stats = useMemo(() => {
+    if (salesReport) {
+      return {
+        totalVentas: salesReport.totalVentas || 0,
+        totalIngresos: salesReport.ingresos || 0,
+        promedioVenta: salesReport.ticketPromedio || 0,
+        productosVendidos: salesReport.unidadesVendidas || 0,
+        metodosPago: {},
+      };
+    }
+
+    return calculateSalesReport(filteredVentas);
+  }, [filteredVentas, salesReport]);
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>

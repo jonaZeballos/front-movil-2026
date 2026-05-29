@@ -15,10 +15,22 @@ export function ReportsDashboardScreen({
   navigation,
   ventas = [],
   ordenes = [],
+  summary,
 }) {
   const ventasData = ventas;
   const salesStats = calculateSalesReport(ventasData);
   const servicesStats = calculateServicesReport(ordenes);
+  const ingresos = summary?.ingresosVentas ?? salesStats.totalIngresos;
+  const totalVentas = summary?.totalVentas ?? salesStats.totalVentas;
+  const totalOrdenes = summary?.totalOrdenes ?? servicesStats.totalOrdenes;
+  const pendientes = Array.isArray(summary?.ordenesPorEstado)
+    ? summary.ordenesPorEstado.reduce((sum, item) => {
+        const estado = String(item.nombre || "").toLowerCase();
+        return estado.includes("recibido") || estado.includes("diagnostico") || estado.includes("cotizado")
+          ? sum + Number(item.total || 0)
+          : sum;
+      }, 0)
+    : servicesStats.pendientes;
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
@@ -38,16 +50,16 @@ export function ReportsDashboardScreen({
           <View style={styles.summaryRow}>
             <ReportSummaryCard
               title="Ingresos"
-              value={formatReportCurrency(salesStats.totalIngresos)}
-              subtitle={`${salesStats.totalVentas} ventas`}
+              value={formatReportCurrency(ingresos)}
+              subtitle={`${totalVentas} ventas`}
               iconName="cash-outline"
               color="#2386F5"
             />
 
             <ReportSummaryCard
               title="Servicios"
-              value={String(servicesStats.totalOrdenes)}
-              subtitle={`${servicesStats.pendientes} pendientes`}
+              value={String(totalOrdenes)}
+              subtitle={`${pendientes} pendientes`}
               iconName="construct-outline"
               color="#0F766E"
             />

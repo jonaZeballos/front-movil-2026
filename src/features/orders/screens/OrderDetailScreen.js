@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -17,6 +18,10 @@ import { orderStatuses } from "../services/ordersApi";
 
 export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservation }) {
   const [observation, setObservation] = useState("");
+  const [savingStatus, setSavingStatus] = useState(null);
+  const [isSavingObservation, setIsSavingObservation] = useState(false);
+  const statusLockRef = useRef(false);
+  const observationLockRef = useRef(false);
 
   if (!order) {
     return (
@@ -32,14 +37,44 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
   }
 
   const handleAddObservation = async () => {
+    if (observationLockRef.current || isSavingObservation) return;
+
     if (!observation.trim()) {
       Alert.alert("Observación vacía", "Ingresa una observación válida.");
       return;
     }
 
-    await onAddObservation(order.id, observation.trim());
-    setObservation("");
+    observationLockRef.current = true;
+    setIsSavingObservation(true);
+
+    try {
+      await onAddObservation(order.id, observation.trim());
+      setObservation("");
+    } catch (error) {
+      Alert.alert("No se pudo guardar", error.message || "Intenta nuevamente.");
+      return;
+    } finally {
+      observationLockRef.current = false;
+      setIsSavingObservation(false);
+    }
     Alert.alert("Confirmación", "La observación fue agregada correctamente.");
+  };
+
+  const handleUpdateStatus = async (status) => {
+    if (statusLockRef.current || savingStatus || order.status === status) return;
+
+    statusLockRef.current = true;
+    setSavingStatus(status);
+
+    try {
+      await onUpdateStatus(order.id, status);
+      Alert.alert("Confirmacion", "El estado fue actualizado correctamente.");
+    } catch (error) {
+      Alert.alert("No se pudo actualizar", error.message || "Intenta nuevamente.");
+    } finally {
+      statusLockRef.current = false;
+      setSavingStatus(null);
+    }
   };
 
   return (
@@ -85,20 +120,36 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
                 return (
                   <Pressable
                     key={status}
-                    style={[styles.statusButton, active && styles.statusButtonActive]}
-                    onPress={async () => {
-                      await onUpdateStatus(order.id, status);
-                      Alert.alert("Confirmación", "El estado fue actualizado correctamente.");
-                    }}
+                    style={[
+                      styles.statusButton,
+                      active && styles.statusButtonActive,
+                      savingStatus && styles.disabledButton,
+                    ]}
+                    onPress={() => handleUpdateStatus(status)}
+                    disabled={Boolean(savingStatus)}
                   >
-                    <Text style={[styles.statusButtonText, active && styles.statusButtonTextActive]}>
-                      {status}
-                    </Text>
+                    {savingStatus === status ? (
+                      <ActivityIndicator size="small" color={active ? "#FFFFFF" : "#5655B9"} />
+                    ) : (
+                      <Text style={[styles.statusButtonText, active && styles.statusButtonTextActive]}>
+                        {status}
+                      </Text>
+                    )}
                   </Pressable>
                 );
               })}
             </View>
           </View>
+
+          {order.cotizacion ? (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Cotizacion asociada</Text>
+              <InfoRow label="Numero" value={order.cotizacion.numero} />
+              <InfoRow label="Descripcion" value={order.cotizacion.descripcion} />
+              <InfoRow label="Estado" value={order.cotizacion.estado || "Pendiente"} />
+              <InfoRow label="Total" value={`Bs. ${Number(order.cotizacion.total || 0).toFixed(2)}`} />
+            </View>
+          ) : null}
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Observaciones</Text>
@@ -121,8 +172,16 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
               style={styles.input}
             />
 
-            <Pressable style={styles.primaryButton} onPress={handleAddObservation}>
-              <Text style={styles.primaryButtonText}>Agregar observación</Text>
+            <Pressable
+              style={[styles.primaryButton, isSavingObservation && styles.disabledButton]}
+              onPress={handleAddObservation}
+              disabled={isSavingObservation}
+            >
+              {isSavingObservation ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.primaryButtonText}>Agregar observacion</Text>
+              )}
             </Pressable>
           </View>
         </ScrollView>
@@ -265,5 +324,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "800",
+  },
+  disabledButton: {
+    opacity: 0.65,
   },
 });

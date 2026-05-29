@@ -1,6 +1,7 @@
 ﻿import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,16 +19,38 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
   const [modelo, setModelo] = useState("");
   const [precio, setPrecio] = useState("");
   const [stock, setStock] = useState("");
+  const [stockMinimo, setStockMinimo] = useState("1");
 
   const onSubmit = () => {
     if (isSaving) return;
 
+    const parsedPrecio = Number(String(precio).replace(",", "."));
+    const parsedStock = Number(stock);
+    const parsedStockMinimo = Number(stockMinimo);
+
+    if (!nombre.trim()) {
+      return Alert.alert("Producto incompleto", "El nombre del producto es obligatorio.");
+    }
+
+    if (!Number.isFinite(parsedPrecio) || parsedPrecio <= 0) {
+      return Alert.alert("Precio invalido", "El precio debe ser mayor a 0.");
+    }
+
+    if (!Number.isInteger(parsedStock) || parsedStock < 0) {
+      return Alert.alert("Stock invalido", "El stock debe ser un numero entero mayor o igual a 0.");
+    }
+
+    if (!Number.isInteger(parsedStockMinimo) || parsedStockMinimo < 0) {
+      return Alert.alert("Stock minimo invalido", "El stock minimo debe ser un numero entero mayor o igual a 0.");
+    }
+
     const producto = {
-      nombre,
-      marca,
-      modelo,
-      precio,
-      stock: Number(stock) || 0,
+      nombre: nombre.trim(),
+      marca: marca.trim(),
+      modelo: modelo.trim(),
+      precio: parsedPrecio,
+      stock: parsedStock,
+      stockMinimo: parsedStockMinimo,
     };
     onGuardar(producto);
   };
@@ -95,6 +118,18 @@ export default function RegistroProducto({ onGuardar, onCancelar, isSaving = fal
             placeholderTextColor="#999"
             value={stock}
             onChangeText={setStock}
+            keyboardType="numeric"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Stock minimo</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ej. 2"
+            placeholderTextColor="#999"
+            value={stockMinimo}
+            onChangeText={setStockMinimo}
             keyboardType="numeric"
           />
         </View>

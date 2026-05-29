@@ -66,8 +66,12 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
 
   const updateQuantity = (productId, operation) => {
     setQuantities((prev) => {
+      const product = productos.find((item) => String(item.id) === String(productId));
+      const availableStock = Number(product?.stock ?? 0);
       const current = prev[productId] || 0;
-      const next = operation === "increment" ? current + 1 : Math.max(current - 1, 0);
+      const next = operation === "increment"
+        ? Math.min(current + 1, availableStock)
+        : Math.max(current - 1, 0);
 
       return {
         ...prev,

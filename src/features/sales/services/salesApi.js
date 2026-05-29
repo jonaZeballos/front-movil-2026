@@ -22,13 +22,15 @@ export async function createSale(saleDraft) {
     body: JSON.stringify({
       clienteId: saleDraft.clienteId,
       clienteNombre: saleDraft.clienteNombre,
-      items: saleDraft.productos,
+      items: saleDraft.productos || saleDraft.items || [],
       descuento: saleDraft.descuento,
     }),
   });
 
   return mapVenta(venta);
 }
+
+export const createVenta = createSale;
 
 export async function generateReceipt(saleId) {
   const receipt = await apiRequest(`/api/ventas/${saleId}/recibo`);

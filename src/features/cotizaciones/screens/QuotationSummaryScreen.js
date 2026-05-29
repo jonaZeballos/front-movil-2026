@@ -1,4 +1,4 @@
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { AppButton } from "../../../shared/components/buttons";
@@ -55,22 +55,6 @@ export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail
               title="Volver a ordenes"
               onPress={onBackToOrders}
               backgroundColor={colors.primary}
-              borderRadius={18}
-              minHeight={52}
-            />
-
-            <AppButton
-              title="Enviar por WhatsApp"
-              onPress={() => {
-                if (quotation.whatsappUrl) {
-                  Linking.openURL(quotation.whatsappUrl);
-                } else {
-                  onViewDetail?.();
-                }
-              }}
-              backgroundColor="#FFFFFF"
-              textColor="#111827"
-              borderColor="#E5E7EB"
               borderRadius={18}
               minHeight={52}
             />

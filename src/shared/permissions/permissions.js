@@ -11,6 +11,8 @@ export const MODULES = {
   COTIZACIONES: "cotizaciones",
   OBSERVACIONES: "observaciones",
   RECIBOS: "recibos",
+  REPORTES: "reportes",
+  NOTIFICACIONES: "notificaciones",
 };
 
 export const MODULE_LABELS = {
@@ -24,6 +26,8 @@ export const MODULE_LABELS = {
   [MODULES.COTIZACIONES]: "Cotizaciones",
   [MODULES.OBSERVACIONES]: "Observaciones",
   [MODULES.RECIBOS]: "Recibos",
+  [MODULES.REPORTES]: "Reportes",
+  [MODULES.NOTIFICACIONES]: "Notificaciones",
 };
 
 export const ROLE_PERMISSIONS = {
@@ -35,6 +39,8 @@ export const ROLE_PERMISSIONS = {
     MODULES.VENTAS,
     MODULES.COTIZACIONES,
     MODULES.INVENTARIO,
+    MODULES.REPORTES,
+    MODULES.NOTIFICACIONES,
     MODULES.ROLES_PERMISOS,
   ],
 
@@ -44,6 +50,7 @@ export const ROLE_PERMISSIONS = {
     MODULES.ORDENES,
     MODULES.COTIZACIONES,
     MODULES.OBSERVACIONES,
+    MODULES.NOTIFICACIONES,
   ],
 
   [ROLES.VENTAS]: [
@@ -51,6 +58,7 @@ export const ROLE_PERMISSIONS = {
     MODULES.VENTAS,
     MODULES.INVENTARIO,
     MODULES.RECIBOS,
+    MODULES.NOTIFICACIONES,
   ],
 };
 

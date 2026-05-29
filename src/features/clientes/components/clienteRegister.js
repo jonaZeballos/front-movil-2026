@@ -128,11 +128,30 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
   const handleGuardar = () => {
     if (isSaving) return;
 
-    if (!form.nombre || !form.numeroDocumento || !form.telefono || !form.correo) {
+    const documento = form.numeroDocumento.replace(/\D/g, "");
+    const telefono = form.telefono.replace(/\D/g, "");
+
+    if (!form.nombre.trim() || !documento || !telefono || !form.correo.trim()) {
       Alert.alert("Error", "Por favor completa nombre, documento, telefono y correo.");
       return;
     }
-    if (onGuardar) onGuardar(form);
+
+    if (documento.length < 5 || documento.length > 12) {
+      Alert.alert("Documento invalido", "El CI/NIT debe contener solo numeros y tener entre 5 y 12 digitos.");
+      return;
+    }
+
+    if (!/^[67]\d{7}$/.test(telefono)) {
+      Alert.alert("Telefono invalido", "Ingresa un telefono boliviano de 8 digitos que empiece en 6 o 7.");
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(form.correo.trim())) {
+      Alert.alert("Correo invalido", "Ingresa un correo electronico valido.");
+      return;
+    }
+
+    if (onGuardar) onGuardar({ ...form, numeroDocumento: documento, telefono, correo: form.correo.trim() });
   };
 
   return (

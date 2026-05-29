@@ -127,20 +127,24 @@ export function RegisterEquipmentScreen({
     failure: problem,
   };
 
-  const isFormValid = [
+  const isEquipmentFormValid = [
     selectedClientId,
     selectedType,
     brand.trim(),
     model.trim(),
     serial.trim(),
-    problem.trim(),
   ].every(Boolean);
 
-  const runSubmit = async (submitAction) => {
+  const runSubmit = async (submitAction, requireProblem = false) => {
     if (submitLockRef.current || isSaving) return;
 
-    if (!isFormValid) {
-      Alert.alert("Formulario incompleto", "Completa todos los campos antes de continuar.");
+    if (!isEquipmentFormValid) {
+      Alert.alert("Formulario incompleto", "Selecciona cliente y completa tipo, marca, modelo y serie.");
+      return;
+    }
+
+    if (requireProblem && !problem.trim()) {
+      Alert.alert("Diagnostico requerido", "Describe la falla para crear la orden junto al equipo.");
       return;
     }
 
@@ -159,7 +163,7 @@ export function RegisterEquipmentScreen({
 
   const handleSave = () => runSubmit(onSave);
 
-  const handleSaveAndCreateOrder = () => runSubmit(onSaveAndCreateOrder);
+  const handleSaveAndCreateOrder = () => runSubmit(onSaveAndCreateOrder, true);
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
@@ -251,10 +255,10 @@ export function RegisterEquipmentScreen({
             />
 
             <MultiLineField
-              label="PROBLEMA"
+              label="FALLA PARA ORDEN"
               value={problem}
               onChangeText={setProblem}
-              placeholder="Describe el problema del equipo"
+              placeholder="Opcional si solo guardas el equipo. Requerido para guardar y crear orden."
             />
           </View>
 

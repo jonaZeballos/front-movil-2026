@@ -13,18 +13,33 @@ import {
   getOrderDate,
 } from "../services";
 
-export function ServicesReportScreen({ navigation, ordenes = [] }) {
+export function ServicesReportScreen({ navigation, ordenes = [], servicesReport }) {
   const [period, setPeriod] = useState("todos");
 
   const filteredOrdenes = useMemo(
-    () => filterReportItemsByPeriod(ordenes, period, getOrderDate),
-    [ordenes, period]
+    () => filterReportItemsByPeriod(servicesReport?.ordenes || ordenes, period, getOrderDate),
+    [ordenes, period, servicesReport]
   );
 
-  const stats = useMemo(
-    () => calculateServicesReport(filteredOrdenes),
-    [filteredOrdenes]
-  );
+  const stats = useMemo(() => {
+    if (servicesReport) {
+      const resumenEstados = (servicesReport.porEstado || []).reduce((acc, item) => {
+        acc[item.nombre] = item.total;
+        return acc;
+      }, {});
+
+      return {
+        totalOrdenes: servicesReport.totalOrdenes || 0,
+        pendientes: servicesReport.ordenesAbiertas || 0,
+        enProceso: resumenEstados["En reparacion"] || 0,
+        finalizadas: servicesReport.ordenesCerradas || 0,
+        sinSolucion: resumenEstados["Sin solucion"] || 0,
+        resumenEstados,
+      };
+    }
+
+    return calculateServicesReport(filteredOrdenes);
+  }, [filteredOrdenes, servicesReport]);
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>

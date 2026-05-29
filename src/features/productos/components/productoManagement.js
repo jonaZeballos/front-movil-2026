@@ -9,8 +9,10 @@ import { ProductSearchBox } from "./ProductSearchBox";
 
 export default function GestionInventario({
   productos = [],
+  isLoading = false,
   onRegistrar,
   onOpenStockControl,
+  onRefresh,
   onVolver,
 }) {
   const [busqueda, setBusqueda] = useState("");

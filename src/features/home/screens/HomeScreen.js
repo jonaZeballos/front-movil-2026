@@ -127,6 +127,7 @@ const recentOrders = [
 
 export function HomeScreen({
   user,
+  stats = {},
   unreadNotificationsCount = 0,
   onOpenNotifications,
   onBackToAuth,
@@ -201,7 +202,7 @@ export function HomeScreen({
             </View>
           </View>
 
-          <Text style={styles.salesAmount}>27</Text>
+          <Text style={styles.salesAmount}>{stats.ordenes ?? 0}</Text>
           <Text style={styles.salesLabel}>Ordenes activas</Text>
 
           <View style={styles.sphereWrap}>

@@ -14,6 +14,12 @@ export async function markNotificationAsReadRemote(notificationId) {
   return mapNotification(notification);
 }
 
+export async function markAllNotificationsAsReadRemote() {
+  return apiRequest("/api/notificaciones/leidas", {
+    method: "PATCH",
+  });
+}
+
 export function getInitialNotifications() {
   return [];
 }

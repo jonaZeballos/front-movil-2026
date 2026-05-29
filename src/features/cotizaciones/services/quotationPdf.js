@@ -22,19 +22,29 @@ export async function shareQuotationPdf(quotation) {
     throw new Error("No hay datos de la cotizacion para generar el PDF.");
   }
 
-  const html = buildQuotationPdfHtml(quotation);
-  const file = await Print.printToFileAsync({ html, base64: false });
+  const uri = await createQuotationPdf(quotation);
   const canShare = await Sharing.isAvailableAsync();
 
   if (!canShare) {
     throw new Error("Este dispositivo no permite compartir archivos PDF.");
   }
 
-  await Sharing.shareAsync(file.uri, {
+  await Sharing.shareAsync(uri, {
     mimeType: "application/pdf",
     UTI: "com.adobe.pdf",
     dialogTitle: "Compartir cotizacion",
   });
+
+  return uri;
+}
+
+export async function createQuotationPdf(quotation) {
+  if (!quotation) {
+    throw new Error("No hay datos de la cotizacion para generar el PDF.");
+  }
+
+  const html = buildQuotationPdfHtml(quotation);
+  const file = await Print.printToFileAsync({ html, base64: false });
 
   return file.uri;
 }

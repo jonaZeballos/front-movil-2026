@@ -105,3 +105,8 @@ export function getQuotationPhone(quotation = {}) {
   const cliente = getQuotationClient(quotation);
   return toDisplayText(cliente.telefono || cliente.celular || cliente.phone, "Sin telefono");
 }
+
+export function getQuotationEmail(quotation = {}) {
+  const cliente = getQuotationClient(quotation);
+  return toDisplayText(cliente.email || cliente.correo || cliente.mail, "Sin correo");
+}

@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { ShareQuotationButton } from "../../cotizaciones/components/ShareQuotationButton";
+import { ShareQuotationEmailButton } from "../../cotizaciones/components/ShareQuotationEmailButton";
 import { ShareQuotationPdfButton } from "../../cotizaciones/components/ShareQuotationPdfButton";
 import {
   formatQuotationDate,
@@ -198,6 +199,7 @@ export function OrderDetailScreen({
                   <Text style={styles.secondaryButtonText}>Ver cotizacion completa</Text>
                 </Pressable>
                 <ShareQuotationButton quotation={quotation} />
+                <ShareQuotationEmailButton quotation={quotation} />
                 <ShareQuotationPdfButton quotation={quotation} />
                 {!quotationActive ? (
                   <Pressable style={styles.primaryButton} onPress={() => onGenerateQuotation?.(order)}>

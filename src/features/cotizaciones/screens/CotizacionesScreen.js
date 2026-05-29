@@ -5,10 +5,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { OrderQuotationCard } from "../components/OrderQuotationCard";
+import {
+  getClienteNombre,
+  getCotizacionValidoHasta,
+  getEquipoNombre,
+  isCotizacionActiva,
+  toDisplayText,
+} from "../utils/quotationFormatters";
 
-export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation }) {
+export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation, onViewQuotation }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const quoteableOrders = orders.filter((order) => {
+  const quoteableOrders = orders.map(mapOrderForQuotation).filter((order) => {
     const status = String(order.status || order.estado || "").toLowerCase();
     return status !== "entregado" && status !== "sin solucion";
   });
@@ -17,6 +24,22 @@ export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation })
     if (!selectedOrder) {
       Alert.alert("Orden obligatoria", "Selecciona una orden para generar la cotizacion.");
       return;
+    }
+
+    if (selectedOrder.cotizacionActiva) {
+      Alert.alert(
+        "Cotizacion activa",
+        "Esta orden ya tiene una cotizacion activa. Se abrira la cotizacion existente.",
+        [{ text: "Ver cotizacion", onPress: () => onViewQuotation?.(selectedOrder.cotizacion) }]
+      );
+      return;
+    }
+
+    if (selectedOrder.cotizacionVencida) {
+      Alert.alert(
+        "Cotizacion vencida",
+        "La cotizacion anterior vencio. Puedes generar una nueva cotizacion para esta orden."
+      );
     }
 
     onGenerateQuotation?.(selectedOrder);
@@ -67,14 +90,33 @@ export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation })
 }
 
 function mapOrderForQuotation(order) {
+  const baseCotizacion = order.cotizacion || order.cotizaciones?.[0] || null;
+  const orderResumen = {
+    id: order.id,
+    codigo: toDisplayText(order.code || order.codigo, "Sin codigo"),
+    cliente: getClienteNombre(order.cliente || order.clientName),
+    equipo: getEquipoNombre(order.equipo || order.equipmentName),
+    falla: toDisplayText(order.failure || order.falla || order.diagnostico, "Sin diagnostico"),
+    diagnostico: toDisplayText(order.diagnostico || order.failure || order.falla, "Sin diagnostico"),
+  };
+  const cotizacion = baseCotizacion
+    ? {
+        ...baseCotizacion,
+        ordenId: baseCotizacion.ordenId || order.id,
+        order: baseCotizacion.order || baseCotizacion.orden || orderResumen,
+        orden: baseCotizacion.orden || baseCotizacion.order || orderResumen,
+      }
+    : null;
+  const activa = isCotizacionActiva(cotizacion);
+
   return {
     ...order,
-    codigo: order.code || `#${String(order.codigo || "").padStart(4, "0")}`,
-    cliente: order.clientName || "Cliente sin nombre",
-    equipo: order.equipmentName || "Equipo sin detalle",
-    falla: order.failure || order.diagnostico || "",
-    diagnostico: order.diagnostico || order.failure || "",
-    estado: order.status || order.estado || "Recibido",
+    ...orderResumen,
+    estado: toDisplayText(order.status || order.estado, "Recibido"),
+    cotizacion,
+    cotizacionActiva: activa,
+    cotizacionVencida: !!cotizacion && !activa,
+    cotizacionValidoHasta: getCotizacionValidoHasta(cotizacion),
   };
 }
 

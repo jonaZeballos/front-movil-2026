@@ -8,6 +8,7 @@ import { colors } from "../../../shared/theme/colors";
 import { QuotationForm } from "../components/QuotationForm";
 import { QuotationOrderInfoCard } from "../components/QuotationOrderInfoCard";
 import { TotalQuotationBox } from "../components/TotalQuotationBox";
+import { isCotizacionActiva } from "../utils/quotationFormatters";
 
 const initialForm = {
   descripcion: "",
@@ -40,6 +41,16 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
+
+    if (isCotizacionActiva(order?.cotizacion)) {
+      Alert.alert(
+        "Cotizacion activa",
+        "Esta orden ya tiene una cotizacion activa. Vuelve al listado para abrir la cotizacion existente."
+      );
+      return;
+    }
+
     const validationErrors = validateQuotation(form, amounts);
 
     if (Object.keys(validationErrors).length > 0) {

@@ -2,6 +2,11 @@ import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
+import {
+  getClienteNombre,
+  getEquipoNombre,
+  toDisplayText,
+} from "../utils/quotationFormatters";
 
 export function QuotationSummaryCard({ quotation }) {
   const order = normalizeOrder(quotation.order);
@@ -13,7 +18,7 @@ export function QuotationSummaryCard({ quotation }) {
       </View>
 
       <Text style={styles.successText}>Cotizacion generada correctamente</Text>
-      <Text style={styles.number}>{quotation.numero}</Text>
+      <Text style={styles.number}>{toDisplayText(quotation.numero, "Sin numero")}</Text>
 
       <SummaryRow label="Codigo de orden" value={order.codigo} />
       <SummaryRow label="Cliente" value={order.cliente} />
@@ -30,9 +35,9 @@ export function QuotationSummaryCard({ quotation }) {
 
 function normalizeOrder(order = {}) {
   return {
-    codigo: order.codigo || order.code || "Sin codigo",
-    cliente: order.cliente || order.clientName || "Cliente sin nombre",
-    equipo: order.equipo || order.equipmentName || "Equipo sin detalle",
+    codigo: toDisplayText(order.codigo || order.code, "Sin codigo"),
+    cliente: getClienteNombre(order.cliente || order.clientName),
+    equipo: getEquipoNombre(order.equipo || order.equipmentName),
   };
 }
 
@@ -40,7 +45,7 @@ function SummaryRow({ label, value, strong = false }) {
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={[styles.value, strong && styles.strongValue]}>{value}</Text>
+      <Text style={[styles.value, strong && styles.strongValue]}>{toDisplayText(value)}</Text>
     </View>
   );
 }

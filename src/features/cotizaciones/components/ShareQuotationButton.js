@@ -20,9 +20,10 @@ export function ShareQuotationButton({ quotation, style }) {
     try {
       await sendQuotationByWhatsApp(quotation);
     } catch (error) {
+      const message = error.message || "Ocurrio un error al enviar la cotizacion.";
       Alert.alert(
-        "No se pudo abrir WhatsApp",
-        error.message || "Ocurrio un error al enviar la cotizacion."
+        message.includes("teléfono") ? "Teléfono no registrado" : "No se pudo abrir WhatsApp",
+        message
       );
     } finally {
       setIsSending(false);

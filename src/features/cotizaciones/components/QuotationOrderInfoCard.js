@@ -1,15 +1,22 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import {
+  getClienteNombre,
+  getDiagnosticoTexto,
+  getEquipoNombre,
+  toDisplayText,
+} from "../utils/quotationFormatters";
+
 export function QuotationOrderInfoCard({ order }) {
   return (
     <View style={styles.card}>
       <Text style={styles.eyebrow}>Orden seleccionada</Text>
-      <Text style={styles.code}>{order.codigo}</Text>
+      <Text style={styles.code}>{toDisplayText(order.codigo || order.code, "Sin codigo")}</Text>
 
-      <InfoRow label="Cliente" value={order.cliente} />
-      <InfoRow label="Equipo" value={order.equipo} />
-      <InfoRow label="Falla reportada" value={order.falla} />
-      <InfoRow label="Diagnostico" value={order.diagnostico} />
+      <InfoRow label="Cliente" value={getClienteNombre(order.cliente || order.clientName)} />
+      <InfoRow label="Equipo" value={getEquipoNombre(order.equipo || order.equipmentName)} />
+      <InfoRow label="Falla reportada" value={getDiagnosticoTexto(order.falla || order.failure)} />
+      <InfoRow label="Diagnostico" value={getDiagnosticoTexto(order.diagnostico)} />
     </View>
   );
 }
@@ -18,7 +25,7 @@ function InfoRow({ label, value }) {
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+      <Text style={styles.value}>{toDisplayText(value)}</Text>
     </View>
   );
 }

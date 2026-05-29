@@ -644,6 +644,9 @@ export function AppNavigator() {
               onGenerateQuotation={(order) =>
                 navigation.push("GenerateQuotation", { order })
               }
+              onViewQuotation={(quotation) =>
+                navigation.push("QuotationSummary", { quotation })
+              }
             />
           )}
         </Stack.Screen>
@@ -656,6 +659,12 @@ export function AppNavigator() {
               onCancel={() => navigation.goBack()}
               onSave={async (quotation) => {
                 const savedQuotation = await createCotizacion(quotation);
+                if (savedQuotation.cotizacionActiva && savedQuotation.yaExistia) {
+                  Alert.alert(
+                    "Cotizacion activa",
+                    "Esta orden ya tiene una cotizacion activa. Se mostrara la cotizacion existente."
+                  );
+                }
                 setOrders((prevOrders) =>
                   prevOrders.map((order) =>
                     order.id === savedQuotation.ordenId

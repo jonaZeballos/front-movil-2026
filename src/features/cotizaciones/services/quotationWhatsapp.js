@@ -5,6 +5,7 @@ import {
   getClientPhone,
   getEquipmentName,
   getOrderCode,
+  normalizeWhatsAppPhone,
   openWhatsApp,
 } from "../../../shared/utils";
 import { getCotizacionWhatsapp } from "./cotizacionesApi";
@@ -17,18 +18,21 @@ export function buildQuotationWhatsAppMessage(quotation) {
   const order = quotation.order || quotation.orden || {};
   const cliente = quotation.cliente || order.cliente || order.customer || {};
   const equipo = quotation.equipo || order.equipo || order.equipment || {};
+  const negocio = quotation.negocio || order.negocio || {};
+  const phone = normalizeWhatsAppPhone(getClientPhone(cliente));
   const emitida = new Date(quotation.fechaCreacion || Date.now());
   const validaHasta = new Date(emitida);
-  validaHasta.setDate(validaHasta.getDate() + 7);
+  validaHasta.setDate(validaHasta.getDate() + 1);
 
   const subtotal = Number(quotation.manoObra || 0) + Number(quotation.repuestos || 0);
 
   return [
-    `*ServiTech - Cotizacion ${cleanText(quotation.numero, "Sin numero")}*`,
+    `*${cleanText(negocio.nombre, "ServiTech")} - Cotizacion ${cleanText(quotation.numero, "Sin numero")}*`,
     `Fecha de emision: ${emitida.toLocaleDateString("es-BO")}`,
-    `Valida hasta: ${validaHasta.toLocaleDateString("es-BO")}`,
+    `Fecha de validez: ${validaHasta.toLocaleDateString("es-BO")}`,
     "",
     `Cliente: ${getClientName(cliente)}`,
+    `Telefono: ${phone || "No registrado"}`,
     `Orden: ${getOrderCode(order)}`,
     `Equipo: ${getEquipmentName(equipo)}`,
     `Diagnostico: ${cleanText(order.diagnostico || order.failure, "No registrado")}`,
@@ -61,7 +65,7 @@ export async function sendQuotationByWhatsApp(quotation) {
   const phone = getQuotationClientPhone(remote?.cotizacion || quotation) || getPhoneFromWaUrl(remote?.whatsappUrl);
 
   if (!phone) {
-    throw new Error("El cliente no tiene telefono registrado para WhatsApp.");
+    throw new Error("El cliente no tiene teléfono registrado");
   }
 
   return openWhatsApp({ message, phone });

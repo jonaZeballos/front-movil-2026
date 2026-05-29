@@ -2,6 +2,12 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
+import {
+  getClienteNombre,
+  getDiagnosticoTexto,
+  getEquipoNombre,
+  toDisplayText,
+} from "../utils/quotationFormatters";
 
 export function OrderQuotationCard({ order, selected = false, onSelect }) {
   return (
@@ -15,19 +21,19 @@ export function OrderQuotationCard({ order, selected = false, onSelect }) {
         </View>
 
         <View style={styles.headerText}>
-          <Text style={styles.code}>{order.codigo}</Text>
-          <Text style={styles.client}>{order.cliente}</Text>
+          <Text style={styles.code}>{toDisplayText(order.codigo || order.code, "Sin codigo")}</Text>
+          <Text style={styles.client}>{getClienteNombre(order.cliente || order.clientName)}</Text>
         </View>
 
         <View style={styles.statusPill}>
-          <Text style={styles.statusText}>{order.estado}</Text>
+          <Text style={styles.statusText}>{toDisplayText(order.estado || order.status, "Sin estado")}</Text>
         </View>
       </View>
 
       <View style={styles.detailBlock}>
-        <Text style={styles.equipment}>{order.equipo}</Text>
-        <Text style={styles.description}>Falla: {order.falla}</Text>
-        <Text style={styles.description}>Diagnostico: {order.diagnostico}</Text>
+        <Text style={styles.equipment}>{getEquipoNombre(order.equipo || order.equipmentName)}</Text>
+        <Text style={styles.description}>Falla: {getDiagnosticoTexto(order.falla || order.failure)}</Text>
+        <Text style={styles.description}>Diagnostico: {getDiagnosticoTexto(order.diagnostico)}</Text>
       </View>
 
       <View style={[styles.actionButton, selected && styles.actionButtonSelected]}>

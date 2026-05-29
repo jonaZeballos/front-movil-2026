@@ -308,15 +308,21 @@ export function AppNavigator() {
     equipmentId,
     navigation,
     providedEquipment,
-    diagnostico
+    orderDraft
   ) => {
     const equipment = providedEquipment || equipments.find((item) => item.id === equipmentId);
 
     if (!equipment) return;
+    const draft =
+      typeof orderDraft === "string"
+        ? { diagnostico: orderDraft }
+        : orderDraft || {};
 
     const newOrder = await createOrden({
       equipoId: equipment.id,
-      diagnostico: diagnostico || equipment.failure || "Diagnostico pendiente",
+      diagnostico: draft.diagnostico || draft.failure || equipment.failure || "Diagnostico pendiente",
+      prioridad: draft.prioridad || "Normal",
+      observaciones: draft.observaciones,
     });
 
     setOrders((prevOrders) => [newOrder, ...prevOrders]);
@@ -356,7 +362,7 @@ export function AppNavigator() {
 
   const saveEquipment = async (equipmentData) => {
     const savedEquipment = await createEquipo(equipmentData);
-    const equipmentWithFailure = { ...savedEquipment, failure: equipmentData.failure };
+    const equipmentWithFailure = { ...savedEquipment, failure: equipmentData.initialFailure || "" };
 
     setEquipments((prevEquipments) => [equipmentWithFailure, ...prevEquipments]);
 
@@ -810,7 +816,11 @@ export function AppNavigator() {
                   newEquipment.id,
                   navigation,
                   newEquipment,
-                  equipmentData.failure
+                  {
+                    diagnostico: equipmentData.diagnostico || equipmentData.failure,
+                    prioridad: equipmentData.prioridad,
+                    observaciones: equipmentData.observaciones,
+                  }
                 );
               }}
             />

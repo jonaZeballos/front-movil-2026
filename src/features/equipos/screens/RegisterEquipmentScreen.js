@@ -1,11 +1,23 @@
-import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 
 const equipmentTypeOptions = ["Laptop", "PC Escritorio", "Impresora"];
+const priorityOptions = ["Baja", "Normal", "Alta", "Urgente"];
 
 function SelectField({
   label,
@@ -14,52 +26,63 @@ function SelectField({
   icon,
   options,
   isOpen,
+  error,
   onToggle,
   onSelect,
-  emptyText = "No hay opciones disponibles.",
 }) {
   return (
     <View style={styles.fieldBlock}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <Pressable onPress={onToggle} style={({ pressed }) => [styles.fieldShell, pressed && styles.pressed]}>
+      <Pressable
+        onPress={onToggle}
+        style={({ pressed }) => [
+          styles.fieldShell,
+          !!error && styles.fieldShellError,
+          pressed && styles.pressed,
+        ]}
+      >
         <View style={styles.fieldContent}>
-          <Feather name={icon} size={18} color="#8A8A8A" />
-          <Text style={[styles.fieldText, !value && styles.placeholderText]}>{value || placeholder}</Text>
+          <Feather name={icon} size={18} color={error ? "#D14343" : "#8A8A8A"} />
+          <Text style={[styles.fieldText, !value && styles.placeholderText]}>
+            {value || placeholder}
+          </Text>
         </View>
         <Ionicons name={isOpen ? "chevron-up" : "chevron-down"} size={18} color="#8A8A8A" />
       </Pressable>
 
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
+
       {isOpen ? (
         <View style={styles.dropdownMenu}>
-          {options.length === 0 ? (
-            <Text style={styles.dropdownEmptyText}>{emptyText}</Text>
-          ) : options.map((option) => {
-            const optionLabel = option.nombre || option.label || option;
-            const optionKey = option.id || optionLabel;
-
-            return (
+          {options.map((option) => (
             <Pressable
-              key={optionKey}
+              key={option}
               onPress={() => onSelect(option)}
               style={({ pressed }) => [styles.dropdownItem, pressed && styles.pressed]}
             >
-              <Text style={styles.dropdownItemText}>{optionLabel}</Text>
-              {optionLabel === value ? <Ionicons name="checkmark" size={16} color="#5655B9" /> : null}
+              <Text style={styles.dropdownItemText}>{option}</Text>
+              {option === value ? <Ionicons name="checkmark" size={16} color="#5655B9" /> : null}
             </Pressable>
-            );
-          })}
+          ))}
         </View>
       ) : null}
     </View>
   );
 }
 
-function InputField({ label, value, onChangeText, placeholder, icon }) {
+function InputField({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  icon,
+  error,
+}) {
   return (
     <View style={styles.fieldBlock}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <View style={styles.fieldShell}>
-        <MaterialCommunityIcons name={icon} size={18} color="#8A8A8A" />
+      <View style={[styles.fieldShell, !!error && styles.fieldShellError]}>
+        <MaterialCommunityIcons name={icon} size={18} color={error ? "#D14343" : "#8A8A8A"} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -68,16 +91,22 @@ function InputField({ label, value, onChangeText, placeholder, icon }) {
           style={styles.input}
         />
       </View>
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 }
 
-function MultiLineField({ label, value, onChangeText, placeholder }) {
+function MultiLineField({ label, value, onChangeText, placeholder, error }) {
   return (
     <View style={styles.fieldBlock}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <View style={[styles.fieldShell, styles.problemShell]}>
-        <Feather name="alert-circle" size={18} color="#8A8A8A" style={styles.problemIcon} />
+      <View style={[styles.fieldShell, styles.problemShell, !!error && styles.fieldShellError]}>
+        <Feather
+          name="alert-circle"
+          size={18}
+          color={error ? "#D14343" : "#8A8A8A"}
+          style={styles.problemIcon}
+        />
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -88,6 +117,7 @@ function MultiLineField({ label, value, onChangeText, placeholder }) {
           textAlignVertical="top"
         />
       </View>
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 }
@@ -100,15 +130,21 @@ export function RegisterEquipmentScreen({
   onCreateClient,
   onRefreshClientes,
 }) {
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const [selectedClientName, setSelectedClientName] = useState("");
+  const [selectedClient, setSelectedClient] = useState(null);
   const [selectedType, setSelectedType] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [serial, setSerial] = useState("");
-  const [problem, setProblem] = useState("");
+  const [initialFailure, setInitialFailure] = useState("");
+  const [orderDiagnostic, setOrderDiagnostic] = useState("");
+  const [priority, setPriority] = useState("Normal");
+  const [orderObservation, setOrderObservation] = useState("");
   const [openField, setOpenField] = useState(null);
+  const [clientModalVisible, setClientModalVisible] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const [savingMode, setSavingMode] = useState(null);
   const submitLockRef = useRef(false);
 
   useEffect(() => {
@@ -117,53 +153,102 @@ export function RegisterEquipmentScreen({
     }
   }, [clientes.length, onRefreshClientes]);
 
-  const equipmentPayload = {
-    clienteId: selectedClientId,
-    clientName: selectedClientName,
-    type: selectedType,
-    brand,
-    model,
-    serial,
-    failure: problem,
+  const filteredClients = useMemo(() => {
+    const term = clientSearch.trim().toLowerCase();
+    const rawTerm = clientSearch.trim();
+
+    return clientes.filter((cliente) => {
+      const nombre = String(cliente.nombre || cliente.razonSocial || "").toLowerCase();
+      const nombres = String(cliente.nombres || "").toLowerCase();
+      const apellidos = String(cliente.apellidos || "").toLowerCase();
+      const documento = String(cliente.numeroDocumento || cliente.documento || "");
+      const telefono = String(cliente.telefono || "");
+      const correo = String(cliente.correo || cliente.email || "").toLowerCase();
+
+      return (
+        !term ||
+        nombre.includes(term) ||
+        nombres.includes(term) ||
+        apellidos.includes(term) ||
+        documento.includes(rawTerm) ||
+        telefono.includes(rawTerm) ||
+        correo.includes(term)
+      );
+    });
+  }, [clientSearch, clientes]);
+
+  const clearError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
-  const isEquipmentFormValid = [
-    selectedClientId,
-    selectedType,
-    brand.trim(),
-    model.trim(),
-    serial.trim(),
-  ].every(Boolean);
+  const buildPayload = () => ({
+    clienteId: selectedClient?.id,
+    clientName: selectedClient?.nombre || selectedClient?.razonSocial,
+    type: selectedType,
+    brand: brand.trim(),
+    model: model.trim(),
+    serial: serial.trim(),
+    initialFailure: initialFailure.trim(),
+    failure: orderDiagnostic.trim(),
+    diagnostico: orderDiagnostic.trim(),
+    prioridad: priority,
+    observaciones: orderObservation.trim(),
+  });
 
-  const runSubmit = async (submitAction, requireProblem = false) => {
+  const validate = (mode) => {
+    const nextErrors = {};
+
+    if (!selectedClient?.id) nextErrors.client = "Seleccione un cliente.";
+    if (!selectedType) nextErrors.type = "Seleccione el tipo de equipo.";
+    if (!brand.trim()) nextErrors.brand = "Ingrese la marca del equipo.";
+    if (!model.trim()) nextErrors.model = "Ingrese el modelo del equipo.";
+    if (serial.trim() && serial.trim().length < 3) {
+      nextErrors.serial = "El numero de serie debe tener al menos 3 caracteres.";
+    }
+
+    if (mode === "order") {
+      if (!orderDiagnostic.trim()) {
+        nextErrors.orderDiagnostic = "Ingrese la falla o diagnostico inicial de la orden.";
+      }
+      if (!priority) {
+        nextErrors.priority = "Seleccione la prioridad de la orden.";
+      }
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const runSubmit = async (submitAction, mode) => {
     if (submitLockRef.current || isSaving) return;
-
-    if (!isEquipmentFormValid) {
-      Alert.alert("Formulario incompleto", "Selecciona cliente y completa tipo, marca, modelo y serie.");
-      return;
-    }
-
-    if (requireProblem && !problem.trim()) {
-      Alert.alert("Diagnostico requerido", "Describe la falla para crear la orden junto al equipo.");
-      return;
-    }
+    if (!validate(mode)) return;
 
     submitLockRef.current = true;
     setIsSaving(true);
+    setSavingMode(mode);
 
     try {
-      await submitAction(equipmentPayload);
+      await submitAction(buildPayload());
     } catch (error) {
-      Alert.alert("No se pudo registrar", error.message || "Intenta nuevamente.");
+      const message = error?.message || "No se pudo registrar el equipo. Intenta nuevamente.";
+      Alert.alert("No se pudo registrar", message);
     } finally {
       submitLockRef.current = false;
       setIsSaving(false);
+      setSavingMode(null);
     }
   };
 
-  const handleSave = () => runSubmit(onSave);
-
-  const handleSaveAndCreateOrder = () => runSubmit(onSaveAndCreateOrder, true);
+  const handleClientSelect = (cliente) => {
+    setSelectedClient(cliente);
+    clearError("client");
+    setClientModalVisible(false);
+  };
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
@@ -175,7 +260,7 @@ export function RegisterEquipmentScreen({
 
           <View style={styles.headerText}>
             <Text style={styles.title}>Registrar equipo</Text>
-            <Text style={styles.subtitle}>Completa el formulario para registrar un nuevo equipo</Text>
+            <Text style={styles.subtitle}>Asocia el equipo a un cliente del negocio actual</Text>
           </View>
         </View>
 
@@ -185,29 +270,34 @@ export function RegisterEquipmentScreen({
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.formCard}>
-            <SelectField
-              label="CLIENTE"
-              value={selectedClientName}
-              placeholder="Selecciona un cliente"
-              icon="user"
-              options={clientes}
-              emptyText="Todavia no hay clientes registrados."
-              isOpen={openField === "client"}
-              onToggle={() => setOpenField((current) => (current === "client" ? null : "client"))}
-              onSelect={(option) => {
-                setSelectedClientId(option.id);
-                setSelectedClientName(option.nombre);
-                setOpenField(null);
-              }}
-            />
+            <View style={styles.fieldBlock}>
+              <Text style={styles.fieldLabel}>CLIENTE</Text>
+              <Pressable
+                onPress={() => setClientModalVisible(true)}
+                style={({ pressed }) => [
+                  styles.fieldShell,
+                  !!errors.client && styles.fieldShellError,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={styles.fieldContent}>
+                  <Feather name="user" size={18} color={errors.client ? "#D14343" : "#8A8A8A"} />
+                  <Text style={[styles.fieldText, !selectedClient && styles.placeholderText]}>
+                    {selectedClient?.nombre || selectedClient?.razonSocial || "Seleccionar cliente"}
+                  </Text>
+                </View>
+                <Ionicons name="search" size={18} color="#8A8A8A" />
+              </Pressable>
+              {!!errors.client && <Text style={styles.errorText}>{errors.client}</Text>}
+            </View>
 
             {clientes.length === 0 ? (
               <View style={styles.emptyClientBox}>
                 <Feather name="user-plus" size={22} color={colors.primary} />
                 <View style={styles.emptyClientTextBox}>
-                  <Text style={styles.emptyClientTitle}>Primero registra un cliente</Text>
+                  <Text style={styles.emptyClientTitle}>No hay clientes registrados</Text>
                   <Text style={styles.emptyClientText}>
-                    El equipo necesita estar asociado a un cliente para crear historial y ordenes.
+                    Registre un cliente primero para asociar el equipo.
                   </Text>
                 </View>
                 <Pressable style={styles.emptyClientButton} onPress={onCreateClient}>
@@ -219,13 +309,15 @@ export function RegisterEquipmentScreen({
             <SelectField
               label="TIPO DE EQUIPO"
               value={selectedType}
-              placeholder="Selecciona una categoría"
+              placeholder="Selecciona una categoria"
               icon="triangle"
               options={equipmentTypeOptions}
+              error={errors.type}
               isOpen={openField === "type"}
               onToggle={() => setOpenField((current) => (current === "type" ? null : "type"))}
               onSelect={(option) => {
                 setSelectedType(option);
+                clearError("type");
                 setOpenField(null);
               }}
             />
@@ -233,7 +325,11 @@ export function RegisterEquipmentScreen({
             <InputField
               label="MARCA"
               value={brand}
-              onChangeText={setBrand}
+              error={errors.brand}
+              onChangeText={(value) => {
+                setBrand(value);
+                clearError("brand");
+              }}
               placeholder="Ingresa la marca del equipo"
               icon="copyright"
             />
@@ -241,34 +337,86 @@ export function RegisterEquipmentScreen({
             <InputField
               label="MODELO"
               value={model}
-              onChangeText={setModel}
+              error={errors.model}
+              onChangeText={(value) => {
+                setModel(value);
+                clearError("model");
+              }}
               placeholder="Ingresa el modelo del equipo"
               icon="card-text-outline"
             />
 
             <InputField
-              label="SERIE"
+              label="NUMERO DE SERIE"
               value={serial}
-              onChangeText={setSerial}
-              placeholder="Ingresa el número de serie"
+              error={errors.serial}
+              onChangeText={(value) => {
+                setSerial(value);
+                clearError("serial");
+              }}
+              placeholder="Opcional. Minimo 3 caracteres si se ingresa"
               icon="numeric"
             />
 
             <MultiLineField
-              label="FALLA PARA ORDEN"
-              value={problem}
-              onChangeText={setProblem}
-              placeholder="Opcional si solo guardas el equipo. Requerido para guardar y crear orden."
+              label="FALLA REPORTADA INICIAL"
+              value={initialFailure}
+              onChangeText={setInitialFailure}
+              placeholder="Opcional. Nota inicial del equipo, no crea una orden."
+            />
+          </View>
+
+          <View style={styles.formCard}>
+            <Text style={styles.sectionTitle}>Datos para crear orden</Text>
+            <Text style={styles.sectionDescription}>
+              Estos campos solo son requeridos si usas Guardar y crear orden.
+            </Text>
+
+            <MultiLineField
+              label="DIAGNOSTICO O FALLA DE LA ORDEN"
+              value={orderDiagnostic}
+              error={errors.orderDiagnostic}
+              onChangeText={(value) => {
+                setOrderDiagnostic(value);
+                clearError("orderDiagnostic");
+              }}
+              placeholder="Describe la falla o diagnostico inicial de la orden"
+            />
+
+            <SelectField
+              label="PRIORIDAD"
+              value={priority}
+              placeholder="Selecciona prioridad"
+              icon="flag"
+              options={priorityOptions}
+              error={errors.priority}
+              isOpen={openField === "priority"}
+              onToggle={() => setOpenField((current) => (current === "priority" ? null : "priority"))}
+              onSelect={(option) => {
+                setPriority(option);
+                clearError("priority");
+                setOpenField(null);
+              }}
+            />
+
+            <MultiLineField
+              label="OBSERVACION DE ORDEN"
+              value={orderObservation}
+              onChangeText={setOrderObservation}
+              placeholder="Opcional. Detalles adicionales para la orden."
             />
           </View>
 
           <Pressable
             style={[styles.primaryButton, isSaving && styles.disabledButton]}
-            onPress={handleSave}
+            onPress={() => runSubmit(onSave, "equipment")}
             disabled={isSaving}
           >
-            {isSaving ? (
-              <ActivityIndicator color="#FFFFFF" />
+            {isSaving && savingMode === "equipment" ? (
+              <View style={styles.loadingRow}>
+                <ActivityIndicator color="#FFFFFF" />
+                <Text style={styles.primaryButtonText}>Guardando...</Text>
+              </View>
             ) : (
               <Text style={styles.primaryButtonText}>Guardar equipo</Text>
             )}
@@ -276,15 +424,112 @@ export function RegisterEquipmentScreen({
 
           <Pressable
             style={[styles.secondaryButton, isSaving && styles.disabledButton]}
-            onPress={handleSaveAndCreateOrder}
+            onPress={() => runSubmit(onSaveAndCreateOrder, "order")}
             disabled={isSaving}
           >
-            <Text style={styles.secondaryButtonText}>Guardar y crear orden</Text>
+            {isSaving && savingMode === "order" ? (
+              <View style={styles.loadingRow}>
+                <ActivityIndicator color="#FFFFFF" />
+                <Text style={styles.secondaryButtonText}>Creando orden...</Text>
+              </View>
+            ) : (
+              <Text style={styles.secondaryButtonText}>Guardar y crear orden</Text>
+            )}
           </Pressable>
         </ScrollView>
+
+        <ClientPickerModal
+          visible={clientModalVisible}
+          clients={filteredClients}
+          search={clientSearch}
+          onSearch={setClientSearch}
+          onClose={() => setClientModalVisible(false)}
+          onSelect={handleClientSelect}
+          onCreateClient={onCreateClient}
+        />
       </View>
     </ScreenContainer>
   );
+}
+
+function ClientPickerModal({
+  visible,
+  clients,
+  search,
+  onSearch,
+  onClose,
+  onSelect,
+  onCreateClient,
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <View>
+              <Text style={styles.modalTitle}>Seleccionar cliente</Text>
+              <Text style={styles.modalSubtitle}>Busca por nombre, documento, telefono o correo</Text>
+            </View>
+            <Pressable style={styles.modalClose} onPress={onClose}>
+              <Ionicons name="close" size={22} color="#111827" />
+            </Pressable>
+          </View>
+
+          <View style={styles.searchShell}>
+            <Feather name="search" size={18} color="#8A8A8A" />
+            <TextInput
+              value={search}
+              onChangeText={onSearch}
+              placeholder="Buscar cliente"
+              placeholderTextColor="#8A8A8A"
+              style={styles.searchInput}
+            />
+          </View>
+
+          <FlatList
+            data={clients}
+            keyExtractor={(item) => String(item.id)}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.clientList}
+            renderItem={({ item }) => (
+              <Pressable style={styles.clientItem} onPress={() => onSelect(item)}>
+                <View style={styles.clientAvatar}>
+                  <Text style={styles.clientAvatarText}>{getInitials(item.nombre || item.razonSocial)}</Text>
+                </View>
+                <View style={styles.clientInfo}>
+                  <Text style={styles.clientName}>{item.nombre || item.razonSocial || "Cliente sin nombre"}</Text>
+                  <Text style={styles.clientMeta}>
+                    Doc: {item.numeroDocumento || "Sin documento"} · {item.telefono || "Sin telefono"}
+                  </Text>
+                  <Text style={styles.clientMeta}>{item.correo || item.email || "Sin correo"}</Text>
+                </View>
+              </Pressable>
+            )}
+            ListEmptyComponent={
+              <View style={styles.modalEmpty}>
+                <Feather name="users" size={34} color="#9CA3AF" />
+                <Text style={styles.modalEmptyTitle}>No hay clientes registrados</Text>
+                <Text style={styles.modalEmptyText}>Registre un cliente primero.</Text>
+                <Pressable style={styles.modalCreateButton} onPress={onCreateClient}>
+                  <Text style={styles.modalCreateButtonText}>Registrar cliente</Text>
+                </Pressable>
+              </View>
+            }
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function getInitials(name) {
+  return String(name || "CL")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 const styles = StyleSheet.create({
@@ -327,6 +572,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 16,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#111827",
+  },
+  sectionDescription: {
+    marginTop: 4,
+    marginBottom: 14,
+    color: "#6B7280",
+    fontSize: 12,
+    lineHeight: 17,
   },
   fieldBlock: {
     marginBottom: 16,
@@ -349,6 +607,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     columnGap: 10,
+  },
+  fieldShellError: {
+    borderColor: "#D14343",
+    backgroundColor: "#FFF7F7",
   },
   fieldContent: {
     flexDirection: "row",
@@ -384,12 +646,6 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     fontSize: 15,
     color: "#111827",
-  },
-  dropdownEmptyText: {
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    color: "#6B7280",
-    fontSize: 13,
   },
   emptyClientBox: {
     marginTop: -4,
@@ -445,13 +701,19 @@ const styles = StyleSheet.create({
   problemInput: {
     minHeight: 80,
   },
+  errorText: {
+    marginTop: 6,
+    color: "#D14343",
+    fontSize: 12,
+    lineHeight: 16,
+  },
   primaryButton: {
-    height: 56,
+    minHeight: 56,
     borderRadius: 18,
     backgroundColor: "#111111",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 18,
+    marginTop: 4,
   },
   primaryButtonText: {
     color: "#FFFFFF",
@@ -459,7 +721,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   secondaryButton: {
-    height: 56,
+    minHeight: 56,
     borderRadius: 18,
     backgroundColor: "#5655B9",
     alignItems: "center",
@@ -471,10 +733,132 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
   },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
+  },
   disabledButton: {
     opacity: 0.7,
   },
   pressed: {
     opacity: 0.85,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.38)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    maxHeight: "82%",
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 18,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    columnGap: 12,
+  },
+  modalTitle: {
+    color: "#111827",
+    fontSize: 19,
+    fontWeight: "900",
+  },
+  modalSubtitle: {
+    marginTop: 3,
+    color: "#6B7280",
+    fontSize: 12,
+  },
+  modalClose: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchShell: {
+    marginTop: 16,
+    minHeight: 50,
+    borderRadius: 16,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    columnGap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#111827",
+    fontSize: 15,
+  },
+  clientList: {
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+  clientItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  clientAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "#EDEBFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clientAvatarText: {
+    color: colors.primary,
+    fontWeight: "900",
+    fontSize: 13,
+  },
+  clientInfo: {
+    flex: 1,
+  },
+  clientName: {
+    color: "#111827",
+    fontWeight: "900",
+    fontSize: 14,
+  },
+  clientMeta: {
+    marginTop: 2,
+    color: "#6B7280",
+    fontSize: 12,
+  },
+  modalEmpty: {
+    alignItems: "center",
+    paddingVertical: 34,
+    rowGap: 8,
+  },
+  modalEmptyTitle: {
+    color: "#111827",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  modalEmptyText: {
+    color: "#6B7280",
+    fontSize: 13,
+  },
+  modalCreateButton: {
+    marginTop: 8,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+  },
+  modalCreateButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "900",
+    fontSize: 13,
   },
 });

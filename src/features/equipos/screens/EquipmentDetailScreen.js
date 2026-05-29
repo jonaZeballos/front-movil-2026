@@ -40,8 +40,8 @@ export function EquipmentDetailScreen({ equipment, onBack }) {
             <InfoRow label="Tipo de equipo" value={equipment.type} />
             <InfoRow label="Marca" value={equipment.brand} />
             <InfoRow label="Modelo" value={equipment.model} />
-            <InfoRow label="Serie" value={equipment.serial} />
-            <InfoRow label="Falla reportada" value={equipment.failure} />
+            <InfoRow label="Serie" value={formatSerial(equipment.serial)} />
+            <InfoRow label="Falla reportada inicial" value={equipment.failure || "Sin falla inicial registrada"} />
           </View>
         </ScrollView>
       </View>
@@ -56,6 +56,11 @@ function InfoRow({ label, value }) {
       <Text style={styles.value}>{value}</Text>
     </View>
   );
+}
+
+function formatSerial(serial) {
+  if (!serial || String(serial).startsWith("SIN-SERIE-")) return "Sin serie";
+  return serial;
 }
 
 const styles = StyleSheet.create({

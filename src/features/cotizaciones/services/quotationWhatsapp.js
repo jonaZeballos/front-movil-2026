@@ -8,6 +8,7 @@ import {
   normalizeWhatsAppPhone,
   openWhatsApp,
 } from "../../../shared/utils";
+import { getQuotationCreator } from "../utils/quotationFormatters";
 import { getCotizacionWhatsapp } from "./cotizacionesApi";
 
 export function buildQuotationWhatsAppMessage(quotation) {
@@ -33,6 +34,7 @@ export function buildQuotationWhatsAppMessage(quotation) {
     "",
     `Cliente: ${getClientName(cliente)}`,
     `Telefono: ${phone || "No registrado"}`,
+    `Cotizacion realizada por: ${getQuotationCreator(quotation)}`,
     `Orden: ${getOrderCode(order)}`,
     `Equipo: ${getEquipmentName(equipo)}`,
     `Diagnostico: ${cleanText(order.diagnostico || order.failure, "No registrado")}`,

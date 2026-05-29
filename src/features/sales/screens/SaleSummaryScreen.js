@@ -21,7 +21,7 @@ import {
   generateReceipt,
 } from "../services/salesApi";
 
-export function SaleSummaryScreen({ saleDraft, onBack, onConfirm }) {
+export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleConfirm = async () => {
@@ -53,7 +53,10 @@ export function SaleSummaryScreen({ saleDraft, onBack, onConfirm }) {
 
       const finalReceipt = receipt || buildElectronicReceipt(saleDraft, savedSale);
 
-      onConfirm?.(finalReceipt);
+      onConfirm?.({
+        ...finalReceipt,
+        realizadoPor: finalReceipt.realizadoPor || user,
+      });
     } catch (error) {
       Alert.alert("No se pudo registrar la venta", error.message || "Intenta nuevamente.");
     } finally {

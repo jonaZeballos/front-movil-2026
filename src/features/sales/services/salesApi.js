@@ -80,15 +80,15 @@ function mapVenta(venta) {
 }
 
 function mapVentaDetalle(item) {
-  const product = item.producto || item;
+  const product = typeof item.producto === "object" ? item.producto : item;
   const quantity = Number(item.quantity || item.cantidad || 0);
   const unitPrice = Number(item.unitPrice || item.precioUnitario || item.precio || 0);
 
   return {
     id: item.id || item.idProducto || product.id,
     productoId: item.productoId || item.idProducto || product.id,
-    name: item.name || item.nombre || product.nombre || "Producto",
-    nombre: item.nombre || product.nombre || item.name || "Producto",
+    name: item.name || item.nombre || (typeof item.producto === "string" ? item.producto : product.nombre) || "Producto",
+    nombre: item.nombre || (typeof item.producto === "string" ? item.producto : product.nombre) || item.name || "Producto",
     quantity,
     cantidad: quantity,
     unitPrice,
@@ -101,7 +101,7 @@ function mapVentaDetalle(item) {
 function mapReceipt(receipt) {
   const source = receipt.recibo || receipt;
   const venta = source.venta || source;
-  const productos = source.productos || source.detalles || venta.productos || venta.detalles || [];
+  const productos = source.productos || source.items || source.detalles || venta.productos || venta.items || venta.detalles || [];
 
   return {
     ...source,
@@ -115,6 +115,8 @@ function mapReceipt(receipt) {
     },
     productos: productos.map(mapVentaDetalle),
     metodoPago: source.metodoPago || "No registrado",
+    negocio: source.negocio || venta.negocio,
+    realizadoPor: source.realizadoPor || venta.realizadoPor,
     subtotal: Number(source.subtotal || venta.subtotal || venta.total || 0),
     descuento: Number(source.descuento || venta.descuento || 0),
     total: Number(source.total || venta.total || 0),

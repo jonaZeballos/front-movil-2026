@@ -3,15 +3,20 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { formatCurrency } from "../services/salesApi";
+import {
+  getReceiptClientEmail,
+  getReceiptClientName,
+  getReceiptClientPhone,
+  getReceiptDate,
+  getReceiptNumber,
+  getReceiptProducts,
+  getReceiptSeller,
+} from "../services/receiptFormatters";
 
 export function ElectronicReceiptCard({ receipt }) {
   if (!receipt) return null;
 
-  const issuedDate = receipt.issuedAt
-    ? new Date(receipt.issuedAt).toLocaleString()
-    : "Fecha no disponible";
-
-  const clientName = getClientName(receipt.cliente);
+  const products = getReceiptProducts(receipt);
 
   return (
     <View style={styles.card}>
@@ -21,8 +26,8 @@ export function ElectronicReceiptCard({ receipt }) {
         </View>
 
         <View>
-          <Text style={styles.title}>Recibo electrónico</Text>
-          <Text style={styles.number}>{receipt.number}</Text>
+          <Text style={styles.title}>Comprobante de venta</Text>
+          <Text style={styles.number}>{getReceiptNumber(receipt)}</Text>
         </View>
       </View>
 
@@ -33,23 +38,25 @@ export function ElectronicReceiptCard({ receipt }) {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Cliente</Text>
-        <Text style={styles.mainText}>{clientName}</Text>
-        <Text style={styles.mutedText}>{receipt.cliente?.email || "Sin correo registrado"}</Text>
+        <Text style={styles.mainText}>{getReceiptClientName(receipt)}</Text>
+        <Text style={styles.mutedText}>{getReceiptClientEmail(receipt)}</Text>
+        <Text style={styles.mutedText}>{getReceiptClientPhone(receipt)}</Text>
+        <Text style={styles.mutedText}>Venta realizada por: {getReceiptSeller(receipt)}</Text>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Detalle</Text>
 
-        {receipt.productos?.map((item) => (
-          <View key={item.id} style={styles.productRow}>
+        {products.map((item) => (
+          <View key={item.id || item.productoId || item.name} style={styles.productRow}>
             <View style={styles.productInfo}>
-              <Text style={styles.productName}>{item.name}</Text>
+              <Text style={styles.productName}>{item.name || item.nombre || "Producto"}</Text>
               <Text style={styles.mutedText}>
-                {item.quantity} x {formatCurrency(item.unitPrice)}
+                {item.quantity || item.cantidad || 0} x {formatCurrency(item.unitPrice || item.precioUnitario)}
               </Text>
             </View>
 
-            <Text style={styles.productTotal}>{formatCurrency(item.total)}</Text>
+            <Text style={styles.productTotal}>{formatCurrency(item.total || item.subtotal)}</Text>
           </View>
         ))}
       </View>
@@ -74,16 +81,17 @@ export function ElectronicReceiptCard({ receipt }) {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Método de pago: {receipt.metodoPago?.label}</Text>
-        <Text style={styles.footerText}>Emitido: {issuedDate}</Text>
+        <Text style={styles.footerText}>Metodo de pago: {getPaymentLabel(receipt.metodoPago)}</Text>
+        <Text style={styles.footerText}>Emitido: {getReceiptDate(receipt)}</Text>
       </View>
     </View>
   );
 }
 
-function getClientName(cliente) {
-  const fullName = [cliente?.nombres, cliente?.apellidos].filter(Boolean).join(" ").trim();
-  return fullName || cliente?.nombre || cliente?.razonSocial || "Cliente mostrador";
+function getPaymentLabel(method) {
+  if (!method) return "No registrado";
+  if (typeof method === "string") return method;
+  return method.label || method.id || "No registrado";
 }
 
 const styles = StyleSheet.create({
@@ -94,11 +102,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#EFEFF5",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
+  header: { flexDirection: "row", alignItems: "center", gap: 12 },
   iconWrap: {
     width: 54,
     height: 54,
@@ -107,17 +111,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
-    color: "#111111",
-    fontFamily: fontFamilies.bold,
-    fontSize: 20,
-  },
-  number: {
-    marginTop: 2,
-    color: "#777782",
-    fontFamily: fontFamilies.medium,
-    fontSize: 13,
-  },
+  title: { color: "#111111", fontFamily: fontFamilies.bold, fontSize: 20 },
+  number: { marginTop: 2, color: "#777782", fontFamily: fontFamilies.medium, fontSize: 13 },
   statusPill: {
     alignSelf: "flex-start",
     marginTop: 14,
@@ -129,31 +124,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 5,
   },
-  statusText: {
-    color: "#10B981",
-    fontFamily: fontFamilies.bold,
-    fontSize: 12,
-  },
-  section: {
-    marginTop: 18,
-  },
-  sectionTitle: {
-    marginBottom: 8,
-    color: "#111111",
-    fontFamily: fontFamilies.bold,
-    fontSize: 15,
-  },
-  mainText: {
-    color: "#22222A",
-    fontFamily: fontFamilies.semibold,
-    fontSize: 15,
-  },
-  mutedText: {
-    marginTop: 2,
-    color: "#8B8B96",
-    fontFamily: fontFamilies.medium,
-    fontSize: 12,
-  },
+  statusText: { color: "#10B981", fontFamily: fontFamilies.bold, fontSize: 12 },
+  section: { marginTop: 18 },
+  sectionTitle: { marginBottom: 8, color: "#111111", fontFamily: fontFamilies.bold, fontSize: 15 },
+  mainText: { color: "#22222A", fontFamily: fontFamilies.semibold, fontSize: 15 },
+  mutedText: { marginTop: 2, color: "#8B8B96", fontFamily: fontFamilies.medium, fontSize: 12 },
   productRow: {
     paddingVertical: 10,
     borderBottomWidth: 1,
@@ -162,59 +137,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
-  productInfo: {
-    flex: 1,
-  },
-  productName: {
-    color: "#22222A",
-    fontFamily: fontFamilies.semibold,
-    fontSize: 14,
-  },
-  productTotal: {
-    color: "#111111",
-    fontFamily: fontFamilies.bold,
-    fontSize: 14,
-  },
-  totalRow: {
-    marginBottom: 9,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  totalLabel: {
-    color: "#777782",
-    fontFamily: fontFamilies.medium,
-    fontSize: 14,
-  },
-  totalText: {
-    color: "#22222A",
-    fontFamily: fontFamilies.semibold,
-    fontSize: 14,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "#EFEFF5",
-    marginVertical: 8,
-  },
-  grandTotalLabel: {
-    color: "#111111",
-    fontFamily: fontFamilies.bold,
-    fontSize: 17,
-  },
-  grandTotal: {
-    color: "#2386F5",
-    fontFamily: fontFamilies.bold,
-    fontSize: 22,
-  },
-  footer: {
-    marginTop: 18,
-    backgroundColor: "#F8F8FB",
-    borderRadius: 16,
-    padding: 12,
-  },
-  footerText: {
-    color: "#777782",
-    fontFamily: fontFamilies.medium,
-    fontSize: 12,
-    marginBottom: 3,
-  },
+  productInfo: { flex: 1 },
+  productName: { color: "#22222A", fontFamily: fontFamilies.semibold, fontSize: 14 },
+  productTotal: { color: "#111111", fontFamily: fontFamilies.bold, fontSize: 14 },
+  totalRow: { marginBottom: 9, flexDirection: "row", justifyContent: "space-between" },
+  totalLabel: { color: "#777782", fontFamily: fontFamilies.medium, fontSize: 14 },
+  totalText: { color: "#22222A", fontFamily: fontFamilies.semibold, fontSize: 14 },
+  separator: { height: 1, backgroundColor: "#EFEFF5", marginVertical: 8 },
+  grandTotalLabel: { color: "#111111", fontFamily: fontFamilies.bold, fontSize: 17 },
+  grandTotal: { color: "#2386F5", fontFamily: fontFamilies.bold, fontSize: 22 },
+  footer: { marginTop: 18, backgroundColor: "#F8F8FB", borderRadius: 16, padding: 12 },
+  footerText: { color: "#777782", fontFamily: fontFamilies.medium, fontSize: 12, marginBottom: 3 },
 });

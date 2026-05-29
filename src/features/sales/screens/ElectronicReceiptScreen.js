@@ -14,6 +14,7 @@ import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { ElectronicReceiptCard } from "../components/ElectronicReceiptCard";
+import { SendReceiptEmailButton } from "../components/SendReceiptEmailButton";
 import { SendReceiptWhatsappButton } from "../components/SendReceiptWhatsappButton";
 import { downloadReceiptPdf } from "../services/receiptPdf";
 
@@ -67,6 +68,7 @@ export function ElectronicReceiptScreen({ receipt, onBackToSales }) {
           </Pressable>
 
           <SendReceiptWhatsappButton receipt={receipt} />
+          <SendReceiptEmailButton receipt={receipt} />
 
           <Pressable
             style={[styles.secondaryButton, isDownloading && styles.buttonDisabled]}

@@ -11,6 +11,7 @@ import {
   getEquipoNombre,
   getQuotationBusiness,
   getQuotationClient,
+  getQuotationCreator,
   getQuotationEquipment,
   getQuotationPhone,
   getQuotationSubtotal,
@@ -40,6 +41,7 @@ export function QuotationSummaryCard({ quotation }) {
       <SummaryRow label="Codigo de orden" value={order.codigo} />
       <SummaryRow label="Cliente" value={getClienteNombre(cliente) || order.cliente} />
       <SummaryRow label="Telefono" value={getQuotationPhone(quotation)} />
+      <SummaryRow label="Cotizacion realizada por" value={getQuotationCreator(quotation)} />
       <SummaryRow label="Equipo" value={getEquipoNombre(equipo) || order.equipo} />
       <SummaryRow label="Diagnostico" value={getDiagnosticoTexto(order.diagnostico || order.failure)} />
       <SummaryRow label="Descripcion del trabajo" value={quotation.descripcion} />

@@ -3,25 +3,21 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text } from "react-nat
 import { Ionicons } from "@expo/vector-icons";
 
 import { fontFamilies } from "../../../shared/theme/fonts";
-import { sendReceiptByWhatsApp } from "../services/receiptWhatsapp";
+import { sendReceiptByEmail } from "../services/receiptEmail";
 
-export function SendReceiptWhatsappButton({ receipt, style }) {
+export function SendReceiptEmailButton({ receipt, style }) {
   const [isSending, setIsSending] = useState(false);
 
   const handleSend = async () => {
-    if (!receipt) {
-      Alert.alert("Recibo no disponible", "No hay datos para enviar por WhatsApp.");
-      return;
-    }
+    if (!receipt || isSending) return;
 
     setIsSending(true);
-
     try {
-      await sendReceiptByWhatsApp(receipt);
+      await sendReceiptByEmail(receipt);
     } catch (error) {
-      const message = error.message || "Ocurrio un error al enviar el recibo.";
+      const message = error.message || "No se pudo preparar el correo.";
       Alert.alert(
-        message.includes("telefono registrado") ? "Telefono no registrado" : "No se pudo abrir WhatsApp",
+        message.includes("correo registrado") ? "Correo no registrado" : "No se pudo enviar por correo",
         message
       );
     } finally {
@@ -41,11 +37,11 @@ export function SendReceiptWhatsappButton({ receipt, style }) {
       disabled={isSending}
     >
       {isSending ? (
-        <ActivityIndicator color="#25D366" />
+        <ActivityIndicator color="#2386F5" />
       ) : (
         <>
-          <Ionicons name="logo-whatsapp" size={19} color="#25D366" />
-          <Text style={styles.buttonText}>Enviar recibo por WhatsApp</Text>
+          <Ionicons name="mail-outline" size={19} color="#2386F5" />
+          <Text style={styles.buttonText}>Enviar recibo por correo</Text>
         </>
       )}
     </Pressable>
@@ -59,20 +55,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#BFEBD0",
+    borderColor: "#DCEBFF",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
-  buttonPressed: {
-    opacity: 0.88,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
+  buttonPressed: { opacity: 0.88 },
+  buttonDisabled: { opacity: 0.7 },
   buttonText: {
-    color: "#25D366",
+    color: "#2386F5",
     fontFamily: fontFamilies.bold,
     fontSize: 15,
   },

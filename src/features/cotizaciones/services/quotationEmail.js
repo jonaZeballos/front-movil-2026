@@ -7,6 +7,7 @@ import {
   getCotizacionValidoHasta,
   getQuotationBusiness,
   getQuotationClient,
+  getQuotationCreator,
   getQuotationEmail,
   getQuotationOrder,
   toDisplayText,
@@ -58,6 +59,7 @@ function buildQuotationEmailBody(quotation) {
     "",
     `Total: ${formatQuotationMoney(quotation.total)}`,
     `Valida hasta: ${formatQuotationDate(validoHasta)}`,
+    `Cotizacion realizada por: ${getQuotationCreator(quotation)}`,
     "",
     `Gracias por confiar en ${toDisplayText(negocio.nombre, "ServiTech")}.`,
   ].join("\n");

@@ -552,6 +552,7 @@ export function AppNavigator() {
           {({ navigation, route }) => (
             <SaleSummaryScreen
               saleDraft={route.params?.saleDraft}
+              user={session?.user}
               onBack={() => navigation.goBack()}
               onConfirm={(receipt) => {
                 setSalesReports((prevReports) => [receipt, ...prevReports]);
@@ -659,6 +660,10 @@ export function AppNavigator() {
               onCancel={() => navigation.goBack()}
               onSave={async (quotation) => {
                 const savedQuotation = await createCotizacion(quotation);
+                const displayQuotation = {
+                  ...savedQuotation,
+                  realizadoPor: savedQuotation.realizadoPor || session?.user,
+                };
                 if (savedQuotation.cotizacionActiva && savedQuotation.yaExistia) {
                   Alert.alert(
                     "Cotizacion activa",
@@ -670,15 +675,15 @@ export function AppNavigator() {
                     order.id === savedQuotation.ordenId
                       ? {
                           ...order,
-                          cotizacion: savedQuotation,
-                          cotizaciones: [savedQuotation, ...(order.cotizaciones || [])],
+                          cotizacion: displayQuotation,
+                          cotizaciones: [displayQuotation, ...(order.cotizaciones || [])],
                           status: "Cotizado",
                           estado: "Cotizado",
                         }
                       : order
                   )
                 );
-                navigation.replace("QuotationSummary", { quotation: savedQuotation });
+                navigation.replace("QuotationSummary", { quotation: displayQuotation });
               }}
             />
           )}

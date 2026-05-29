@@ -22,6 +22,7 @@ import {
   getClienteNombre,
   getCotizacionValidoHasta,
   getEquipoNombre,
+  getQuotationCreator,
   getQuotationPhone,
   getQuotationSubtotal,
   isCotizacionActiva,
@@ -183,6 +184,7 @@ export function OrderDetailScreen({
               <InfoRow label="Estado" value={quotationActive ? "Activa" : "Vencida"} />
               <InfoRow label="Cliente" value={getClienteNombre(quotation.cliente || order.cliente || order.clientName)} />
               <InfoRow label="Telefono" value={getQuotationPhone(quotation)} />
+              <InfoRow label="Cotizacion realizada por" value={getQuotationCreator(quotation)} />
               <InfoRow label="Descripcion" value={quotation.descripcion} />
               <InfoRow label="Mano de obra" value={formatQuotationMoney(quotation.manoObra)} />
               <InfoRow label="Repuestos/productos" value={formatQuotationMoney(quotation.repuestos)} />

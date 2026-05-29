@@ -1,63 +1,61 @@
+import { cleanText, formatCurrency, getClientPhone, openWhatsApp } from "../../../shared/utils";
 import {
-  cleanText,
-  formatCurrency,
-  formatDateTime,
-  getClientName,
-  getClientPhone,
-  openWhatsApp,
-} from "../../../shared/utils";
+  getReceiptBusinessName,
+  getReceiptClient,
+  getReceiptClientName,
+  getReceiptDate,
+  getReceiptNumber,
+  getReceiptProducts,
+  getReceiptSeller,
+} from "./receiptFormatters";
 
 export function buildReceiptWhatsAppMessage(receipt) {
   if (!receipt) {
     throw new Error("No hay datos del recibo para enviar.");
   }
 
-  const clienteNombre = getClientName(receipt.cliente);
-  const productos = Array.isArray(receipt.productos) ? receipt.productos : [];
+  const productos = getReceiptProducts(receipt);
+  const productosText = productos.length
+    ? productos.map((item, index) => {
+        const name = cleanText(item.name || item.nombre || item.producto, "Producto");
+        const quantity = Number(item.quantity || item.cantidad || 0);
+        const unitPrice = Number(item.unitPrice || item.precioUnitario || 0);
+        const total = Number(item.total || item.subtotal || quantity * unitPrice || 0);
 
-  const productosText =
-    productos.length > 0
-      ? productos.map((item, index) => {
-          const name = cleanText(item.name || item.nombre, "Producto");
-          const quantity = Number(item.quantity || item.cantidad || 0);
-          const unitPrice = Number(item.unitPrice || item.precioUnitario || 0);
-          const total = Number(item.total || quantity * unitPrice || 0);
-
-          return `${index + 1}. ${name} - ${quantity} x ${formatCurrency(unitPrice)} = ${formatCurrency(total)}`;
-        })
-      : ["Sin productos registrados"];
+        return `${index + 1}. ${name} - ${quantity} x ${formatCurrency(unitPrice)} = ${formatCurrency(total)}`;
+      })
+    : ["Sin productos registrados"];
 
   return [
-    `🧾 *Recibo electronico*`,
+    `*${getReceiptBusinessName(receipt)} - Comprobante de venta ${getReceiptNumber(receipt)}*`,
+    `Emitido: ${getReceiptDate(receipt)}`,
     "",
-    `*Nro:* ${cleanText(receipt.number || receipt.numero, "Sin numero")}`,
-    `*Estado:* ${cleanText(receipt.status || receipt.estado, "Emitido")}`,
+    `Cliente: ${getReceiptClientName(receipt)}`,
+    `Venta realizada por: ${getReceiptSeller(receipt)}`,
     "",
-    `👤 *Cliente:* ${clienteNombre}`,
-    "",
-    `*Detalle de venta:*`,
+    "Detalle de venta:",
     ...productosText,
     "",
-    `💰 *Subtotal:* ${formatCurrency(receipt.subtotal)}`,
-    `🏷️ *Descuento:* ${formatCurrency(receipt.descuento)}`,
-    `✅ *Total pagado:* ${formatCurrency(receipt.total)}`,
-    "",
-    `💳 *Metodo de pago:* ${getPaymentLabel(receipt.metodoPago)}`,
-    `📅 *Emitido:* ${formatDateTime(receipt.issuedAt || receipt.fecha)}`,
+    `Subtotal: ${formatCurrency(receipt.subtotal)}`,
+    `Descuento: ${formatCurrency(receipt.descuento)}`,
+    `Total pagado: ${formatCurrency(receipt.total)}`,
+    `Metodo de pago: ${getPaymentLabel(receipt.metodoPago)}`,
     "",
     "Gracias por su compra.",
   ].join("\n");
 }
 
 export function getReceiptClientPhone(receipt) {
-  return getClientPhone(receipt?.cliente);
+  return getClientPhone(getReceiptClient(receipt));
 }
 
 export async function sendReceiptByWhatsApp(receipt) {
-  const message = buildReceiptWhatsAppMessage(receipt);
   const phone = getReceiptClientPhone(receipt);
+  if (!phone) {
+    throw new Error("El cliente no tiene telefono registrado");
+  }
 
-  return openWhatsApp({ message, phone });
+  return openWhatsApp({ message: buildReceiptWhatsAppMessage(receipt), phone });
 }
 
 function getPaymentLabel(method) {

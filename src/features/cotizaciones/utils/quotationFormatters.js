@@ -110,3 +110,19 @@ export function getQuotationEmail(quotation = {}) {
   const cliente = getQuotationClient(quotation);
   return toDisplayText(cliente.email || cliente.correo || cliente.mail, "Sin correo");
 }
+
+export function getUserDisplayName(user = {}) {
+  const fullName = [user.nombres, user.apellidos].filter(Boolean).join(" ").trim();
+  return fullName || user.nombre || user.name || user.username || user.email || "Usuario no disponible";
+}
+
+export function getQuotationCreator(quotation = {}) {
+  return getUserDisplayName(
+    quotation.realizadoPor ||
+      quotation.creadoPor ||
+      quotation.usuarioCreacion ||
+      quotation.usuario ||
+      quotation.user ||
+      {}
+  );
+}

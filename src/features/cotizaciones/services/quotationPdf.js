@@ -10,6 +10,7 @@ import {
   getEquipoNombre,
   getQuotationBusiness,
   getQuotationClient,
+  getQuotationCreator,
   getQuotationEquipment,
   getQuotationOrder,
   getQuotationPhone,
@@ -104,6 +105,7 @@ function buildQuotationPdfHtml(quotation) {
               <div class="section">Cliente</div>
               ${row("Nombre", getClienteNombre(cliente))}
               ${row("Telefono", getQuotationPhone(quotation))}
+              ${row("Realizada por", getQuotationCreator(quotation))}
             </div>
           </div>
 

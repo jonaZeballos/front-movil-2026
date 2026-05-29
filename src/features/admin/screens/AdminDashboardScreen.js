@@ -6,7 +6,6 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
 
 import EsferaSvg from "../../../../assets/images/esfera.svg";
@@ -128,8 +127,8 @@ export function AdminDashboardScreen({
   onOpenReports,
   onOpenRolesPermissions,
 }) {
-  const insets = useSafeAreaInsets();
   const displayName = getUserDisplayName(user, "Administrador");
+  const businessName = getBusinessName(user);
   const initials = getInitials(displayName);
   const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "admin");
   const summaryCards = [
@@ -211,8 +210,8 @@ export function AdminDashboardScreen({
             </View>
           </View>
 
-          <Text style={styles.salesAmount}>Panel</Text>
-          <Text style={styles.salesLabel}>Control general del sistema</Text>
+          <Text style={styles.salesAmount}>Panel Administrativo</Text>
+          <Text style={styles.salesLabel}>{businessName}</Text>
 
           <View style={styles.sphereWrap}>
             {typeof EsferaSvg === "number" ? (
@@ -254,7 +253,7 @@ export function AdminDashboardScreen({
             })}
           </View>
 
-          <Text style={styles.sectionTitle}>Módulos administrativos</Text>
+          <Text style={styles.sectionTitle}>Modulos administrativos</Text>
 
           <View style={styles.optionsGrid}>
             {options.map((item) => {
@@ -273,33 +272,16 @@ export function AdminDashboardScreen({
             })}
           </View>
 
-          <Text style={styles.recentSectionTitle}>Resumen rápido</Text>
+          <Text style={styles.recentSectionTitle}>Resumen rapido</Text>
 
           <View style={styles.adminInfoCard}>
             <Text style={styles.infoTitle}>Acceso total habilitado</Text>
             <Text style={styles.infoText}>
-              Desde este panel podrás administrar usuarios, clientes, equipos,
-              órdenes, ventas, inventario y consultar el control de roles y
+              Desde este panel puedes administrar usuarios, clientes, equipos,
+              ordenes, ventas, inventario y consultar el control de roles y
               permisos.
             </Text>
           </View>
-        </View>
-
-        <View
-          style={[
-            styles.bottomBar,
-            { paddingBottom: Math.max(insets.bottom, 4) },
-          ]}
-        >
-          <Ionicons name="home-outline" size={20} color="#D8D7FF" />
-          <Feather name="users" size={18} color="#D8D7FF" />
-
-          <Pressable style={styles.centerBtn} onPress={onOpenUsers}>
-            <Ionicons name="add" size={36} color="#FFFFFF" />
-          </Pressable>
-
-          <Feather name="bar-chart-2" size={18} color="#D8D7FF" />
-          <Ionicons name="person" size={20} color="#D8D7FF" />
         </View>
       </View>
     </ScreenContainer>
@@ -321,6 +303,16 @@ function getInitials(name) {
     .map((part) => part[0]?.toUpperCase() || "")
     .slice(0, 2)
     .join("");
+}
+
+function getBusinessName(user) {
+  return (
+    user?.negocio?.nombre ||
+    user?.negocio?.razonSocial ||
+    user?.negocioNombre ||
+    user?.businessName ||
+    "Gestion general del negocio"
+  );
 }
 
 function getRoleLabel(role) {
@@ -442,8 +434,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: "#E6E9FF",
     fontFamily: fontFamilies.bold,
-    fontSize: 42,
-    lineHeight: 50,
+    fontSize: 30,
+    lineHeight: 36,
     zIndex: 2,
   },
   salesLabel: {
@@ -466,7 +458,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dashboardBg,
     paddingTop: 10,
     paddingHorizontal: 14,
-    paddingBottom: 92,
+    paddingBottom: 24,
   },
   serviceGrid: {
     flexDirection: "row",
@@ -576,30 +568,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     color: "#7A7A82",
-  },
-  bottomBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 76,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: "#060606",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  centerBtn: {
-    marginTop: -30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primary,
-    borderWidth: 3,
-    borderColor: "#E7E7EF",
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

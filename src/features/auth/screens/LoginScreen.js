@@ -23,6 +23,7 @@ export function LoginScreen({ onBack, onLogin }) {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,19 +31,51 @@ export function LoginScreen({ onBack, onLogin }) {
   const contentWidth = Math.min(screenWidth - horizontalPadding * 2, 360);
   const isDisabled = isLoading || !username.trim() || !password.trim();
 
+  const clearFieldError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    if (errorMessage) setErrorMessage("");
+  };
+
+  const validate = () => {
+    const nextErrors = {};
+
+    if (!username.trim()) {
+      nextErrors.username = "Ingrese su usuario o correo.";
+    }
+
+    if (!password.trim()) {
+      nextErrors.password = "Ingrese su contrasena.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleLogin = async () => {
-    if (!username.trim()) return setErrorMessage("Ingresa tu usuario o correo.");
-    if (!password.trim()) return setErrorMessage("Ingresa tu contraseña.");
+    if (isLoading) return;
+    if (!validate()) return;
 
     setIsLoading(true);
-    const result = await onLogin?.({
-      email: username.trim().toLowerCase(),
-      password: password.trim(),
-    });
-    setIsLoading(false);
+    setErrorMessage("");
 
-    if (!result?.success) {
-      setErrorMessage(result?.message || "Credenciales inválidas.");
+    try {
+      const result = await onLogin?.({
+        email: username.trim().toLowerCase(),
+        password: password.trim(),
+      });
+
+      if (!result?.success) {
+        setErrorMessage(result?.message || "Credenciales invalidas.");
+      }
+    } catch (error) {
+      setErrorMessage(error.message || "No se pudo iniciar sesion.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,60 +87,63 @@ export function LoginScreen({ onBack, onLogin }) {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          alignItems: "center",
-          paddingHorizontal: horizontalPadding,
-          paddingTop: 20,
-          paddingBottom: 32,
-        }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={{ width: contentWidth }}>
-          <Text style={[textPresets.headingDark, { color: colors.black, marginBottom: 24 }]}>
-            Inicio de sesión
-          </Text>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            alignItems: "center",
+            paddingHorizontal: horizontalPadding,
+            paddingTop: 20,
+            paddingBottom: 32,
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={{ width: contentWidth }}>
+            <Text style={[textPresets.headingDark, { color: colors.black, marginBottom: 24 }]}>
+              Inicio de sesion
+            </Text>
 
-          <View style={tw`items-center mb-8`}>
-            <AppLogoFull width={170} height={36} color={colors.black} />
+            <View style={tw`items-center mb-8`}>
+              <AppLogoFull width={170} height={36} color={colors.black} />
+            </View>
+
+            <View style={{ rowGap: 14 }}>
+              <AuthInput
+                value={username}
+                onChangeText={(text) => {
+                  setUsername(text);
+                  clearFieldError("username");
+                }}
+                placeholder="Usuario o correo"
+                icon="mail"
+                autoCapitalize="none"
+                error={errors.username}
+              />
+
+              <PasswordInput
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  clearFieldError("password");
+                }}
+                error={errors.password}
+              />
+            </View>
+
+            {!!errorMessage && (
+              <Text style={{ color: "#D14343", marginTop: 14 }}>{errorMessage}</Text>
+            )}
+
+            <View style={{ marginTop: 28 }}>
+              <AppButton
+                title={isLoading ? "Iniciando sesion..." : "Iniciar sesion"}
+                onPress={handleLogin}
+                disabled={isDisabled}
+                backgroundColor={isDisabled ? "#B8B8B8" : colors.primary}
+                minHeight={54}
+              />
+            </View>
           </View>
-
-          <View style={{ rowGap: 14 }}>
-            <AuthInput
-              value={username}
-              onChangeText={(text) => {
-                setUsername(text);
-                if (errorMessage) setErrorMessage("");
-              }}
-              placeholder="correo"
-              icon="mail"
-              autoCapitalize="none"
-            />
-
-            <PasswordInput
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errorMessage) setErrorMessage("");
-              }}
-            />
-          </View>
-
-          {!!errorMessage && (
-            <Text style={{ color: "#D14343", marginTop: 14 }}>{errorMessage}</Text>
-          )}
-
-          <View style={{ marginTop: 28 }}>
-            <AppButton
-              title={isLoading ? "Ingresando..." : "Iniciar Sesión"}
-              onPress={handleLogin}
-              backgroundColor={isDisabled ? "#B8B8B8" : colors.primary}
-              minHeight={54}
-            />
-          </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
       </KeyboardAvoidingView>
     </ScreenContainer>
   );

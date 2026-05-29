@@ -1,55 +1,116 @@
 import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+const EMAIL_REGEX = /\S+@\S+\.\S+/;
+
 export function CreateUserScreen({ onBack, onSave }) {
   const [form, setForm] = useState({
-    name: "",
+    nombres: "",
+    apellidos: "",
+    username: "",
     email: "",
     password: "",
     role: "tecnico",
   });
+  const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const submitLockRef = useRef(false);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validate = () => {
+    const nextErrors = {};
+    const nombres = form.nombres.trim();
+    const apellidos = form.apellidos.trim();
+    const username = form.username.trim();
+    const email = form.email.trim();
+    const password = form.password.trim();
+
+    if (nombres.length < 2) {
+      nextErrors.nombres = "Ingrese al menos 2 caracteres.";
+    }
+
+    if (apellidos.length < 2) {
+      nextErrors.apellidos = "Ingrese al menos 2 caracteres.";
+    }
+
+    if (!username) {
+      nextErrors.username = "Ingrese un nombre de usuario.";
+    } else if (!USERNAME_REGEX.test(username)) {
+      nextErrors.username = "Use solo letras, numeros, punto, guion o guion bajo.";
+    }
+
+    if (!email) {
+      nextErrors.email = "Ingrese un correo electronico.";
+    } else if (!EMAIL_REGEX.test(email)) {
+      nextErrors.email = "Ingrese un correo valido, ejemplo: usuario@correo.com.";
+    }
+
+    if (!password) {
+      nextErrors.password = "Ingrese una contrasena.";
+    } else if (password.length < 6) {
+      nextErrors.password = "La contrasena debe tener al menos 6 caracteres.";
+    }
+
+    if (!["tecnico", "ventas"].includes(form.role)) {
+      nextErrors.role = "Seleccione el rol del usuario.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   const handleSave = async () => {
     if (submitLockRef.current || isSaving) return;
+    if (!validate()) return;
 
-    if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
-      Alert.alert("Error", "Completa nombre, correo y contrasena.");
-      return;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(form.email.trim())) {
-      Alert.alert("Correo invalido", "Ingresa un correo electronico valido.");
-      return;
-    }
-
-    if (form.password.trim().length < 6) {
-      Alert.alert("Contrasena invalida", "La contrasena debe tener al menos 6 caracteres.");
-      return;
-    }
+    const nombres = form.nombres.trim();
+    const apellidos = form.apellidos.trim();
+    const username = form.username.trim();
+    const email = form.email.trim().toLowerCase();
+    const password = form.password.trim();
+    const name = [nombres, apellidos].filter(Boolean).join(" ").trim();
 
     submitLockRef.current = true;
     setIsSaving(true);
 
     try {
       await onSave?.({
-        ...form,
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password.trim(),
+        nombres,
+        apellidos,
+        username,
+        name,
+        email,
+        password,
+        role: form.role,
       });
     } catch (error) {
-      Alert.alert("No se pudo guardar", error.message || "Intenta nuevamente.");
+      Alert.alert("No se pudo crear el usuario", error.message || "Intenta nuevamente.");
     } finally {
       submitLockRef.current = false;
       setIsSaving(false);
@@ -58,78 +119,114 @@ export function CreateUserScreen({ onBack, onSave }) {
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Pressable onPress={onBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={22} color="#111827" />
-          </Pressable>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Pressable onPress={onBack} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={22} color="#111827" />
+            </Pressable>
 
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Crear usuario</Text>
-            <Text style={styles.subtitle}>Asigna acceso a tecnico o ventas</Text>
-          </View>
-        </View>
-
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.formCard}>
-            <Field
-              label="Nombre completo"
-              icon="person-outline"
-              placeholder="Ingrese nombre completo"
-              value={form.name}
-              onChangeText={(value) => handleChange("name", value)}
-            />
-
-            <Field
-              label="Correo"
-              icon="mail-outline"
-              placeholder="usuario@servitech.com"
-              value={form.email}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              onChangeText={(value) => handleChange("email", value)}
-            />
-
-            <Field
-              label="Contrasena"
-              icon="lock-closed-outline"
-              placeholder="Contrasena inicial"
-              value={form.password}
-              secureTextEntry={!showPassword}
-              rightIcon={showPassword ? "eye-outline" : "eye-off-outline"}
-              onPressRightIcon={() => setShowPassword((value) => !value)}
-              onChangeText={(value) => handleChange("password", value)}
-            />
-
-            <Text style={styles.fieldLabel}>Rol del usuario</Text>
-
-            <View style={styles.rolesRow}>
-              <RoleButton
-                label="Tecnico"
-                active={form.role === "tecnico"}
-                onPress={() => handleChange("role", "tecnico")}
-              />
-              <RoleButton
-                label="Ventas"
-                active={form.role === "ventas"}
-                onPress={() => handleChange("role", "ventas")}
-              />
+            <View style={styles.headerText}>
+              <Text style={styles.title}>Crear usuario</Text>
+              <Text style={styles.subtitle}>Asigna acceso a tecnico o ventas</Text>
             </View>
           </View>
 
-          <Pressable
-            style={[styles.saveButton, isSaving && styles.disabledButton]}
-            onPress={handleSave}
-            disabled={isSaving}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
           >
-            {isSaving ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.saveButtonText}>Guardar usuario</Text>
-            )}
-          </Pressable>
-        </ScrollView>
-      </View>
+            <View style={styles.formCard}>
+              <Field
+                label="Nombres"
+                icon="person-outline"
+                placeholder="Ingrese nombres"
+                value={form.nombres}
+                error={errors.nombres}
+                onChangeText={(value) => handleChange("nombres", value)}
+              />
+
+              <Field
+                label="Apellidos"
+                icon="person-outline"
+                placeholder="Ingrese apellidos"
+                value={form.apellidos}
+                error={errors.apellidos}
+                onChangeText={(value) => handleChange("apellidos", value)}
+              />
+
+              <Field
+                label="Username"
+                icon="at-outline"
+                placeholder="usuario.tecnico"
+                value={form.username}
+                error={errors.username}
+                autoCapitalize="none"
+                onChangeText={(value) => handleChange("username", value)}
+              />
+
+              <Field
+                label="Correo"
+                icon="mail-outline"
+                placeholder="usuario@servitech.com"
+                value={form.email}
+                error={errors.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onChangeText={(value) => handleChange("email", value)}
+              />
+
+              <Field
+                label="Contrasena"
+                icon="lock-closed-outline"
+                placeholder="Contrasena inicial"
+                value={form.password}
+                error={errors.password}
+                secureTextEntry={!showPassword}
+                rightIcon={showPassword ? "eye-outline" : "eye-off-outline"}
+                onPressRightIcon={() => setShowPassword((value) => !value)}
+                onChangeText={(value) => handleChange("password", value)}
+              />
+
+              <Text style={styles.fieldLabel}>Rol del usuario</Text>
+
+              <View style={styles.rolesRow}>
+                <RoleButton
+                  label="Tecnico"
+                  active={form.role === "tecnico"}
+                  onPress={() => handleChange("role", "tecnico")}
+                />
+                <RoleButton
+                  label="Ventas"
+                  active={form.role === "ventas"}
+                  onPress={() => handleChange("role", "ventas")}
+                />
+              </View>
+
+              {!!errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
+            </View>
+
+            <Pressable
+              style={[styles.saveButton, isSaving && styles.disabledButton]}
+              onPress={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <View style={styles.loadingRow}>
+                  <ActivityIndicator color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>Creando usuario...</Text>
+                </View>
+              ) : (
+                <Text style={styles.saveButtonText}>Guardar usuario</Text>
+              )}
+            </Pressable>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -139,6 +236,7 @@ function Field({
   icon,
   placeholder,
   value,
+  error,
   onChangeText,
   keyboardType = "default",
   autoCapitalize = "sentences",
@@ -150,8 +248,8 @@ function Field({
     <View style={styles.fieldGroup}>
       <Text style={styles.fieldLabel}>{label}</Text>
 
-      <View style={styles.inputShell}>
-        <Ionicons name={icon} size={18} color="#8C8C8C" />
+      <View style={[styles.inputShell, !!error && styles.inputShellError]}>
+        <Ionicons name={icon} size={18} color={error ? "#D14343" : "#8C8C8C"} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -168,6 +266,8 @@ function Field({
           </Pressable>
         ) : null}
       </View>
+
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 }
@@ -186,6 +286,9 @@ function RoleButton({ label, active, onPress }) {
 }
 
 const styles = StyleSheet.create({
+  keyboard: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     paddingHorizontal: 18,
@@ -219,7 +322,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   scrollContent: {
-    paddingBottom: 120,
+    paddingBottom: 40,
   },
   formCard: {
     backgroundColor: "#FFFFFF",
@@ -249,11 +352,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     columnGap: 10,
   },
+  inputShellError: {
+    borderColor: "#D14343",
+    backgroundColor: "#FFF7F7",
+  },
   input: {
     flex: 1,
     color: "#111111",
     fontSize: 15,
     paddingVertical: 0,
+  },
+  errorText: {
+    marginTop: 6,
+    color: "#D14343",
+    fontSize: 12,
+    lineHeight: 16,
   },
   rolesRow: {
     flexDirection: "row",
@@ -287,6 +400,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#5655B9",
     alignItems: "center",
     justifyContent: "center",
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
   },
   saveButtonText: {
     color: "#FFFFFF",

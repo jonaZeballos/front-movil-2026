@@ -6,7 +6,6 @@ import {
   FontAwesome5,
   Feather,
 } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SvgUri } from "react-native-svg";
 
 import EsferaSvg from "../../../../assets/images/esfera.svg";
@@ -136,10 +135,58 @@ export function HomeScreen({
   onOpenClientes,
   onOpenQuotations,
 }) {
-  const insets = useSafeAreaInsets();
   const displayName = getUserDisplayName(user, "Tecnico");
+  const businessName = getBusinessName(user);
   const initials = getInitials(displayName);
   const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "tecnico");
+  const dynamicServiceCards = [
+    {
+      id: "orders",
+      title: "Ordenes\nactivas",
+      total: String(stats.ordenes ?? 0),
+      totalLabel: "Total",
+      statPrimary: String(stats.equipos ?? 0),
+      statPrimaryLabel: "Eq.",
+      statSecondary: String(stats.clientes ?? 0),
+      statSecondaryLabel: "Cli.",
+      trend: "Gestion tecnica",
+      trendLabel: "del negocio actual",
+      iconPack: MaterialIcons,
+      iconName: "computer",
+      iconBg: "#F5AA29",
+    },
+    {
+      id: "equipment",
+      title: "Equipos\nregistrados",
+      total: String(stats.equipos ?? 0),
+      totalLabel: "Total",
+      statPrimary: String(stats.ordenes ?? 0),
+      statPrimaryLabel: "Ord.",
+      statSecondary: String(stats.clientes ?? 0),
+      statSecondaryLabel: "Cli.",
+      trend: "Datos reales",
+      trendLabel: "segun tu negocio",
+      iconPack: MaterialCommunityIcons,
+      iconName: "progress-wrench",
+      iconBg: "#58D2B8",
+      trendColor: "#2386F5",
+    },
+    {
+      id: "clients",
+      title: "Clientes\nregistrados",
+      total: String(stats.clientes ?? 0),
+      totalLabel: "Total",
+      statPrimary: String(stats.equipos ?? 0),
+      statPrimaryLabel: "Eq.",
+      statSecondary: String(stats.ordenes ?? 0),
+      statSecondaryLabel: "Ord.",
+      trend: "Usa los accesos",
+      trendLabel: "para operar el servicio",
+      iconPack: Feather,
+      iconName: "check-circle",
+      iconBg: "#3F7AFD",
+    },
+  ];
 
   const esferaUri =
     typeof EsferaSvg === "number"
@@ -187,6 +234,7 @@ export function HomeScreen({
                 <View style={styles.rolePill}>
                   <Text style={styles.roleText}>{roleLabel}</Text>
                 </View>
+                <Text style={styles.businessName}>{businessName}</Text>
               </View>
             </View>
 
@@ -218,7 +266,7 @@ export function HomeScreen({
 
         <View style={styles.content}>
           <View style={styles.serviceGrid}>
-            {serviceCards.map((item, index) => {
+            {dynamicServiceCards.map((item, index) => {
               const IconPack = item.iconPack;
               const isLargeMetric = item.total.length > 3;
               const isWideCard = index === 2;
@@ -317,72 +365,18 @@ export function HomeScreen({
             })}
           </View>
 
-          <View style={styles.recentTitleRow}>
-            <Text style={styles.recentSectionTitle}>
-              Ultimas ordenes asignadas
+          <View style={styles.infoCard}>
+            <View style={styles.recentTitleRow}>
+              <Text style={styles.recentSectionTitle}>Gestion tecnica</Text>
+
+              <Pressable onPress={handleOpenOrders}>
+                <Text style={styles.seeAll}>Ver ordenes</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.infoText}>
+              Revisa clientes, equipos, ordenes y cotizaciones asociadas al negocio actual.
             </Text>
-
-            <Pressable onPress={handleOpenOrders}>
-              <Text style={styles.seeAll}>Ver todas</Text>
-            </Pressable>
           </View>
-
-          <View style={styles.recentRow}>
-            {recentOrders.map((order) => {
-              const IconPack = order.iconPack;
-
-              return (
-                <Pressable
-                  key={order.id}
-                  style={styles.recentCard}
-                  onPress={handleOpenOrders}
-                >
-                  <Text style={styles.recentStatus}>{order.status}</Text>
-
-                  <View
-                    style={[
-                      styles.recentIconWrap,
-                      { backgroundColor: order.iconColor },
-                    ]}
-                  >
-                    <IconPack name={order.iconName} size={15} color="#FFFFFF" />
-                  </View>
-
-                  <Text style={styles.recentCode}>{order.code}</Text>
-                  <Text style={styles.recentName}>{order.name}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.bottomBar,
-            { paddingBottom: Math.max(insets.bottom, 4) },
-          ]}
-        >
-          <Ionicons name="home-outline" size={20} color="#D8D7FF" />
-
-          <Pressable onPress={handleOpenClientes}>
-            <MaterialCommunityIcons
-              name="briefcase-account-outline"
-              size={20}
-              color="#D8D7FF"
-            />
-          </Pressable>
-
-          <Pressable style={styles.centerBtn} onPress={handleOpenOrders}>
-            <Ionicons name="add" size={36} color="#FFFFFF" />
-          </Pressable>
-
-          <Pressable onPress={handleOpenQuotations}>
-            <Feather name="tag" size={18} color="#D8D7FF" />
-          </Pressable>
-
-          <Pressable onPress={handleOpenEquipos}>
-            <Ionicons name="person" size={20} color="#D8D7FF" />
-          </Pressable>
         </View>
       </View>
     </ScreenContainer>
@@ -401,6 +395,16 @@ function getInitials(name) {
     .map((part) => part[0]?.toUpperCase() || "")
     .slice(0, 2)
     .join("");
+}
+
+function getBusinessName(user) {
+  return (
+    user?.negocio?.nombre ||
+    user?.negocio?.razonSocial ||
+    user?.negocioNombre ||
+    user?.businessName ||
+    "Negocio actual"
+  );
 }
 
 function getRoleLabel(role) {
@@ -483,6 +487,12 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.medium,
     fontSize: 9,
   },
+  businessName: {
+    marginTop: 3,
+    color: "#DEE1FF",
+    fontFamily: fontFamilies.medium,
+    fontSize: 11,
+  },
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
@@ -549,7 +559,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dashboardBg,
     paddingTop: 10,
     paddingHorizontal: 14,
-    paddingBottom: 92,
+    paddingBottom: 24,
   },
   serviceGrid: {
     flexDirection: "row",
@@ -683,6 +693,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     columnGap: 8,
   },
+  infoCard: {
+    backgroundColor: "#F5F5F7",
+    borderRadius: 14,
+    padding: 14,
+  },
+  infoText: {
+    marginTop: 6,
+    color: "#7A7A82",
+    fontFamily: fontFamilies.regular,
+    fontSize: 12,
+    lineHeight: 17,
+  },
   seeAll: {
     color: "#A0A0A7",
     fontFamily: fontFamilies.medium,
@@ -733,30 +755,5 @@ const styles = StyleSheet.create({
     color: "#8E8E96",
     fontFamily: fontFamilies.regular,
     fontSize: 10,
-  },
-  bottomBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 76,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: "#060606",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  centerBtn: {
-    marginTop: -30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primary,
-    borderWidth: 3,
-    borderColor: "#E7E7EF",
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

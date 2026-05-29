@@ -5,15 +5,12 @@ import {
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { NotificationBell } from "../../notifications";
-import { SalesChartCard } from "../components/SalesChartCard";
 import { SalesMetricCard } from "../components/SalesMetricCard";
-import { SalesNoteCard } from "../components/SalesNoteCard";
 import { SalesOptionCard } from "../components/SalesOptionCard";
 
 const salesCards = [
@@ -70,8 +67,6 @@ const options = [
   },
 ];
 
-const chartData = [42, 68, 50, 78, 62, 90, 74];
-
 export function SalesDashboardScreen({
   user,
   stats = {},
@@ -82,8 +77,8 @@ export function SalesDashboardScreen({
   onOpenInventory,
   onOpenSales,
 }) {
-  const insets = useSafeAreaInsets();
   const displayName = getUserDisplayName(user, "Ventas");
+  const businessName = getBusinessName(user);
   const initials = getInitials(displayName);
   const roleLabel = getRoleLabel(user?.rol || user?.tipoUsuario || "ventas");
   const dynamicSalesCards = salesCards.map((item) => {
@@ -116,6 +111,7 @@ export function SalesDashboardScreen({
                 <View style={styles.rolePill}>
                   <Text style={styles.roleText}>{roleLabel}</Text>
                 </View>
+                <Text style={styles.businessName}>{businessName}</Text>
               </View>
             </View>
 
@@ -158,35 +154,12 @@ export function SalesDashboardScreen({
             ))}
           </View>
 
-          <SalesChartCard data={chartData} />
-          <SalesNoteCard />
-        </View>
-
-        <View
-          style={[
-            styles.bottomBar,
-            { paddingBottom: Math.max(insets.bottom, 4) },
-          ]}
-        >
-          <Ionicons name="home-outline" size={20} color="#D8D7FF" />
-
-          <Pressable onPress={onOpenSales}>
-            <Ionicons name="cart-outline" size={20} color="#D8D7FF" />
-          </Pressable>
-
-          <Pressable style={styles.centerBtn} onPress={onOpenSales}>
-            <Ionicons name="add" size={36} color="#FFFFFF" />
-          </Pressable>
-
-          <Pressable onPress={onOpenInventory}>
-            <MaterialCommunityIcons
-              name="archive-outline"
-              size={20}
-              color="#D8D7FF"
-            />
-          </Pressable>
-
-          <Ionicons name="receipt-outline" size={20} color="#D8D7FF" />
+          <View style={styles.infoCard}>
+            <Text style={styles.infoTitle}>Gestion comercial</Text>
+            <Text style={styles.infoText}>
+              Registra ventas, consulta inventario y atiende clientes del negocio actual.
+            </Text>
+          </View>
         </View>
       </View>
     </ScreenContainer>
@@ -204,6 +177,16 @@ function getInitials(name) {
     .map((part) => part[0]?.toUpperCase() || "")
     .slice(0, 2)
     .join("");
+}
+
+function getBusinessName(user) {
+  return (
+    user?.negocio?.nombre ||
+    user?.negocio?.razonSocial ||
+    user?.negocioNombre ||
+    user?.businessName ||
+    "Negocio actual"
+  );
 }
 
 function getRoleLabel(role) {
@@ -284,6 +267,12 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.medium,
     fontSize: 9,
   },
+  businessName: {
+    marginTop: 3,
+    color: "#DEE1FF",
+    fontFamily: fontFamilies.medium,
+    fontSize: 11,
+  },
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
@@ -348,7 +337,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dashboardBg,
     paddingTop: 10,
     paddingHorizontal: 14,
-    paddingBottom: 92,
+    paddingBottom: 24,
   },
   cardsRow: {
     flexDirection: "row",
@@ -371,29 +360,21 @@ const styles = StyleSheet.create({
     rowGap: 10,
     marginBottom: 14,
   },
-  bottomBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 76,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: "#060606",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 20,
+  infoCard: {
+    backgroundColor: "#F5F5F7",
+    borderRadius: 14,
+    padding: 14,
   },
-  centerBtn: {
-    marginTop: -30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primary,
-    borderWidth: 3,
-    borderColor: "#E7E7EF",
-    alignItems: "center",
-    justifyContent: "center",
+  infoTitle: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: 15,
+    color: "#111111",
+    marginBottom: 4,
+  },
+  infoText: {
+    fontFamily: fontFamilies.regular,
+    fontSize: 12,
+    lineHeight: 17,
+    color: "#7A7A82",
   },
 });

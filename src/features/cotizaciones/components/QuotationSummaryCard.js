@@ -4,12 +4,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../shared/theme/colors";
 import {
   getClienteNombre,
+  formatQuotationDate,
+  formatQuotationMoney,
+  getCotizacionValidoHasta,
+  getDiagnosticoTexto,
   getEquipoNombre,
+  getQuotationBusiness,
+  getQuotationClient,
+  getQuotationEquipment,
+  getQuotationPhone,
+  getQuotationSubtotal,
   toDisplayText,
 } from "../utils/quotationFormatters";
 
 export function QuotationSummaryCard({ quotation }) {
-  const order = normalizeOrder(quotation.order);
+  const order = normalizeOrder(quotation.order || quotation.orden);
+  const cliente = getQuotationClient(quotation);
+  const equipo = getQuotationEquipment(quotation);
+  const negocio = getQuotationBusiness(quotation);
+  const validoHasta = getCotizacionValidoHasta(quotation);
+  const subtotal = getQuotationSubtotal(quotation);
 
   return (
     <View style={styles.card}>
@@ -20,15 +34,25 @@ export function QuotationSummaryCard({ quotation }) {
       <Text style={styles.successText}>Cotizacion generada correctamente</Text>
       <Text style={styles.number}>{toDisplayText(quotation.numero, "Sin numero")}</Text>
 
+      <SummaryRow label="Negocio" value={toDisplayText(negocio.nombre, "ServiTech")} />
+      <SummaryRow label="Fecha de emision" value={formatQuotationDate(quotation.fechaEmision || quotation.fechaCreacion)} />
+      <SummaryRow label="Valida hasta" value={formatQuotationDate(validoHasta)} />
       <SummaryRow label="Codigo de orden" value={order.codigo} />
-      <SummaryRow label="Cliente" value={order.cliente} />
-      <SummaryRow label="Equipo" value={order.equipo} />
+      <SummaryRow label="Cliente" value={getClienteNombre(cliente) || order.cliente} />
+      <SummaryRow label="Telefono" value={getQuotationPhone(quotation)} />
+      <SummaryRow label="Equipo" value={getEquipoNombre(equipo) || order.equipo} />
+      <SummaryRow label="Diagnostico" value={getDiagnosticoTexto(order.diagnostico || order.failure)} />
       <SummaryRow label="Descripcion del trabajo" value={quotation.descripcion} />
-      <SummaryRow label="Mano de obra" value={`Bs. ${Number(quotation.manoObra || 0).toFixed(2)}`} />
-      <SummaryRow label="Repuestos" value={`Bs. ${Number(quotation.repuestos || 0).toFixed(2)}`} />
-      <SummaryRow label="Descuento" value={`Bs. ${Number(quotation.descuento || 0).toFixed(2)}`} />
-      <SummaryRow label="Total a pagar" value={`Bs. ${Number(quotation.total || 0).toFixed(2)}`} strong />
-      <SummaryRow label="Estado" value={quotation.estado || "Pendiente de aprobacion"} />
+      <SummaryRow label="Mano de obra" value={formatQuotationMoney(quotation.manoObra)} />
+      <SummaryRow label="Repuestos/productos" value={formatQuotationMoney(quotation.repuestos)} />
+      <SummaryRow label="Subtotal" value={formatQuotationMoney(subtotal)} />
+      <SummaryRow label="Descuento" value={formatQuotationMoney(quotation.descuento)} />
+      <SummaryRow label="Total a pagar" value={formatQuotationMoney(quotation.total)} strong />
+      <SummaryRow label="Observaciones" value={quotation.observaciones || "Sin observaciones"} />
+      <SummaryRow label="Estado" value={quotation.activa === false ? "Vencida" : quotation.estado || "Pendiente de aprobacion"} />
+      <Text style={styles.validityText}>
+        Cotizacion valida hasta {formatQuotationDate(validoHasta)}.
+      </Text>
     </View>
   );
 }
@@ -38,6 +62,7 @@ function normalizeOrder(order = {}) {
     codigo: toDisplayText(order.codigo || order.code, "Sin codigo"),
     cliente: getClienteNombre(order.cliente || order.clientName),
     equipo: getEquipoNombre(order.equipo || order.equipmentName),
+    diagnostico: getDiagnosticoTexto(order.diagnostico || order.failure),
   };
 }
 
@@ -102,5 +127,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 19,
     fontWeight: "900",
+  },
+  validityText: {
+    alignSelf: "stretch",
+    marginTop: 12,
+    color: "#374151",
+    fontSize: 13,
+    fontWeight: "800",
+    textAlign: "center",
   },
 });

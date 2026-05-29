@@ -13,10 +13,30 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
+import { ShareQuotationButton } from "../../cotizaciones/components/ShareQuotationButton";
+import { ShareQuotationPdfButton } from "../../cotizaciones/components/ShareQuotationPdfButton";
+import {
+  formatQuotationDate,
+  formatQuotationMoney,
+  getClienteNombre,
+  getCotizacionValidoHasta,
+  getEquipoNombre,
+  getQuotationPhone,
+  getQuotationSubtotal,
+  isCotizacionActiva,
+  toDisplayText,
+} from "../../cotizaciones/utils/quotationFormatters";
 import { StatusBadge } from "../components/StatusBadge";
 import { orderStatuses } from "../services/ordersApi";
 
-export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservation }) {
+export function OrderDetailScreen({
+  order,
+  onBack,
+  onUpdateStatus,
+  onAddObservation,
+  onViewQuotation,
+  onGenerateQuotation,
+}) {
   const [observation, setObservation] = useState("");
   const [savingStatus, setSavingStatus] = useState(null);
   const [isSavingObservation, setIsSavingObservation] = useState(false);
@@ -76,6 +96,10 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
       setSavingStatus(null);
     }
   };
+
+  const quotation = order.cotizacion ? buildOrderQuotation(order) : null;
+  const quotationActive = isCotizacionActiva(quotation);
+  const validoHasta = getCotizacionValidoHasta(quotation);
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
@@ -141,15 +165,56 @@ export function OrderDetailScreen({ order, onBack, onUpdateStatus, onAddObservat
             </View>
           </View>
 
-          {order.cotizacion ? (
+          {quotation ? (
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Cotizacion asociada</Text>
-              <InfoRow label="Numero" value={order.cotizacion.numero} />
-              <InfoRow label="Descripcion" value={order.cotizacion.descripcion} />
-              <InfoRow label="Estado" value={order.cotizacion.estado || "Pendiente"} />
-              <InfoRow label="Total" value={`Bs. ${Number(order.cotizacion.total || 0).toFixed(2)}`} />
+              <View style={[styles.noticeBox, quotationActive ? styles.noticeActive : styles.noticeExpired]}>
+                <Text style={styles.noticeText}>
+                  {quotationActive
+                    ? "Esta orden ya tiene una cotizacion activa"
+                    : "Cotizacion vencida"}
+                </Text>
+              </View>
+
+              <InfoRow label="Numero" value={quotation.numero} />
+              <InfoRow label="Fecha de emision" value={formatQuotationDate(quotation.fechaEmision || quotation.fechaCreacion)} />
+              <InfoRow label="Fecha de validez" value={formatQuotationDate(validoHasta)} />
+              <InfoRow label="Estado" value={quotationActive ? "Activa" : "Vencida"} />
+              <InfoRow label="Cliente" value={getClienteNombre(quotation.cliente || order.cliente || order.clientName)} />
+              <InfoRow label="Telefono" value={getQuotationPhone(quotation)} />
+              <InfoRow label="Descripcion" value={quotation.descripcion} />
+              <InfoRow label="Mano de obra" value={formatQuotationMoney(quotation.manoObra)} />
+              <InfoRow label="Repuestos/productos" value={formatQuotationMoney(quotation.repuestos)} />
+              <InfoRow label="Subtotal" value={formatQuotationMoney(getQuotationSubtotal(quotation))} />
+              <InfoRow label="Descuento" value={formatQuotationMoney(quotation.descuento)} />
+              <InfoRow label="Total" value={formatQuotationMoney(quotation.total)} />
+              <InfoRow label="Observaciones" value={quotation.observaciones || "Sin observaciones"} />
+              <Text style={styles.validityText}>
+                Cotizacion valida hasta {formatQuotationDate(validoHasta)}.
+              </Text>
+
+              <View style={styles.quotationActions}>
+                <Pressable style={styles.secondaryButton} onPress={() => onViewQuotation?.(quotation)}>
+                  <Text style={styles.secondaryButtonText}>Ver cotizacion completa</Text>
+                </Pressable>
+                <ShareQuotationButton quotation={quotation} />
+                <ShareQuotationPdfButton quotation={quotation} />
+                {!quotationActive ? (
+                  <Pressable style={styles.primaryButton} onPress={() => onGenerateQuotation?.(order)}>
+                    <Text style={styles.primaryButtonText}>Generar nueva cotizacion</Text>
+                  </Pressable>
+                ) : null}
+              </View>
             </View>
-          ) : null}
+          ) : (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Cotizacion</Text>
+              <Text style={styles.emptyText}>Esta orden aun no tiene cotizacion asociada.</Text>
+              <Pressable style={styles.primaryButton} onPress={() => onGenerateQuotation?.(order)}>
+                <Text style={styles.primaryButtonText}>Generar cotizacion</Text>
+              </Pressable>
+            </View>
+          )}
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Observaciones</Text>
@@ -194,9 +259,34 @@ function InfoRow({ label, value }) {
   return (
     <View style={styles.infoRow}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+      <Text style={styles.value}>{toDisplayText(value)}</Text>
     </View>
   );
+}
+
+function buildOrderQuotation(order) {
+  const orderSummary = {
+    id: order.id,
+    codigo: order.codigo || order.code,
+    code: order.code || order.codigo,
+    cliente: order.cliente || { nombre: order.clientName },
+    clientName: order.clientName,
+    equipo: order.equipo || { nombre: order.equipmentName, nroSerie: order.equipmentSerial },
+    equipmentName: order.equipmentName,
+    diagnostico: order.diagnostico || order.failure,
+    failure: order.failure || order.diagnostico,
+    negocio: order.negocio,
+  };
+
+  return {
+    ...order.cotizacion,
+    ordenId: order.cotizacion.ordenId || order.id,
+    cliente: order.cotizacion.cliente || orderSummary.cliente,
+    equipo: order.cotizacion.equipo || orderSummary.equipo,
+    negocio: order.cotizacion.negocio || orderSummary.negocio,
+    order: order.cotizacion.order || order.cotizacion.orden || orderSummary,
+    orden: order.cotizacion.orden || order.cotizacion.order || orderSummary,
+  };
 }
 
 const styles = StyleSheet.create({
@@ -327,5 +417,44 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.65,
+  },
+  noticeBox: {
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+  },
+  noticeActive: {
+    backgroundColor: "#ECFDF5",
+  },
+  noticeExpired: {
+    backgroundColor: "#FEF2F2",
+  },
+  noticeText: {
+    color: "#111827",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  validityText: {
+    color: "#374151",
+    fontSize: 13,
+    fontWeight: "800",
+    marginTop: 4,
+  },
+  quotationActions: {
+    marginTop: 12,
+    rowGap: 10,
+  },
+  secondaryButton: {
+    minHeight: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#5655B9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryButtonText: {
+    color: "#5655B9",
+    fontSize: 15,
+    fontWeight: "800",
   },
 });

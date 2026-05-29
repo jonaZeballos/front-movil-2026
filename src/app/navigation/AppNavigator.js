@@ -645,7 +645,7 @@ export function AppNavigator() {
                 navigation.push("GenerateQuotation", { order })
               }
               onViewQuotation={(quotation) =>
-                navigation.push("QuotationSummary", { quotation })
+                navigation.push("QuotationSummary", { quotation, returnToPrevious: true })
               }
             />
           )}
@@ -688,7 +688,9 @@ export function AppNavigator() {
           {({ navigation, route }) => (
             <QuotationSummaryScreen
               quotation={route.params?.quotation}
-              onBackToOrders={() => navigation.navigate("Cotizaciones")}
+              onBackToOrders={() =>
+                route.params?.returnToPrevious ? navigation.goBack() : navigation.navigate("Cotizaciones")
+              }
               onViewDetail={() => {}}
             />
           )}
@@ -729,6 +731,12 @@ export function AppNavigator() {
                 onBack={() => navigation.goBack()}
                 onUpdateStatus={updateOrderStatus}
                 onAddObservation={addOrderObservation}
+                onViewQuotation={(quotation) =>
+                  navigation.push("QuotationSummary", { quotation, returnToPrevious: true })
+                }
+                onGenerateQuotation={(orderToQuote) =>
+                  navigation.push("GenerateQuotation", { order: orderToQuote })
+                }
               />
             );
           }}

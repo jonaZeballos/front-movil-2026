@@ -63,3 +63,45 @@ export function isCotizacionActiva(cotizacion) {
 
   return new Date(validoHasta).getTime() >= Date.now();
 }
+
+export function formatQuotationDate(value, fallback = "Sin fecha") {
+  if (!value) return fallback;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return date.toLocaleDateString("es-BO");
+}
+
+export function formatQuotationMoney(value) {
+  const number = Number(value || 0);
+  return `Bs. ${Number.isFinite(number) ? number.toFixed(2) : "0.00"}`;
+}
+
+export function getQuotationOrder(quotation = {}) {
+  return quotation.order || quotation.orden || {};
+}
+
+export function getQuotationClient(quotation = {}) {
+  const order = getQuotationOrder(quotation);
+  return quotation.cliente || order.cliente || order.customer || {};
+}
+
+export function getQuotationEquipment(quotation = {}) {
+  const order = getQuotationOrder(quotation);
+  return quotation.equipo || order.equipo || order.equipment || {};
+}
+
+export function getQuotationBusiness(quotation = {}) {
+  const order = getQuotationOrder(quotation);
+  return quotation.negocio || order.negocio || {};
+}
+
+export function getQuotationSubtotal(quotation = {}) {
+  return Number(quotation.manoObra || 0) + Number(quotation.repuestos || 0);
+}
+
+export function getQuotationPhone(quotation = {}) {
+  const cliente = getQuotationClient(quotation);
+  return toDisplayText(cliente.telefono || cliente.celular || cliente.phone, "Sin telefono");
+}

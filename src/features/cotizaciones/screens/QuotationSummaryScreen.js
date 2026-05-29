@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AppButton } from "../../../shared/components/buttons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
+import { ShareQuotationPdfButton } from "../components/ShareQuotationPdfButton";
 import { QuotationSummaryCard } from "../components/QuotationSummaryCard";
 import { ShareQuotationButton } from "../components/ShareQuotationButton";
 
@@ -50,6 +51,7 @@ export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail
 
           <View style={styles.actions}>
             <ShareQuotationButton quotation={quotation} />
+            <ShareQuotationPdfButton quotation={quotation} />
 
             <AppButton
               title="Volver a ordenes"

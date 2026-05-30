@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { useMemo, useState } from "react";
+import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Feather, Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
@@ -14,35 +14,65 @@ import {
 } from "../utils/quotationFormatters";
 
 export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation, onViewQuotation }) {
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedClientId, setSelectedClientId] = useState(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [clientPickerVisible, setClientPickerVisible] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
   const quoteableOrders = orders.map(mapOrderForQuotation).filter((order) => {
     const status = String(order.status || order.estado || "").toLowerCase();
     return status !== "entregado" && status !== "sin solucion";
   });
+  const clients = useMemo(() => getClientsFromOrders(quoteableOrders), [quoteableOrders]);
+  const filteredClients = useMemo(
+    () => clients.filter((client) => clientMatchesSearch(client, clientSearch)),
+    [clientSearch, clients]
+  );
+  const selectedClient = clients.find((client) => client.id === selectedClientId);
+  const visibleOrders = selectedClientId
+    ? quoteableOrders.filter((order) => getOrderClientKey(order) === selectedClientId)
+    : [];
+  const selectedOrders = visibleOrders.filter((order) => selectedOrderIds.includes(order.id));
 
-  const handleGenerate = () => {
-    if (!selectedOrder) {
-      Alert.alert("Orden obligatoria", "Selecciona una orden para generar la cotizacion.");
-      return;
-    }
+  const handleSelectClient = (clientId) => {
+    setSelectedClientId(clientId);
+    setSelectedOrderIds([]);
+    setClientPickerVisible(false);
+  };
 
-    if (selectedOrder.cotizacionActiva) {
+  const toggleOrder = (order) => {
+    if (order.cotizacionActiva) {
       Alert.alert(
         "Cotizacion activa",
         "Esta orden ya tiene una cotizacion activa. Se abrira la cotizacion existente.",
-        [{ text: "Ver cotizacion", onPress: () => onViewQuotation?.(selectedOrder.cotizacion) }]
+        [{ text: "Ver cotizacion", onPress: () => onViewQuotation?.(order.cotizacion) }]
       );
       return;
     }
 
-    if (selectedOrder.cotizacionVencida) {
+    setSelectedOrderIds((prev) =>
+      prev.includes(order.id) ? prev.filter((id) => id !== order.id) : [...prev, order.id]
+    );
+  };
+
+  const handleGenerate = () => {
+    if (!selectedClientId) {
+      Alert.alert("Cliente obligatorio", "Selecciona un cliente para ver sus ordenes cotizables.");
+      return;
+    }
+
+    if (!selectedOrders.length) {
+      Alert.alert("Orden obligatoria", "Selecciona una o mas ordenes para generar la cotizacion.");
+      return;
+    }
+
+    if (selectedOrders.some((order) => order.cotizacionVencida)) {
       Alert.alert(
         "Cotizacion vencida",
-        "La cotizacion anterior vencio. Puedes generar una nueva cotizacion para esta orden."
+        "Una cotizacion anterior vencio. Puedes generar una nueva cotizacion para la seleccion actual."
       );
     }
 
-    onGenerateQuotation?.(selectedOrder);
+    onGenerateQuotation?.(selectedOrders[0], selectedOrders);
   };
 
   return (
@@ -59,34 +89,176 @@ export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation, o
           </View>
         </View>
 
+        <View style={styles.clientSection}>
+          <Text style={styles.sectionTitle}>Selecciona cliente</Text>
+          <Pressable
+            style={styles.clientPickerButton}
+            onPress={() => setClientPickerVisible(true)}
+          >
+            <Feather name="search" size={18} color="#6B7280" />
+            <View style={styles.clientPickerText}>
+              <Text style={styles.clientPickerTitle}>
+                {selectedClient?.name || "Seleccionar cliente"}
+              </Text>
+              <Text style={styles.clientPickerMeta}>
+                {selectedClient ? `${selectedClient.count} orden${selectedClient.count === 1 ? "" : "es"} disponible${selectedClient.count === 1 ? "" : "s"}` : "Buscar por nombre, documento, telefono o correo"}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+          </Pressable>
+        </View>
+
+        {!!selectedClientId && (
+          <Text style={styles.selectionText}>
+            {selectedOrders.length} orden{selectedOrders.length === 1 ? "" : "es"} seleccionada{selectedOrders.length === 1 ? "" : "s"}
+          </Text>
+        )}
+
         <FlatList
-          data={quoteableOrders}
+          data={visibleOrders}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <OrderQuotationCard
               order={item}
-              selected={selectedOrder?.id === item.id}
-              onSelect={() => setSelectedOrder(item)}
+              selected={selectedOrderIds.includes(item.id)}
+              onSelect={() => toggleOrder(item)}
             />
           )}
           ListEmptyComponent={
             <View style={styles.emptyCard}>
               <Ionicons name="document-text-outline" size={42} color="#9CA3AF" />
-              <Text style={styles.emptyTitle}>No hay ordenes para cotizar</Text>
-              <Text style={styles.emptyText}>Registra ordenes de servicio para generar cotizaciones.</Text>
+              <Text style={styles.emptyTitle}>
+                {selectedClientId ? "No hay ordenes para este cliente" : "No hay clientes con ordenes"}
+              </Text>
+              <Text style={styles.emptyText}>
+                {selectedClientId
+                  ? "Este cliente no tiene ordenes disponibles para cotizar."
+                  : "Registra ordenes de servicio para generar cotizaciones."}
+              </Text>
             </View>
           }
         />
 
         <Pressable style={styles.createButton} onPress={handleGenerate}>
           <Ionicons name="add" size={22} color="#FFFFFF" />
-          <Text style={styles.createButtonText}>Generar cotizacion</Text>
+          <Text style={styles.createButtonText}>
+            {selectedOrders.length > 1 ? "Generar cotizacion agrupada" : "Generar cotizacion"}
+          </Text>
         </Pressable>
+
+        <ClientPickerModal
+          visible={clientPickerVisible}
+          clients={filteredClients}
+          search={clientSearch}
+          onSearch={setClientSearch}
+          onSelect={handleSelectClient}
+          onClose={() => setClientPickerVisible(false)}
+        />
       </View>
     </ScreenContainer>
   );
+}
+
+function getClientsFromOrders(orders) {
+  const map = new Map();
+  orders.forEach((order) => {
+    const id = getOrderClientKey(order);
+    if (!id) return;
+    if (!map.has(id)) {
+      map.set(id, {
+        id,
+        name: getClienteNombre(order.cliente || order.clientName),
+        searchText: buildClientSearchText(order),
+        count: 0,
+      });
+    }
+    map.get(id).count += 1;
+  });
+  return Array.from(map.values());
+}
+
+function clientMatchesSearch(client, search) {
+  const term = search.trim().toLowerCase();
+  if (!term) return true;
+  return String(client.searchText || client.name || "").toLowerCase().includes(term);
+}
+
+function buildClientSearchText(order) {
+  const cliente = order.clienteOriginal || order.cliente || {};
+  if (typeof cliente !== "object") {
+    return [order.clientName, cliente].filter(Boolean).join(" ");
+  }
+  return [
+    cliente.nombre,
+    cliente.razonSocial,
+    cliente.nombres,
+    cliente.apellidos,
+    cliente.numeroDocumento,
+    cliente.documento,
+    cliente.telefono,
+    cliente.email,
+    cliente.correo,
+    order.clientName,
+  ].filter(Boolean).join(" ");
+}
+
+function ClientPickerModal({ visible, clients, search, onSearch, onSelect, onClose }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Seleccionar cliente</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={22} color="#111827" />
+            </Pressable>
+          </View>
+          <View style={styles.searchShell}>
+            <Feather name="search" size={18} color="#8A8A8A" />
+            <TextInput
+              value={search}
+              onChangeText={onSearch}
+              placeholder="Buscar cliente"
+              placeholderTextColor="#8A8A8A"
+              style={styles.searchInput}
+            />
+          </View>
+          <FlatList
+            data={clients}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.modalList}
+            renderItem={({ item }) => (
+              <Pressable style={styles.clientRow} onPress={() => onSelect(item.id)}>
+                <View style={styles.clientRowIcon}>
+                  <Ionicons name="person-outline" size={18} color={colors.primary} />
+                </View>
+                <View style={styles.clientRowText}>
+                  <Text style={styles.clientRowTitle}>{item.name}</Text>
+                  <Text style={styles.clientRowMeta}>
+                    {item.count} orden{item.count === 1 ? "" : "es"} disponible{item.count === 1 ? "" : "s"}
+                  </Text>
+                </View>
+              </Pressable>
+            )}
+            ListEmptyComponent={
+              <Text style={styles.modalEmpty}>No hay clientes con ordenes disponibles.</Text>
+            }
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function getOrderClientKey(order) {
+  const cliente = order.clienteOriginal || order.cliente;
+  if (cliente && typeof cliente === "object") {
+    return cliente.id || cliente.idUsuario || cliente.email || cliente.telefono || cliente.nombre;
+  }
+  return String(order.clientName || cliente || "").trim();
 }
 
 function mapOrderForQuotation(order) {
@@ -112,6 +284,7 @@ function mapOrderForQuotation(order) {
   return {
     ...order,
     ...orderResumen,
+    clienteOriginal: order.cliente,
     estado: toDisplayText(order.status || order.estado, "Recibido"),
     cotizacion,
     cotizacionActiva: activa,
@@ -153,6 +326,46 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontSize: 13,
   },
+  clientSection: {
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    marginBottom: 8,
+    color: "#111827",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  clientPickerButton: {
+    minHeight: 58,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
+  },
+  clientPickerText: {
+    flex: 1,
+  },
+  clientPickerTitle: {
+    color: "#111827",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  clientPickerMeta: {
+    marginTop: 3,
+    color: "#6B7280",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  selectionText: {
+    marginBottom: 10,
+    color: "#4B5563",
+    fontSize: 13,
+    fontWeight: "800",
+  },
   listContent: {
     paddingBottom: 16,
   },
@@ -190,5 +403,84 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     textAlign: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 18,
+  },
+  modalCard: {
+    width: "100%",
+    maxHeight: "78%",
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  modalTitle: {
+    color: "#111827",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  searchShell: {
+    marginTop: 14,
+    minHeight: 48,
+    borderRadius: 15,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#111827",
+    fontSize: 14,
+  },
+  modalList: {
+    paddingTop: 10,
+  },
+  clientRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 10,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  clientRowIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: "#EDEBFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clientRowText: {
+    flex: 1,
+  },
+  clientRowTitle: {
+    color: "#111827",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  clientRowMeta: {
+    marginTop: 2,
+    color: "#6B7280",
+    fontSize: 12,
+  },
+  modalEmpty: {
+    textAlign: "center",
+    color: "#6B7280",
+    fontSize: 13,
+    paddingVertical: 22,
   },
 });

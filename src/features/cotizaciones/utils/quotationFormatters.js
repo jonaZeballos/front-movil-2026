@@ -82,6 +82,14 @@ export function getQuotationOrder(quotation = {}) {
   return quotation.order || quotation.orden || {};
 }
 
+export function getQuotationOrders(quotation = {}) {
+  const orders = quotation.orders || quotation.ordenes;
+  if (Array.isArray(orders) && orders.length) return orders;
+
+  const order = getQuotationOrder(quotation);
+  return order?.id ? [order] : [];
+}
+
 export function getQuotationClient(quotation = {}) {
   const order = getQuotationOrder(quotation);
   return quotation.cliente || order.cliente || order.customer || {};

@@ -71,6 +71,7 @@ import {
 import {
   listOrdenes,
   createOrden,
+  createOrdenesLote,
   updateOrden,
 } from "../../features/orders/services/ordersApi";
 import { listProductos } from "../../features/productos/services";
@@ -317,11 +318,39 @@ export function AppNavigator() {
       typeof orderDraft === "string"
         ? { diagnostico: orderDraft }
         : orderDraft || {};
+    const equipmentIds = Array.isArray(draft.equipoIds) && draft.equipoIds.length
+      ? draft.equipoIds
+      : [equipment.id];
+
+    if (equipmentIds.length > 1) {
+      const createdOrders = await createOrdenesLote({
+        equipoIds: equipmentIds,
+        diagnostico: draft.diagnostico || draft.failure || "Diagnostico pendiente",
+        prioridad: draft.prioridad || "Normal",
+        estado: draft.estado || "Recibido",
+        observaciones: draft.observaciones,
+      });
+
+      setOrders((prevOrders) => [...createdOrders, ...prevOrders]);
+      setNotifications((prevNotifications) =>
+        addNotification(prevNotifications, {
+          type: "order",
+          title: "Ordenes registradas",
+          message: `Se crearon ${createdOrders.length} ordenes de servicio.`,
+          priority: "high",
+          payload: createdOrders,
+        })
+      );
+      Alert.alert("Ordenes creadas", `Se crearon ${createdOrders.length} ordenes de servicio.`);
+      navigation.replace("OrdersList");
+      return;
+    }
 
     const newOrder = await createOrden({
       equipoId: equipment.id,
       diagnostico: draft.diagnostico || draft.failure || equipment.failure || "Diagnostico pendiente",
       prioridad: draft.prioridad || "Normal",
+      estado: draft.estado || "Recibido",
       observaciones: draft.observaciones,
     });
 
@@ -662,8 +691,8 @@ export function AppNavigator() {
             <CotizacionesScreen
               orders={orders}
               onBack={() => navigation.goBack()}
-              onGenerateQuotation={(order) =>
-                navigation.push("GenerateQuotation", { order })
+              onGenerateQuotation={(order, selectedOrders) =>
+                navigation.push("GenerateQuotation", { order, selectedOrders })
               }
               onViewQuotation={(quotation) =>
                 navigation.push("QuotationSummary", { quotation, returnToPrevious: true })
@@ -676,6 +705,7 @@ export function AppNavigator() {
           {({ navigation, route }) => (
             <GenerateQuotationScreen
               order={route.params?.order}
+              selectedOrders={route.params?.selectedOrders}
               onBack={() => navigation.goBack()}
               onCancel={() => navigation.goBack()}
               onSave={async (quotation) => {
@@ -692,7 +722,7 @@ export function AppNavigator() {
                 }
                 setOrders((prevOrders) =>
                   prevOrders.map((order) =>
-                    order.id === savedQuotation.ordenId
+                    (displayQuotation.ordenIds || displayQuotation.ordenes?.map((item) => item.id) || [savedQuotation.ordenId]).includes(order.id)
                       ? {
                           ...order,
                           cotizacion: displayQuotation,

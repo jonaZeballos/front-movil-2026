@@ -7,16 +7,25 @@ import {
   toDisplayText,
 } from "../utils/quotationFormatters";
 
-export function QuotationOrderInfoCard({ order }) {
+export function QuotationOrderInfoCard({ order, orders = [] }) {
+  const selectedOrders = Array.isArray(orders) && orders.length ? orders : [order].filter(Boolean);
+  const isGrouped = selectedOrders.length > 1;
+
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>Orden seleccionada</Text>
-      <Text style={styles.code}>{toDisplayText(order.codigo || order.code, "Sin codigo")}</Text>
+      <Text style={styles.eyebrow}>{isGrouped ? "Ordenes seleccionadas" : "Orden seleccionada"}</Text>
+      <Text style={styles.code}>
+        {isGrouped ? `${selectedOrders.length} ordenes` : toDisplayText(order.codigo || order.code, "Sin codigo")}
+      </Text>
 
       <InfoRow label="Cliente" value={getClienteNombre(order.cliente || order.clientName)} />
-      <InfoRow label="Equipo" value={getEquipoNombre(order.equipo || order.equipmentName)} />
-      <InfoRow label="Falla reportada" value={getDiagnosticoTexto(order.falla || order.failure)} />
-      <InfoRow label="Diagnostico" value={getDiagnosticoTexto(order.diagnostico)} />
+      {selectedOrders.map((item) => (
+        <View key={item.id || item.codigo || item.code} style={styles.orderBlock}>
+          <InfoRow label="Orden" value={toDisplayText(item.codigo || item.code, "Sin codigo")} />
+          <InfoRow label="Equipo" value={getEquipoNombre(item.equipo || item.equipmentName)} />
+          <InfoRow label="Diagnostico" value={getDiagnosticoTexto(item.diagnostico || item.falla || item.failure)} />
+        </View>
+      ))}
     </View>
   );
 }
@@ -52,6 +61,10 @@ const styles = StyleSheet.create({
   },
   row: {
     paddingVertical: 9,
+    borderTopWidth: 1,
+    borderTopColor: "#F0F1F5",
+  },
+  orderBlock: {
     borderTopWidth: 1,
     borderTopColor: "#F0F1F5",
   },

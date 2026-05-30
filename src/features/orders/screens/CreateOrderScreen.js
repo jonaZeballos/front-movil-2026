@@ -47,7 +47,7 @@ export function CreateOrderScreen({ clientes = [], equipments = [], onCreateOrde
           </View>
           <Text style={styles.cardTitle}>Formulario de orden</Text>
           <Text style={styles.cardText}>
-            Selecciona cliente, equipo, prioridad y registra el diagnostico o falla de la orden.
+            Selecciona cliente, uno o varios equipos, prioridad y registra el diagnostico o falla de la orden.
           </Text>
 
           {equipments.length === 0 ? (

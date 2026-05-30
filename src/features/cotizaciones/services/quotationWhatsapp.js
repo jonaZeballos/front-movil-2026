@@ -8,7 +8,7 @@ import {
   normalizeWhatsAppPhone,
   openWhatsApp,
 } from "../../../shared/utils";
-import { getQuotationCreator } from "../utils/quotationFormatters";
+import { getQuotationCreator, getQuotationOrders } from "../utils/quotationFormatters";
 import { getCotizacionWhatsapp } from "./cotizacionesApi";
 
 export function buildQuotationWhatsAppMessage(quotation) {
@@ -20,6 +20,8 @@ export function buildQuotationWhatsAppMessage(quotation) {
   const cliente = quotation.cliente || order.cliente || order.customer || {};
   const equipo = quotation.equipo || order.equipo || order.equipment || {};
   const negocio = quotation.negocio || order.negocio || {};
+  const orders = getQuotationOrders(quotation);
+  const isGrouped = orders.length > 1;
   const phone = normalizeWhatsAppPhone(getClientPhone(cliente));
   const emitida = new Date(quotation.fechaCreacion || Date.now());
   const validaHasta = new Date(emitida);
@@ -35,9 +37,13 @@ export function buildQuotationWhatsAppMessage(quotation) {
     `Cliente: ${getClientName(cliente)}`,
     `Telefono: ${phone || "No registrado"}`,
     `Cotizacion realizada por: ${getQuotationCreator(quotation)}`,
-    `Orden: ${getOrderCode(order)}`,
-    `Equipo: ${getEquipmentName(equipo)}`,
-    `Diagnostico: ${cleanText(order.diagnostico || order.failure, "No registrado")}`,
+    isGrouped ? "Ordenes incluidas:" : `Orden: ${getOrderCode(order)}`,
+    ...(isGrouped
+      ? orders.map((item) => `- ${getOrderCode(item)} - ${getEquipmentName(item.equipo || item.equipmentName)} - ${cleanText(item.diagnostico || item.failure, "No registrado")}`)
+      : [
+          `Equipo: ${getEquipmentName(equipo)}`,
+          `Diagnostico: ${cleanText(order.diagnostico || order.failure, "No registrado")}`,
+        ]),
     "",
     "Detalle del servicio:",
     cleanText(quotation.descripcion, "Sin descripcion"),

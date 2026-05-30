@@ -13,6 +13,7 @@ import {
   getQuotationClient,
   getQuotationCreator,
   getQuotationEquipment,
+  getQuotationOrders,
   getQuotationPhone,
   getQuotationSubtotal,
   toDisplayText,
@@ -22,6 +23,8 @@ export function QuotationSummaryCard({ quotation }) {
   const order = normalizeOrder(quotation.order || quotation.orden);
   const cliente = getQuotationClient(quotation);
   const equipo = getQuotationEquipment(quotation);
+  const ordenes = getQuotationOrders(quotation);
+  const isGrouped = ordenes.length > 1;
   const negocio = getQuotationBusiness(quotation);
   const validoHasta = getCotizacionValidoHasta(quotation);
   const subtotal = getQuotationSubtotal(quotation);
@@ -38,12 +41,26 @@ export function QuotationSummaryCard({ quotation }) {
       <SummaryRow label="Negocio" value={toDisplayText(negocio.nombre, "ServiTech")} />
       <SummaryRow label="Fecha de emision" value={formatQuotationDate(quotation.fechaEmision || quotation.fechaCreacion)} />
       <SummaryRow label="Valida hasta" value={formatQuotationDate(validoHasta)} />
-      <SummaryRow label="Codigo de orden" value={order.codigo} />
+      <SummaryRow label={isGrouped ? "Ordenes incluidas" : "Codigo de orden"} value={isGrouped ? `${ordenes.length} ordenes` : order.codigo} />
       <SummaryRow label="Cliente" value={getClienteNombre(cliente) || order.cliente} />
       <SummaryRow label="Telefono" value={getQuotationPhone(quotation)} />
       <SummaryRow label="Cotizacion realizada por" value={getQuotationCreator(quotation)} />
-      <SummaryRow label="Equipo" value={getEquipoNombre(equipo) || order.equipo} />
-      <SummaryRow label="Diagnostico" value={getDiagnosticoTexto(order.diagnostico || order.failure)} />
+      {isGrouped ? (
+        <View style={styles.ordersBlock}>
+          {ordenes.map((item) => (
+            <View key={item.id || item.codigo || item.code} style={styles.orderItem}>
+              <Text style={styles.orderTitle}>{toDisplayText(item.code || item.codigo, "Sin codigo")}</Text>
+              <Text style={styles.orderText}>{getEquipoNombre(item.equipo || item.equipmentName)}</Text>
+              <Text style={styles.orderText}>{getDiagnosticoTexto(item.diagnostico || item.failure)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <>
+          <SummaryRow label="Equipo" value={getEquipoNombre(equipo) || order.equipo} />
+          <SummaryRow label="Diagnostico" value={getDiagnosticoTexto(order.diagnostico || order.failure)} />
+        </>
+      )}
       <SummaryRow label="Descripcion del trabajo" value={quotation.descripcion} />
       <SummaryRow label="Mano de obra" value={formatQuotationMoney(quotation.manoObra)} />
       <SummaryRow label="Repuestos/productos" value={formatQuotationMoney(quotation.repuestos)} />
@@ -112,6 +129,30 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: "#F0F1F5",
+  },
+  ordersBlock: {
+    alignSelf: "stretch",
+    borderTopWidth: 1,
+    borderTopColor: "#F0F1F5",
+    paddingVertical: 10,
+    rowGap: 8,
+  },
+  orderItem: {
+    borderRadius: 12,
+    backgroundColor: "#F9FAFB",
+    padding: 10,
+  },
+  orderTitle: {
+    color: "#111827",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  orderText: {
+    marginTop: 3,
+    color: "#6B7280",
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 17,
   },
   label: {
     color: "#6B7280",

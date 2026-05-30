@@ -29,6 +29,20 @@ export function createOrden(orderData) {
   }).then(mapOrden);
 }
 
+export function createOrdenesLote(orderData) {
+  return apiRequest("/api/ordenes/lote", {
+    method: "POST",
+    body: JSON.stringify({
+      equipoIds: orderData.equipoIds || [],
+      diagnostico: orderData.diagnostico || orderData.failure,
+      prioridad: orderData.prioridad || "Normal",
+      estado: orderData.estado || "Recibido",
+      observaciones: orderData.observaciones,
+      garantiaDias: orderData.garantiaDias || 0,
+    }),
+  }).then((ordenes) => ordenes.map(mapOrden));
+}
+
 export function updateOrden(orderId, data) {
   return apiRequest(`/api/ordenes/${orderId}`, {
     method: "PATCH",

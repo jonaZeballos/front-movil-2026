@@ -10,6 +10,7 @@ import {
   getQuotationCreator,
   getQuotationEmail,
   getQuotationOrder,
+  getQuotationOrders,
   toDisplayText,
 } from "../utils/quotationFormatters";
 import { createQuotationPdf } from "./quotationPdf";
@@ -49,13 +50,16 @@ function buildQuotationEmailSubject(quotation) {
 function buildQuotationEmailBody(quotation) {
   const cliente = getQuotationClient(quotation);
   const order = getQuotationOrder(quotation);
+  const orders = getQuotationOrders(quotation);
   const negocio = getQuotationBusiness(quotation);
   const validoHasta = getCotizacionValidoHasta(quotation);
 
   return [
     `Estimado/a ${getClienteNombre(cliente)},`,
     "",
-    `Adjuntamos la cotizacion ${toDisplayText(quotation.numero, "Sin numero")} correspondiente a la orden ${toDisplayText(order.code || order.codigo, "Sin codigo")}.`,
+    orders.length > 1
+      ? `Adjuntamos la cotizacion ${toDisplayText(quotation.numero, "Sin numero")} correspondiente a ${orders.length} ordenes de servicio.`
+      : `Adjuntamos la cotizacion ${toDisplayText(quotation.numero, "Sin numero")} correspondiente a la orden ${toDisplayText(order.code || order.codigo, "Sin codigo")}.`,
     "",
     `Total: ${formatQuotationMoney(quotation.total)}`,
     `Valida hasta: ${formatQuotationDate(validoHasta)}`,

@@ -26,6 +26,7 @@ export function OrderFormModal({
   initialEquipment = null,
   lockClient = false,
   lockEquipment = false,
+  allowMultipleEquipments = true,
   submitLabel = "Crear orden",
   isSubmitting = false,
   onClose,
@@ -33,6 +34,7 @@ export function OrderFormModal({
 }) {
   const [selectedClient, setSelectedClient] = useState(initialClient);
   const [selectedEquipment, setSelectedEquipment] = useState(initialEquipment);
+  const [selectedEquipments, setSelectedEquipments] = useState(initialEquipment ? [initialEquipment] : []);
   const [clientSearch, setClientSearch] = useState("");
   const [equipmentSearch, setEquipmentSearch] = useState("");
   const [diagnostico, setDiagnostico] = useState("");
@@ -46,6 +48,7 @@ export function OrderFormModal({
     if (!visible) return;
     setSelectedClient(initialClient || null);
     setSelectedEquipment(initialEquipment || null);
+    setSelectedEquipments(initialEquipment ? [initialEquipment] : []);
     setErrors({});
     setPicker(null);
   }, [initialClient, initialEquipment, visible]);
@@ -100,7 +103,9 @@ export function OrderFormModal({
   const validate = () => {
     const nextErrors = {};
     if (!selectedClient?.id) nextErrors.client = "Seleccione un cliente.";
-    if (!selectedEquipment?.id && !lockEquipment) nextErrors.equipment = "Seleccione un equipo.";
+    if (!selectedEquipments.length && !selectedEquipment?.id && !lockEquipment) {
+      nextErrors.equipment = "Seleccione al menos un equipo.";
+    }
     if (!diagnostico.trim()) nextErrors.diagnostico = "Ingrese el diagnostico o falla de la orden.";
     if (!prioridad) nextErrors.prioridad = "Seleccione la prioridad.";
 
@@ -114,7 +119,9 @@ export function OrderFormModal({
 
     onSubmit?.({
       clienteId: selectedClient?.id,
-      equipoId: selectedEquipment?.id || initialEquipment?.id,
+      equipoId: selectedEquipments[0]?.id || selectedEquipment?.id || initialEquipment?.id,
+      equipoIds: selectedEquipments.map((equipment) => equipment.id).filter(Boolean),
+      equipos: selectedEquipments,
       diagnostico: diagnostico.trim(),
       failure: diagnostico.trim(),
       prioridad,
@@ -126,14 +133,30 @@ export function OrderFormModal({
   const selectClient = (client) => {
     setSelectedClient(client);
     setSelectedEquipment(null);
+    setSelectedEquipments([]);
     setPicker(null);
     clearError("client");
   };
 
   const selectEquipment = (equipment) => {
-    setSelectedEquipment(equipment);
-    setPicker(null);
+    if (allowMultipleEquipments && !lockEquipment) {
+      setSelectedEquipments((prev) => {
+        const exists = prev.some((item) => String(item.id) === String(equipment.id));
+        return exists
+          ? prev.filter((item) => String(item.id) !== String(equipment.id))
+          : [...prev, equipment];
+      });
+    } else {
+      setSelectedEquipment(equipment);
+      setSelectedEquipments([equipment]);
+      setPicker(null);
+    }
     clearError("equipment");
+  };
+
+  const closeEquipmentPicker = () => {
+    setSelectedEquipment(selectedEquipments[0] || null);
+    setPicker(null);
   };
 
   return (
@@ -166,9 +189,9 @@ export function OrderFormModal({
               />
 
               <PickerField
-                label="Equipo"
-                value={getEquipmentLabel(selectedEquipment || initialEquipment)}
-                placeholder="Seleccionar equipo"
+                label={allowMultipleEquipments && !lockEquipment ? "Equipos" : "Equipo"}
+                value={getSelectedEquipmentsLabel(selectedEquipments, selectedEquipment || initialEquipment)}
+                placeholder={allowMultipleEquipments && !lockEquipment ? "Seleccionar uno o varios equipos" : "Seleccionar equipo"}
                 icon="monitor"
                 disabled={lockEquipment}
                 error={errors.equipment}
@@ -236,7 +259,7 @@ export function OrderFormModal({
             <SelectionItem
               title={getClientName(item)}
               subtitle={`Doc: ${item.numeroDocumento || "Sin documento"} · ${item.telefono || "Sin telefono"}`}
-              icon="user"
+              icon="account-outline"
               onPress={() => selectClient(item)}
             />
           )}
@@ -256,10 +279,16 @@ export function OrderFormModal({
               title={getEquipmentLabel(item)}
               subtitle={`Serie: ${formatSerial(item.serial || item.nroSerie)} · Cliente: ${item.clientName || "Sin cliente"}`}
               icon="monitor"
+              selected={selectedEquipments.some((equipment) => String(equipment.id) === String(item.id))}
               onPress={() => selectEquipment(item)}
             />
           )}
-          onClose={() => setPicker(null)}
+          footerText={
+            allowMultipleEquipments && !lockEquipment
+              ? `${selectedEquipments.length} equipo${selectedEquipments.length === 1 ? "" : "s"} seleccionado${selectedEquipments.length === 1 ? "" : "s"}`
+              : ""
+          }
+          onClose={closeEquipmentPicker}
         />
       </View>
     </Modal>
@@ -335,6 +364,7 @@ function SelectionModal({
   data,
   keyExtractor,
   renderItem,
+  footerText,
   onClose,
 }) {
   if (!visible) return null;
@@ -367,13 +397,18 @@ function SelectionModal({
             renderItem={({ item }) => renderItem(item)}
             ListEmptyComponent={<Text style={styles.emptyText}>{emptyText}</Text>}
           />
+          {!!footerText && (
+            <Pressable style={styles.selectionDoneButton} onPress={onClose}>
+              <Text style={styles.selectionDoneText}>{footerText} - Listo</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </Modal>
   );
 }
 
-function SelectionItem({ title, subtitle, icon, onPress }) {
+function SelectionItem({ title, subtitle, icon, selected = false, onPress }) {
   return (
     <Pressable style={styles.selectionItem} onPress={onPress}>
       <View style={styles.selectionIcon}>
@@ -383,6 +418,7 @@ function SelectionItem({ title, subtitle, icon, onPress }) {
         <Text style={styles.selectionItemTitle}>{title}</Text>
         <Text style={styles.selectionItemSubtitle}>{subtitle}</Text>
       </View>
+      {selected ? <Ionicons name="checkmark-circle" size={22} color="#5655B9" /> : null}
     </Pressable>
   );
 }
@@ -396,6 +432,14 @@ function getEquipmentLabel(equipment) {
   return [equipment.type || equipment.tipo, equipment.brand || equipment.marca, equipment.model || equipment.modelo]
     .filter(Boolean)
     .join(" ");
+}
+
+function getSelectedEquipmentsLabel(selectedEquipments, fallbackEquipment) {
+  if (selectedEquipments.length > 1) {
+    return `${selectedEquipments.length} equipos seleccionados`;
+  }
+
+  return getEquipmentLabel(selectedEquipments[0] || fallbackEquipment);
 }
 
 function formatSerial(serial) {
@@ -617,5 +661,18 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontSize: 13,
     paddingVertical: 22,
+  },
+  selectionDoneButton: {
+    minHeight: 48,
+    borderRadius: 15,
+    backgroundColor: "#5655B9",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  selectionDoneText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
   },
 });

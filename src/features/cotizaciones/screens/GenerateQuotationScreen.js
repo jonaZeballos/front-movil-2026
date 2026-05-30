@@ -18,10 +18,14 @@ const initialForm = {
   observaciones: "",
 };
 
-export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
+export function GenerateQuotationScreen({ order, selectedOrders = [], onBack, onCancel, onSave }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const ordersToQuote = useMemo(
+    () => (Array.isArray(selectedOrders) && selectedOrders.length ? selectedOrders : [order].filter(Boolean)),
+    [order, selectedOrders]
+  );
 
   const amounts = useMemo(() => {
     const manoObra = parseAmount(form.manoObra);
@@ -43,10 +47,10 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
   const handleSave = async () => {
     if (isSaving) return;
 
-    if (isCotizacionActiva(order?.cotizacion)) {
+    if (ordersToQuote.some((item) => isCotizacionActiva(item?.cotizacion))) {
       Alert.alert(
         "Cotizacion activa",
-        "Esta orden ya tiene una cotizacion activa. Vuelve al listado para abrir la cotizacion existente."
+        "Una de las ordenes seleccionadas ya tiene una cotizacion activa. Vuelve al listado para abrir la cotizacion existente."
       );
       return;
     }
@@ -63,7 +67,9 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
       await onSave?.({
         numero: "COT-001",
         order,
+        orders: ordersToQuote,
         ordenId: order.id,
+        ordenIds: ordersToQuote.map((item) => item.id),
         descripcion: form.descripcion.trim(),
         manoObra: amounts.manoObra,
         repuestos: amounts.repuestos,
@@ -144,7 +150,7 @@ export function GenerateQuotationScreen({ order, onBack, onCancel, onSave }) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
         >
-          <QuotationOrderInfoCard order={order} />
+          <QuotationOrderInfoCard order={order} orders={ordersToQuote} />
           <QuotationForm form={form} errors={errors} onChange={handleChange} />
           <TotalQuotationBox total={Math.max(amounts.total, 0)} />
 

@@ -288,6 +288,9 @@ function buildOrderQuotation(order) {
     cliente: order.cotizacion.cliente || orderSummary.cliente,
     equipo: order.cotizacion.equipo || orderSummary.equipo,
     negocio: order.cotizacion.negocio || orderSummary.negocio,
+    ordenes: order.cotizacion.ordenes || order.cotizacion.orders || [orderSummary],
+    orders: order.cotizacion.orders || order.cotizacion.ordenes || [orderSummary],
+    equipos: order.cotizacion.equipos || [],
     order: order.cotizacion.order || order.cotizacion.orden || orderSummary,
     orden: order.cotizacion.orden || order.cotizacion.order || orderSummary,
   };

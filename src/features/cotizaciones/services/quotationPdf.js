@@ -13,6 +13,7 @@ import {
   getQuotationCreator,
   getQuotationEquipment,
   getQuotationOrder,
+  getQuotationOrders,
   getQuotationPhone,
   getQuotationSubtotal,
   toDisplayText,
@@ -57,6 +58,8 @@ function buildQuotationPdfHtml(quotation) {
   const negocio = getQuotationBusiness(quotation);
   const validoHasta = getCotizacionValidoHasta(quotation);
   const subtotal = getQuotationSubtotal(quotation);
+  const orders = getQuotationOrders(quotation);
+  const isGrouped = orders.length > 1;
 
   return `
     <!DOCTYPE html>
@@ -111,10 +114,12 @@ function buildQuotationPdfHtml(quotation) {
 
           <div class="grid">
             <div class="box">
-              <div class="section">Orden</div>
-              ${row("Codigo", toDisplayText(order.code || order.codigo, "Sin codigo"))}
-              ${row("Equipo", getEquipoNombre(equipo || order.equipo || order.equipmentName))}
-              ${row("Diagnostico", getDiagnosticoTexto(order.diagnostico || order.failure))}
+              <div class="section">${isGrouped ? "Ordenes incluidas" : "Orden"}</div>
+              ${isGrouped ? buildOrdersHtml(orders) : `
+                ${row("Codigo", toDisplayText(order.code || order.codigo, "Sin codigo"))}
+                ${row("Equipo", getEquipoNombre(equipo || order.equipo || order.equipmentName))}
+                ${row("Diagnostico", getDiagnosticoTexto(order.diagnostico || order.failure))}
+              `}
             </div>
             <div class="box">
               <div class="section">Servicio</div>
@@ -140,6 +145,15 @@ function buildQuotationPdfHtml(quotation) {
       </body>
     </html>
   `;
+}
+
+function buildOrdersHtml(orders) {
+  return orders.map((order) => `
+    <div class="row">
+      <span class="label">${escapeHtml(toDisplayText(order.code || order.codigo, "Sin codigo"))}</span>
+      <span class="value">${escapeHtml(getEquipoNombre(order.equipo || order.equipmentName))}<br/>${escapeHtml(getDiagnosticoTexto(order.diagnostico || order.failure))}</span>
+    </div>
+  `).join("");
 }
 
 function row(label, value) {

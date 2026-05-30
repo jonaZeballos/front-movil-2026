@@ -11,6 +11,7 @@ export async function createCotizacion(data) {
     method: "POST",
     body: JSON.stringify({
       ordenId: data.ordenId || data.idOrden || data.order?.id,
+      ordenIds: data.ordenIds,
       descripcion: data.descripcion,
       manoObra: data.manoObra,
       repuestos: data.repuestos,
@@ -45,6 +46,12 @@ export function mapCotizacion(cotizacion) {
     yaExistia: cotizacion.yaExistia,
     order: cotizacion.order || cotizacion.orden,
     orden: cotizacion.orden || cotizacion.order,
+    ordenes: cotizacion.ordenes || cotizacion.orders || [],
+    orders: cotizacion.orders || cotizacion.ordenes || [],
+    ordenIds: cotizacion.ordenIds || (cotizacion.ordenes || cotizacion.orders || []).map((orden) => orden.id).filter(Boolean),
+    equipos: cotizacion.equipos || [],
+    esAgrupada: !!cotizacion.esAgrupada,
+    cantidadOrdenes: cotizacion.cantidadOrdenes || cotizacion.ordenes?.length || cotizacion.orders?.length || 1,
     cliente: cotizacion.cliente || cotizacion.orden?.cliente,
     equipo: cotizacion.equipo || cotizacion.orden?.equipo,
   };

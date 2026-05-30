@@ -15,9 +15,9 @@ import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
+import { OrderFormModal } from "../../orders/components/OrderFormModal";
 
 const equipmentTypeOptions = ["Laptop", "PC Escritorio", "Impresora"];
-const priorityOptions = ["Baja", "Normal", "Alta", "Urgente"];
 
 function SelectField({
   label,
@@ -136,11 +136,9 @@ export function RegisterEquipmentScreen({
   const [model, setModel] = useState("");
   const [serial, setSerial] = useState("");
   const [initialFailure, setInitialFailure] = useState("");
-  const [orderDiagnostic, setOrderDiagnostic] = useState("");
-  const [priority, setPriority] = useState("Normal");
-  const [orderObservation, setOrderObservation] = useState("");
   const [openField, setOpenField] = useState(null);
   const [clientModalVisible, setClientModalVisible] = useState(false);
+  const [orderModalVisible, setOrderModalVisible] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -194,13 +192,9 @@ export function RegisterEquipmentScreen({
     model: model.trim(),
     serial: serial.trim(),
     initialFailure: initialFailure.trim(),
-    failure: orderDiagnostic.trim(),
-    diagnostico: orderDiagnostic.trim(),
-    prioridad: priority,
-    observaciones: orderObservation.trim(),
   });
 
-  const validate = (mode) => {
+  const validate = () => {
     const nextErrors = {};
 
     if (!selectedClient?.id) nextErrors.client = "Seleccione un cliente.";
@@ -211,29 +205,20 @@ export function RegisterEquipmentScreen({
       nextErrors.serial = "El numero de serie debe tener al menos 3 caracteres.";
     }
 
-    if (mode === "order") {
-      if (!orderDiagnostic.trim()) {
-        nextErrors.orderDiagnostic = "Ingrese la falla o diagnostico inicial de la orden.";
-      }
-      if (!priority) {
-        nextErrors.priority = "Seleccione la prioridad de la orden.";
-      }
-    }
-
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
 
-  const runSubmit = async (submitAction, mode) => {
+  const runSubmit = async (submitAction, mode, orderData = {}) => {
     if (submitLockRef.current || isSaving) return;
-    if (!validate(mode)) return;
+    if (!validate()) return;
 
     submitLockRef.current = true;
     setIsSaving(true);
     setSavingMode(mode);
 
     try {
-      await submitAction(buildPayload());
+      await submitAction({ ...buildPayload(), ...orderData });
     } catch (error) {
       const message = error?.message || "No se pudo registrar el equipo. Intenta nuevamente.";
       Alert.alert("No se pudo registrar", message);
@@ -366,47 +351,6 @@ export function RegisterEquipmentScreen({
             />
           </View>
 
-          <View style={styles.formCard}>
-            <Text style={styles.sectionTitle}>Datos para crear orden</Text>
-            <Text style={styles.sectionDescription}>
-              Estos campos solo son requeridos si usas Guardar y crear orden.
-            </Text>
-
-            <MultiLineField
-              label="DIAGNOSTICO O FALLA DE LA ORDEN"
-              value={orderDiagnostic}
-              error={errors.orderDiagnostic}
-              onChangeText={(value) => {
-                setOrderDiagnostic(value);
-                clearError("orderDiagnostic");
-              }}
-              placeholder="Describe la falla o diagnostico inicial de la orden"
-            />
-
-            <SelectField
-              label="PRIORIDAD"
-              value={priority}
-              placeholder="Selecciona prioridad"
-              icon="flag"
-              options={priorityOptions}
-              error={errors.priority}
-              isOpen={openField === "priority"}
-              onToggle={() => setOpenField((current) => (current === "priority" ? null : "priority"))}
-              onSelect={(option) => {
-                setPriority(option);
-                clearError("priority");
-                setOpenField(null);
-              }}
-            />
-
-            <MultiLineField
-              label="OBSERVACION DE ORDEN"
-              value={orderObservation}
-              onChangeText={setOrderObservation}
-              placeholder="Opcional. Detalles adicionales para la orden."
-            />
-          </View>
-
           <Pressable
             style={[styles.primaryButton, isSaving && styles.disabledButton]}
             onPress={() => runSubmit(onSave, "equipment")}
@@ -424,17 +368,12 @@ export function RegisterEquipmentScreen({
 
           <Pressable
             style={[styles.secondaryButton, isSaving && styles.disabledButton]}
-            onPress={() => runSubmit(onSaveAndCreateOrder, "order")}
+            onPress={() => {
+              if (validate()) setOrderModalVisible(true);
+            }}
             disabled={isSaving}
           >
-            {isSaving && savingMode === "order" ? (
-              <View style={styles.loadingRow}>
-                <ActivityIndicator color="#FFFFFF" />
-                <Text style={styles.secondaryButtonText}>Creando orden...</Text>
-              </View>
-            ) : (
-              <Text style={styles.secondaryButtonText}>Guardar y crear orden</Text>
-            )}
+            <Text style={styles.secondaryButtonText}>Crear orden para este equipo</Text>
           </Pressable>
         </ScrollView>
 
@@ -446,6 +385,28 @@ export function RegisterEquipmentScreen({
           onClose={() => setClientModalVisible(false)}
           onSelect={handleClientSelect}
           onCreateClient={onCreateClient}
+        />
+
+        <OrderFormModal
+          visible={orderModalVisible}
+          clientes={clientes}
+          equipments={[]}
+          initialClient={selectedClient}
+          initialEquipment={{
+            id: "nuevo-equipo",
+            type: selectedType,
+            brand,
+            model,
+            serial,
+          }}
+          lockClient
+          lockEquipment
+          submitLabel="Guardar equipo y crear orden"
+          isSubmitting={isSaving && savingMode === "order"}
+          onClose={() => setOrderModalVisible(false)}
+          onSubmit={(orderData) => {
+            runSubmit(onSaveAndCreateOrder, "order", orderData);
+          }}
         />
       </View>
     </ScreenContainer>

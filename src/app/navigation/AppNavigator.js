@@ -737,9 +737,10 @@ export function AppNavigator() {
         <Stack.Screen name="CreateOrder">
           {({ navigation }) => (
             <CreateOrderScreen
+              clientes={clientes}
               equipments={equipments}
-              onCreateOrder={(equipmentId, diagnostico) =>
-                createServiceOrder(equipmentId, navigation, null, diagnostico)
+              onCreateOrder={(equipmentId, orderData) =>
+                createServiceOrder(equipmentId, navigation, null, orderData)
               }
               onBack={() => navigation.goBack()}
             />

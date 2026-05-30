@@ -1,36 +1,24 @@
 import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
+import { OrderFormModal } from "../components/OrderFormModal";
 
-export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
-  const [diagnostico, setDiagnostico] = useState("");
+export function CreateOrderScreen({ clientes = [], equipments = [], onCreateOrder, onBack }) {
+  const [formVisible, setFormVisible] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const submitLockRef = useRef(false);
 
-  const selectedEquipment = equipments.find((item) => item.id === selectedEquipmentId);
-
-  const handleCreate = async () => {
+  const handleCreate = async (orderData) => {
     if (submitLockRef.current || isSaving) return;
-
-    if (!selectedEquipmentId) {
-      Alert.alert("Equipo obligatorio", "Selecciona un equipo registrado para crear la orden.");
-      return;
-    }
-
-    if (!diagnostico.trim()) {
-      Alert.alert("Diagnostico obligatorio", "Describe la falla reportada para crear la orden.");
-      return;
-    }
 
     submitLockRef.current = true;
     setIsSaving(true);
 
     try {
-      await onCreateOrder(selectedEquipmentId, diagnostico.trim());
+      await onCreateOrder(orderData.equipoId, orderData);
     } catch (error) {
       Alert.alert("No se pudo crear la orden", error.message || "Intenta nuevamente.");
     } finally {
@@ -40,7 +28,7 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
   };
 
   return (
-    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={onBack} style={styles.backButton}>
@@ -49,76 +37,43 @@ export function CreateOrderScreen({ equipments, onCreateOrder, onBack }) {
 
           <View style={styles.headerText}>
             <Text style={styles.title}>Nueva orden</Text>
-            <Text style={styles.subtitle}>Selecciona un equipo registrado</Text>
+            <Text style={styles.subtitle}>Crea una orden para un equipo existente</Text>
           </View>
         </View>
 
-        <FlatList
-          data={equipments}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => {
-            const selected = selectedEquipmentId === item.id;
-
-            return (
-              <Pressable
-                style={[styles.equipmentCard, selected && styles.equipmentCardSelected]}
-                onPress={() => setSelectedEquipmentId(item.id)}
-              >
-                <View style={styles.cardHeader}>
-                  <View style={styles.iconBox}>
-                    <MaterialCommunityIcons name="monitor-dashboard" size={22} color="#FFFFFF" />
-                  </View>
-
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.equipmentName}>
-                      {item.type} {item.brand} {item.model}
-                    </Text>
-                    <Text style={styles.clientName}>Cliente: {item.clientName}</Text>
-                  </View>
-
-                  <Ionicons
-                    name={selected ? "radio-button-on" : "radio-button-off"}
-                    size={23}
-                    color={selected ? "#5655B9" : "#9CA3AF"}
-                  />
-                </View>
-
-                <Text style={styles.serial}>Serie: {item.serial}</Text>
-                <Text style={styles.failure}>Falla reportada: {item.failure}</Text>
-              </Pressable>
-            );
-          }}
-        />
-
-        {selectedEquipment ? (
-          <View style={styles.summaryBox}>
-            <Text style={styles.summaryTitle}>Cliente seleccionado automáticamente</Text>
-            <Text style={styles.summaryText}>{selectedEquipment.clientName}</Text>
-            <TextInput
-              value={diagnostico}
-              onChangeText={setDiagnostico}
-              placeholder="Describe la falla o diagnostico inicial"
-              placeholderTextColor="#8C8C8C"
-              multiline
-              style={styles.diagnosticInput}
-            />
+        <View style={styles.card}>
+          <View style={styles.iconBox}>
+            <MaterialCommunityIcons name="clipboard-text-outline" size={30} color="#5655B9" />
           </View>
-        ) : null}
+          <Text style={styles.cardTitle}>Formulario de orden</Text>
+          <Text style={styles.cardText}>
+            Selecciona cliente, equipo, prioridad y registra el diagnostico o falla de la orden.
+          </Text>
 
-        <Pressable
-          style={[styles.createButton, isSaving && styles.disabledButton]}
-          onPress={handleCreate}
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.createButtonText}>Crear orden</Text>
-          )}
-        </Pressable>
+          {equipments.length === 0 ? (
+            <Text style={styles.emptyText}>
+              No hay equipos registrados. Registra un equipo antes de crear una orden.
+            </Text>
+          ) : null}
+
+          <Pressable
+            style={[styles.primaryButton, equipments.length === 0 && styles.disabledButton]}
+            onPress={() => setFormVisible(true)}
+            disabled={equipments.length === 0}
+          >
+            <Text style={styles.primaryButtonText}>Abrir formulario</Text>
+          </Pressable>
+        </View>
+
+        <OrderFormModal
+          visible={formVisible && equipments.length > 0}
+          clientes={clientes}
+          equipments={equipments}
+          submitLabel="Crear orden"
+          isSubmitting={isSaving}
+          onClose={() => setFormVisible(false)}
+          onSubmit={handleCreate}
+        />
       </View>
     </ScreenContainer>
   );
@@ -157,96 +112,55 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#6B7280",
   },
-  listContent: {
-    paddingBottom: 120,
-  },
-  equipmentCard: {
+  card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  equipmentCardSelected: {
-    borderColor: "#5655B9",
-  },
-  cardHeader: {
-    flexDirection: "row",
+    borderRadius: 24,
+    padding: 18,
     alignItems: "center",
   },
   iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#5655B9",
+    width: 58,
+    height: 58,
+    borderRadius: 18,
+    backgroundColor: "#EDEBFF",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  equipmentName: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  clientName: {
-    marginTop: 3,
-    fontSize: 13,
-    color: "#6B7280",
-  },
-  serial: {
-    marginTop: 12,
-    fontSize: 13,
-    color: "#374151",
-  },
-  failure: {
-    marginTop: 5,
-    fontSize: 13,
-    color: "#6B7280",
-  },
-  summaryBox: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 14,
     marginBottom: 12,
   },
-  summaryTitle: {
-    fontSize: 12,
+  cardTitle: {
+    color: "#111827",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  cardText: {
+    marginTop: 6,
     color: "#6B7280",
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
   },
-  summaryText: {
-    marginTop: 4,
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#111827",
+  emptyText: {
+    marginTop: 14,
+    color: "#B45309",
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
   },
-  diagnosticInput: {
-    minHeight: 88,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 14,
-    padding: 12,
-    marginTop: 12,
-    color: "#111827",
-    textAlignVertical: "top",
-  },
-  createButton: {
-    height: 56,
-    borderRadius: 18,
+  primaryButton: {
+    width: "100%",
+    height: 54,
+    borderRadius: 17,
     backgroundColor: "#5655B9",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 14,
+    marginTop: 18,
   },
-  createButtonText: {
+  primaryButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "900",
   },
   disabledButton: {
-    opacity: 0.7,
+    opacity: 0.55,
   },
 });

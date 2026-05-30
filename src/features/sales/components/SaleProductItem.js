@@ -1,14 +1,17 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { formatCurrency } from "../services/salesApi";
 
 export function SaleProductItem({
   product,
   quantity = 0,
+  error,
   onIncrement,
   onDecrement,
+  onChangeQuantity,
 }) {
   const isSelected = quantity > 0;
 
@@ -16,10 +19,9 @@ export function SaleProductItem({
     <View style={[styles.card, isSelected && styles.cardSelected]}>
       <View style={styles.info}>
         <Text style={styles.name}>{product.name}</Text>
-        <Text style={styles.meta}>
-          {product.category} · Stock {product.stock}
-        </Text>
+        <Text style={styles.meta}>{product.category || "Inventario"} · Stock {product.stock}</Text>
         <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
       </View>
 
       <View style={styles.counter}>
@@ -35,7 +37,14 @@ export function SaleProductItem({
           />
         </Pressable>
 
-        <Text style={styles.quantity}>{quantity}</Text>
+        <TextInput
+          value={String(quantity || "")}
+          onChangeText={onChangeQuantity}
+          keyboardType="number-pad"
+          style={styles.quantityInput}
+          placeholder="0"
+          placeholderTextColor="#9CA3AF"
+        />
 
         <Pressable style={styles.counterBtn} onPress={onIncrement}>
           <Ionicons name="add" size={18} color="#FFFFFF" />
@@ -58,8 +67,8 @@ const styles = StyleSheet.create({
     borderColor: "#EFEFF5",
   },
   cardSelected: {
-    borderColor: "#2386F5",
-    backgroundColor: "#F4F8FF",
+    borderColor: colors.primary,
+    backgroundColor: "#F4F3FF",
   },
   info: {
     flex: 1,
@@ -78,9 +87,15 @@ const styles = StyleSheet.create({
   },
   price: {
     marginTop: 6,
-    color: "#2386F5",
+    color: colors.primary,
     fontFamily: fontFamilies.bold,
     fontSize: 16,
+  },
+  errorText: {
+    marginTop: 6,
+    color: "#D14343",
+    fontFamily: fontFamilies.medium,
+    fontSize: 12,
   },
   counter: {
     flexDirection: "row",
@@ -91,18 +106,24 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#2386F5",
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   counterBtnDisabled: {
     backgroundColor: "#ECECF2",
   },
-  quantity: {
-    minWidth: 20,
+  quantityInput: {
+    minWidth: 44,
+    height: 34,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
     textAlign: "center",
     color: "#111111",
     fontFamily: fontFamilies.bold,
     fontSize: 16,
+    paddingHorizontal: 4,
   },
 });

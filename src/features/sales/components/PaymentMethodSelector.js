@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { paymentMethods } from "../services/salesApi";
 
@@ -20,7 +21,7 @@ export function PaymentMethodSelector({ value, onChange }) {
               <Ionicons
                 name={method.iconName}
                 size={21}
-                color={isSelected ? "#FFFFFF" : "#2386F5"}
+                color={isSelected ? "#FFFFFF" : colors.primary}
               />
             </View>
 
@@ -50,8 +51,8 @@ const styles = StyleSheet.create({
     borderColor: "#EFEFF5",
   },
   cardSelected: {
-    borderColor: "#2386F5",
-    backgroundColor: "#F4F8FF",
+    borderColor: colors.primary,
+    backgroundColor: "#F4F3FF",
   },
   iconWrap: {
     width: 38,
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconWrapSelected: {
-    backgroundColor: "#2386F5",
+    backgroundColor: colors.primary,
   },
   label: {
     marginTop: 8,
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   labelSelected: {
-    color: "#2386F5",
+    color: colors.primary,
     fontFamily: fontFamilies.bold,
   },
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, BackHandler } from "react-native";
 import {
   NavigationContainer,
@@ -97,6 +97,7 @@ const LOGOUT_CONFIRM_ROUTES = ["AdminDashboard", "SalesDashboard", "Home"];
 
 export function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
+  const navigationActionLockRef = useRef({ key: null, expiresAt: 0 });
 
   const [isSplashVisible, setIsSplashVisible] = useState(true);
   const [session, setSession] = useState(null);
@@ -113,6 +114,38 @@ export function AppNavigator() {
   const [notifications, setNotifications] = useState(getInitialNotifications);
 
   const unreadNotificationsCount = getUnreadNotificationsCount(notifications);
+
+  const runNavigationOnce = (key, action, lockMs = 700) => {
+    const now = Date.now();
+    const lock = navigationActionLockRef.current;
+
+    if (lock.key === key && now < lock.expiresAt) {
+      return;
+    }
+
+    navigationActionLockRef.current = {
+      key,
+      expiresAt: now + lockMs,
+    };
+
+    action();
+  };
+
+  const pushOnce = (navigation, routeName, params) => {
+    runNavigationOnce(`push:${routeName}`, () => navigation.push(routeName, params));
+  };
+
+  const navigateOnce = (navigation, routeName, params) => {
+    runNavigationOnce(`navigate:${routeName}`, () => navigation.navigate(routeName, params));
+  };
+
+  const replaceOnce = (navigation, routeName, params) => {
+    runNavigationOnce(`replace:${routeName}`, () => navigation.replace(routeName, params));
+  };
+
+  const goBackOnce = (navigation) => {
+    runNavigationOnce("goBack", () => navigation.goBack(), 400);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -180,7 +213,7 @@ export function AppNavigator() {
         password: passwordData.password,
       });
       setRegisterDraft(null);
-      navigation.replace("RegisterSuccess");
+      replaceOnce(navigation, "RegisterSuccess");
       return { success: true };
     } catch (error) {
       return {
@@ -288,7 +321,7 @@ export function AppNavigator() {
   }, [currentRouteName]);
 
   const handleOpenNotifications = (navigation) => {
-    navigation.push("Notifications");
+    pushOnce(navigation, "Notifications");
   };
 
   const handleMarkNotificationAsRead = (notificationId) => {
@@ -342,7 +375,7 @@ export function AppNavigator() {
         })
       );
       Alert.alert("Ordenes creadas", `Se crearon ${createdOrders.length} ordenes de servicio.`);
-      navigation.replace("OrdersList");
+      replaceOnce(navigation, "OrdersList");
       return;
     }
 
@@ -366,7 +399,7 @@ export function AppNavigator() {
       })
     );
 
-    navigation.replace("OrderDetail", { orderId: newOrder.id });
+    replaceOnce(navigation, "OrderDetail", { orderId: newOrder.id });
   };
 
   const updateOrderStatus = async (orderId, status) => {
@@ -459,15 +492,15 @@ export function AppNavigator() {
       >
         <Stack.Screen name="Onboarding" options={{ gestureEnabled: false }}>
           {({ navigation }) => (
-            <OnboardingScreen onComplete={() => navigation.replace("AuthEntry")} />
+            <OnboardingScreen onComplete={() => replaceOnce(navigation, "AuthEntry")} />
           )}
         </Stack.Screen>
 
         <Stack.Screen name="AuthEntry" options={{ gestureEnabled: false }}>
           {({ navigation }) => (
             <AuthEntryScreen
-              onLogin={() => navigation.push("Login")}
-              onRegister={() => navigation.push("RegisterStepOne")}
+              onLogin={() => pushOnce(navigation, "Login")}
+              onRegister={() => pushOnce(navigation, "RegisterStepOne")}
               onGoogle={() => {}}
               onFacebook={() => {}}
             />
@@ -489,7 +522,7 @@ export function AppNavigator() {
               onBack={() => resetToRoute(navigation, "Login")}
               onNext={(data) => {
                 setRegisterDraft(data);
-                navigation.push("RegisterStepTwo");
+                pushOnce(navigation, "RegisterStepTwo");
               }}
               onGoToLogin={() => resetToRoute(navigation, "Login")}
             />
@@ -499,7 +532,7 @@ export function AppNavigator() {
         <Stack.Screen name="RegisterStepTwo">
           {({ navigation }) => (
             <RegisterStepTwoScreen
-              onBack={() => navigation.navigate("RegisterStepOne")}
+              onBack={() => navigateOnce(navigation, "RegisterStepOne")}
               onFinish={(data) => handleRegisterOwner(data, navigation)}
             />
           )}
@@ -507,7 +540,7 @@ export function AppNavigator() {
 
         <Stack.Screen name="RegisterSuccess" options={{ gestureEnabled: false }}>
           {({ navigation }) => (
-            <RegisterSuccessScreen onOk={() => navigation.replace("Login")} />
+            <RegisterSuccessScreen onOk={() => replaceOnce(navigation, "Login")} />
           )}
         </Stack.Screen>
 
@@ -523,22 +556,22 @@ export function AppNavigator() {
               unreadNotificationsCount={unreadNotificationsCount}
               onOpenNotifications={() => handleOpenNotifications(navigation)}
               onLogout={() => confirmLogout()}
-              onOpenUsers={() => navigation.push("UsersManagement")}
-              onOpenClientes={() => navigation.push("Clientes")}
-              onOpenEquipos={() => navigation.push("EquipmentList")}
-              onOpenOrders={() => navigation.push("OrdersList")}
-              onOpenSales={() => navigation.push("RegisterSale")}
-              onOpenInventory={() => navigation.navigate("Inventario")}
-              onOpenQuotations={() => navigation.push("Cotizaciones")}
-              onOpenReports={() => navigation.push("Reports")}
-              onOpenRolesPermissions={() => navigation.push("RolesPermissions")}
+              onOpenUsers={() => pushOnce(navigation, "UsersManagement")}
+              onOpenClientes={() => pushOnce(navigation, "Clientes")}
+              onOpenEquipos={() => pushOnce(navigation, "EquipmentList")}
+              onOpenOrders={() => pushOnce(navigation, "OrdersList")}
+              onOpenSales={() => pushOnce(navigation, "RegisterSale")}
+              onOpenInventory={() => navigateOnce(navigation, "Inventario")}
+              onOpenQuotations={() => pushOnce(navigation, "Cotizaciones")}
+              onOpenReports={() => pushOnce(navigation, "Reports")}
+              onOpenRolesPermissions={() => pushOnce(navigation, "RolesPermissions")}
             />
           )}
         </Stack.Screen>
 
         <Stack.Screen name="RolesPermissions">
           {({ navigation }) => (
-            <RolesPermissionsScreen onBack={() => navigation.goBack()} />
+            <RolesPermissionsScreen onBack={() => goBackOnce(navigation)} />
           )}
         </Stack.Screen>
 
@@ -546,8 +579,8 @@ export function AppNavigator() {
           {({ navigation }) => (
             <UsersManagementScreen
               users={users}
-              onBack={() => navigation.goBack()}
-              onCreateUser={() => navigation.push("CreateUser")}
+              onBack={() => goBackOnce(navigation)}
+              onCreateUser={() => pushOnce(navigation, "CreateUser")}
             />
           )}
         </Stack.Screen>
@@ -555,10 +588,10 @@ export function AppNavigator() {
         <Stack.Screen name="CreateUser">
           {({ navigation }) => (
             <CreateUserScreen
-              onBack={() => navigation.goBack()}
+              onBack={() => goBackOnce(navigation)}
               onSave={async (userData) => {
                 await saveUser(userData);
-                navigation.replace("UsersManagement");
+                replaceOnce(navigation, "UsersManagement");
               }}
             />
           )}
@@ -576,10 +609,10 @@ export function AppNavigator() {
               unreadNotificationsCount={unreadNotificationsCount}
               onOpenNotifications={() => handleOpenNotifications(navigation)}
               onLogout={() => confirmLogout()}
-              onOpenClientes={() => navigation.push("Clientes")}
-              onOpenInventory={() => navigation.navigate("Inventario")}
-              onOpenSales={() => navigation.push("RegisterSale")}
-              onOpenReports={() => navigation.push("Reports")}
+              onOpenClientes={() => pushOnce(navigation, "Clientes")}
+              onOpenInventory={() => navigateOnce(navigation, "Inventario")}
+              onOpenSales={() => pushOnce(navigation, "RegisterSale")}
+              onOpenReports={() => pushOnce(navigation, "Reports")}
             />
           )}
         </Stack.Screen>
@@ -589,9 +622,9 @@ export function AppNavigator() {
             <RegisterSaleScreen
               clientes={clientes}
               productos={products}
-              onBack={() => navigation.goBack()}
+              onBack={() => goBackOnce(navigation)}
               onContinue={(saleDraft) =>
-                navigation.push("SaleSummary", { saleDraft })
+                pushOnce(navigation, "SaleSummary", { saleDraft })
               }
             />
           )}
@@ -602,7 +635,7 @@ export function AppNavigator() {
             <SaleSummaryScreen
               saleDraft={route.params?.saleDraft}
               user={session?.user}
-              onBack={() => navigation.goBack()}
+              onBack={() => goBackOnce(navigation)}
               onConfirm={(receipt) => {
                 setSalesReports((prevReports) => [receipt, ...prevReports]);
                 listProductos().then(setProducts).catch(() => {});
@@ -611,7 +644,7 @@ export function AppNavigator() {
                   addNotification(prevNotifications, buildSaleNotification(receipt))
                 );
 
-                navigation.replace("ElectronicReceipt", { receipt });
+                replaceOnce(navigation, "ElectronicReceipt", { receipt });
               }}
             />
           )}
@@ -621,7 +654,7 @@ export function AppNavigator() {
           {({ navigation, route }) => (
             <ElectronicReceiptScreen
               receipt={route.params?.receipt}
-              onBackToSales={() => navigation.navigate("SalesDashboard")}
+              onBackToSales={() => navigateOnce(navigation, "SalesDashboard")}
             />
           )}
         </Stack.Screen>
@@ -647,7 +680,7 @@ export function AppNavigator() {
 
         <Stack.Screen name="SalesRegister">
           {({ navigation }) => (
-            <SalesRegisterScreen onBack={() => navigation.goBack()} />
+            <SalesRegisterScreen onBack={() => goBackOnce(navigation)} />
           )}
         </Stack.Screen>
 
@@ -663,10 +696,10 @@ export function AppNavigator() {
               unreadNotificationsCount={unreadNotificationsCount}
               onOpenNotifications={() => handleOpenNotifications(navigation)}
               onBackToAuth={() => confirmLogout()}
-              onOpenOrders={() => navigation.push("OrdersList")}
-              onOpenEquipos={() => navigation.push("EquipmentList")}
-              onOpenClientes={() => navigation.push("Clientes")}
-              onOpenQuotations={() => navigation.push("Cotizaciones")}
+              onOpenOrders={() => pushOnce(navigation, "OrdersList")}
+              onOpenEquipos={() => pushOnce(navigation, "EquipmentList")}
+              onOpenClientes={() => pushOnce(navigation, "Clientes")}
+              onOpenQuotations={() => pushOnce(navigation, "Cotizaciones")}
             />
           )}
         </Stack.Screen>
@@ -690,12 +723,12 @@ export function AppNavigator() {
           {({ navigation }) => (
             <CotizacionesScreen
               orders={orders}
-              onBack={() => navigation.goBack()}
+              onBack={() => goBackOnce(navigation)}
               onGenerateQuotation={(order, selectedOrders) =>
-                navigation.push("GenerateQuotation", { order, selectedOrders })
+                pushOnce(navigation, "GenerateQuotation", { order, selectedOrders })
               }
               onViewQuotation={(quotation) =>
-                navigation.push("QuotationSummary", { quotation, returnToPrevious: true })
+                pushOnce(navigation, "QuotationSummary", { quotation, returnToPrevious: true })
               }
             />
           )}
@@ -706,8 +739,8 @@ export function AppNavigator() {
             <GenerateQuotationScreen
               order={route.params?.order}
               selectedOrders={route.params?.selectedOrders}
-              onBack={() => navigation.goBack()}
-              onCancel={() => navigation.goBack()}
+              onBack={() => goBackOnce(navigation)}
+              onCancel={() => goBackOnce(navigation)}
               onSave={async (quotation) => {
                 const savedQuotation = await createCotizacion(quotation);
                 const displayQuotation = {
@@ -733,7 +766,7 @@ export function AppNavigator() {
                       : order
                   )
                 );
-                navigation.replace("QuotationSummary", { quotation: displayQuotation });
+                replaceOnce(navigation, "QuotationSummary", { quotation: displayQuotation });
               }}
             />
           )}
@@ -744,7 +777,7 @@ export function AppNavigator() {
             <QuotationSummaryScreen
               quotation={route.params?.quotation}
               onBackToOrders={() =>
-                route.params?.returnToPrevious ? navigation.goBack() : navigation.navigate("Cotizaciones")
+                route.params?.returnToPrevious ? goBackOnce(navigation) : navigateOnce(navigation, "Cotizaciones")
               }
               onViewDetail={() => {}}
             />
@@ -755,11 +788,11 @@ export function AppNavigator() {
           {({ navigation }) => (
             <OrdersListScreen
               orders={orders}
-              onCreateOrder={() => navigation.push("CreateOrder")}
+              onCreateOrder={() => pushOnce(navigation, "CreateOrder")}
               onOpenOrder={(order) =>
-                navigation.push("OrderDetail", { orderId: order.id })
+                pushOnce(navigation, "OrderDetail", { orderId: order.id })
               }
-              onBack={() => navigation.goBack()}
+              onBack={() => goBackOnce(navigation)}
             />
           )}
         </Stack.Screen>
@@ -772,7 +805,7 @@ export function AppNavigator() {
               onCreateOrder={(equipmentId, orderData) =>
                 createServiceOrder(equipmentId, navigation, null, orderData)
               }
-              onBack={() => navigation.goBack()}
+              onBack={() => goBackOnce(navigation)}
             />
           )}
         </Stack.Screen>
@@ -784,14 +817,14 @@ export function AppNavigator() {
             return (
               <OrderDetailScreen
                 order={order}
-                onBack={() => navigation.goBack()}
+                onBack={() => goBackOnce(navigation)}
                 onUpdateStatus={updateOrderStatus}
                 onAddObservation={addOrderObservation}
                 onViewQuotation={(quotation) =>
-                  navigation.push("QuotationSummary", { quotation, returnToPrevious: true })
+                pushOnce(navigation, "QuotationSummary", { quotation, returnToPrevious: true })
                 }
                 onGenerateQuotation={(orderToQuote) =>
-                  navigation.push("GenerateQuotation", { order: orderToQuote })
+                  pushOnce(navigation, "GenerateQuotation", { order: orderToQuote })
                 }
               />
             );
@@ -804,11 +837,11 @@ export function AppNavigator() {
               equipments={equipments}
               onRegister={async () => {
                 await refreshClientes().catch(() => {});
-                navigation.push("RegisterEquipment");
+                pushOnce(navigation, "RegisterEquipment");
               }}
-              onBack={() => navigation.goBack()}
+              onBack={() => goBackOnce(navigation)}
               onOpenEquipment={(equipment) =>
-                navigation.push("EquipmentDetail", { equipmentId: equipment.id })
+                pushOnce(navigation, "EquipmentDetail", { equipmentId: equipment.id })
               }
             />
           )}
@@ -823,7 +856,7 @@ export function AppNavigator() {
             return (
               <EquipmentDetailScreen
                 equipment={equipment}
-                onBack={() => navigation.goBack()}
+                onBack={() => goBackOnce(navigation)}
               />
             );
           }}
@@ -833,12 +866,12 @@ export function AppNavigator() {
           {({ navigation }) => (
             <RegisterEquipmentScreen
               clientes={clientes}
-              onBack={() => navigation.goBack()}
-              onCreateClient={() => navigation.navigate("Clientes")}
+              onBack={() => goBackOnce(navigation)}
+              onCreateClient={() => navigateOnce(navigation, "Clientes")}
               onRefreshClientes={refreshClientes}
               onSave={async (equipmentData) => {
                 await saveEquipment(equipmentData);
-                navigation.replace("EquipmentList");
+                replaceOnce(navigation, "EquipmentList");
               }}
               onSaveAndCreateOrder={async (equipmentData) => {
                 const newEquipment = await saveEquipment(equipmentData);

@@ -4,10 +4,13 @@ import { SalesDashboardScreen } from "../screens/SalesDashboardScreen";
 import { RegisterSaleScreen } from "../screens/RegisterSaleScreen";
 import { SaleSummaryScreen } from "../screens/SaleSummaryScreen";
 import { ElectronicReceiptScreen } from "../screens/ElectronicReceiptScreen";
+import { useNavigationActionGuard } from "../../../shared/navigation/useNavigationActionGuard";
 
 const Stack = createNativeStackNavigator();
 
 export function SalesStack({ user, clientes = [], onLogout }) {
+  const { createGuardedNavigation } = useNavigationActionGuard();
+
   return (
     <Stack.Navigator
       initialRouteName="SalesDashboard"
@@ -17,36 +20,44 @@ export function SalesStack({ user, clientes = [], onLogout }) {
       }}
     >
       <Stack.Screen name="SalesDashboard">
-        {({ navigation }) => (
-          <SalesDashboardScreen
-            user={user}
-            onLogout={onLogout}
-            onOpenClientes={() => {}}
-            onOpenInventory={() => {}}
-            onOpenSales={() => navigation.push("RegisterSale")}
-          />
-        )}
+        {({ navigation }) => {
+          const guardedNavigation = createGuardedNavigation(navigation);
+
+          return (
+            <SalesDashboardScreen
+              user={user}
+              onLogout={onLogout}
+              onOpenClientes={() => {}}
+              onOpenInventory={() => {}}
+              onOpenSales={() => guardedNavigation.push("RegisterSale")}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="RegisterSale">
-        {({ navigation }) => (
-          <RegisterSaleScreen
-            clientes={clientes}
-            onBack={() => navigation.goBack()}
-            onContinue={(saleDraft) =>
-              navigation.push("SaleSummary", { saleDraft })
-            }
-          />
-        )}
+        {({ navigation }) => {
+          const guardedNavigation = createGuardedNavigation(navigation);
+
+          return (
+            <RegisterSaleScreen
+              clientes={clientes}
+              onBack={() => guardedNavigation.goBack()}
+              onContinue={(saleDraft) =>
+                guardedNavigation.push("SaleSummary", { saleDraft })
+              }
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="SaleSummary">
         {({ navigation, route }) => (
           <SaleSummaryScreen
             saleDraft={route.params?.saleDraft}
-            onBack={() => navigation.goBack()}
+            onBack={() => createGuardedNavigation(navigation).goBack()}
             onConfirm={(receipt) =>
-              navigation.replace("ElectronicReceipt", { receipt })
+              createGuardedNavigation(navigation).replace("ElectronicReceipt", { receipt })
             }
           />
         )}
@@ -56,7 +67,7 @@ export function SalesStack({ user, clientes = [], onLogout }) {
         {({ navigation, route }) => (
           <ElectronicReceiptScreen
             receipt={route.params?.receipt}
-            onBackToSales={() => navigation.navigate("SalesDashboard")}
+            onBackToSales={() => createGuardedNavigation(navigation).navigate("SalesDashboard")}
           />
         )}
       </Stack.Screen>

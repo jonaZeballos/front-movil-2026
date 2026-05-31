@@ -2,6 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { ManagementScreen, RegisterScreen, ClientHistoryScreen } from "../index";
+import { useNavigationActionGuard } from "../../../shared/navigation/useNavigationActionGuard";
 
 const Stack = createNativeStackNavigator();
 
@@ -11,6 +12,8 @@ export function RegisterStack({
   equipos = [],
   onGuardarCliente,
 }) {
+  const { createGuardedNavigation } = useNavigationActionGuard();
+
   const findClienteById = (clienteId) => {
     return clientes.find((cliente) => String(cliente.id) === String(clienteId));
   };
@@ -25,26 +28,34 @@ export function RegisterStack({
       }}
     >
       <Stack.Screen name="Management">
-        {({ navigation }) => (
-          <ManagementScreen
-            navigation={navigation}
-            clientes={clientes}
-            ordenes={ordenes}
-            equipos={equipos}
-          />
-        )}
+        {({ navigation }) => {
+          const guardedNavigation = createGuardedNavigation(navigation);
+
+          return (
+            <ManagementScreen
+              navigation={guardedNavigation}
+              clientes={clientes}
+              ordenes={ordenes}
+              equipos={equipos}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="RegisterClient">
-        {({ navigation }) => (
-          <RegisterScreen
-            navigation={navigation}
-            onGuardar={async (clienteData) => {
-              await onGuardarCliente?.(clienteData);
-              navigation.goBack();
-            }}
-          />
-        )}
+        {({ navigation }) => {
+          const guardedNavigation = createGuardedNavigation(navigation);
+
+          return (
+            <RegisterScreen
+              navigation={guardedNavigation}
+              onGuardar={async (clienteData) => {
+                await onGuardarCliente?.(clienteData);
+                guardedNavigation.goBack();
+              }}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="ClientHistory">
@@ -53,7 +64,7 @@ export function RegisterStack({
 
           return (
             <ClientHistoryScreen
-              navigation={navigation}
+              navigation={createGuardedNavigation(navigation)}
               cliente={cliente}
               ordenes={ordenes}
               equipos={equipos}

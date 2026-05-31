@@ -10,6 +10,12 @@ import { textPresets } from "../../../shared/theme/typography";
 import { AuthInput } from "../components/AuthInput";
 import { AuthTopBar } from "../components/AuthTopBar";
 
+const PERSON_NAME_REGEX = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/;
+const INVALID_PERSON_NAME_CHARS_REGEX = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g;
+
+const sanitizePersonName = (value) =>
+  value.replace(INVALID_PERSON_NAME_CHARS_REGEX, "").replace(/\s{2,}/g, " ");
+
 export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
   const { width: screenWidth } = useWindowDimensions();
 
@@ -41,10 +47,14 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
 
     if (!trimmedNombres || trimmedNombres.length < 2) {
       nextErrors.nombres = "Ingrese al menos 2 caracteres.";
+    } else if (!PERSON_NAME_REGEX.test(trimmedNombres)) {
+      nextErrors.nombres = "Use solo letras y espacios.";
     }
 
     if (!trimmedApellidos || trimmedApellidos.length < 2) {
       nextErrors.apellidos = "Ingrese al menos 2 caracteres.";
+    } else if (!PERSON_NAME_REGEX.test(trimmedApellidos)) {
+      nextErrors.apellidos = "Use solo letras y espacios.";
     }
 
     if (!trimmedEmail) {
@@ -117,8 +127,8 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
             </Text>
 
             <View style={{ rowGap: 12 }}>
-              <AuthInput value={nombres} onChangeText={(text) => { setNombres(text); clearFieldError("nombres"); }} placeholder="Nombres" icon="user" error={errors.nombres} />
-              <AuthInput value={apellidos} onChangeText={(text) => { setApellidos(text); clearFieldError("apellidos"); }} placeholder="Apellidos" icon="user" error={errors.apellidos} />
+              <AuthInput value={nombres} onChangeText={(text) => { setNombres(sanitizePersonName(text)); clearFieldError("nombres"); }} placeholder="Nombres" icon="user" error={errors.nombres} />
+              <AuthInput value={apellidos} onChangeText={(text) => { setApellidos(sanitizePersonName(text)); clearFieldError("apellidos"); }} placeholder="Apellidos" icon="user" error={errors.apellidos} />
               <AuthInput value={email} onChangeText={(text) => { setEmail(text); clearFieldError("email"); }} placeholder="Email" icon="mail" keyboardType="email-address" autoCapitalize="none" error={errors.email} />
               <AuthInput value={username} onChangeText={(text) => { setUsername(text); clearFieldError("username"); }} placeholder="Nombre de usuario" icon="smile" autoCapitalize="none" error={errors.username} />
               <AuthInput value={businessName} onChangeText={(text) => { setBusinessName(text); clearFieldError("businessName"); }} placeholder="Nombre del negocio" icon="briefcase" error={errors.businessName} />

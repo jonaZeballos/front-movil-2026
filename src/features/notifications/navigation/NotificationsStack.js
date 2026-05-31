@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { NotificationsScreen } from "../screens/NotificationsScreen";
 import { NotificationDetailScreen } from "../screens/NotificationDetailScreen";
+import { useNavigationActionGuard } from "../../../shared/navigation/useNavigationActionGuard";
 
 const Stack = createNativeStackNavigator();
 
@@ -10,6 +11,8 @@ export function NotificationsStack({
   onMarkAsRead,
   onMarkAllAsRead,
 }) {
+  const { createGuardedNavigation } = useNavigationActionGuard();
+
   const findNotificationById = (notificationId) => {
     return notifications.find(
       (notification) => String(notification.id) === String(notificationId)
@@ -26,19 +29,23 @@ export function NotificationsStack({
       }}
     >
       <Stack.Screen name="NotificationsList">
-        {({ navigation }) => (
-          <NotificationsScreen
-            navigation={navigation}
-            notifications={notifications}
-            onMarkAllAsRead={onMarkAllAsRead}
-            onOpenNotification={(notification) => {
-              onMarkAsRead?.(notification.id);
-              navigation.push("NotificationDetail", {
-                notificationId: notification.id,
-              });
-            }}
-          />
-        )}
+        {({ navigation }) => {
+          const guardedNavigation = createGuardedNavigation(navigation);
+
+          return (
+            <NotificationsScreen
+              navigation={guardedNavigation}
+              notifications={notifications}
+              onMarkAllAsRead={onMarkAllAsRead}
+              onOpenNotification={(notification) => {
+                onMarkAsRead?.(notification.id);
+                guardedNavigation.push("NotificationDetail", {
+                  notificationId: notification.id,
+                });
+              }}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="NotificationDetail">
@@ -47,7 +54,7 @@ export function NotificationsStack({
 
           return (
             <NotificationDetailScreen
-              navigation={navigation}
+              navigation={createGuardedNavigation(navigation)}
               notification={notification}
             />
           );

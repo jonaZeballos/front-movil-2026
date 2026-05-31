@@ -187,6 +187,9 @@ export function CreateUserScreen({ onBack, onSave }) {
                 value={form.password}
                 error={errors.password}
                 secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="newPassword"
                 rightIcon={showPassword ? "eye-outline" : "eye-off-outline"}
                 onPressRightIcon={() => setShowPassword((value) => !value)}
                 onChangeText={(value) => handleChange("password", value)}
@@ -240,7 +243,9 @@ function Field({
   onChangeText,
   keyboardType = "default",
   autoCapitalize = "sentences",
+  autoCorrect = true,
   secureTextEntry = false,
+  textContentType,
   rightIcon,
   onPressRightIcon,
 }) {
@@ -257,7 +262,9 @@ function Field({
           placeholderTextColor="#8C8C8C"
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          autoCorrect={autoCorrect}
           secureTextEntry={secureTextEntry}
+          textContentType={textContentType}
           style={styles.input}
         />
         {rightIcon ? (

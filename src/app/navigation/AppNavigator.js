@@ -591,7 +591,7 @@ export function AppNavigator() {
               onBack={() => goBackOnce(navigation)}
               onSave={async (userData) => {
                 await saveUser(userData);
-                replaceOnce(navigation, "UsersManagement");
+                resetToRoute(navigation, "AdminDashboard");
               }}
             />
           )}

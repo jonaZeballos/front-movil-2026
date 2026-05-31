@@ -72,6 +72,7 @@ import {
   listOrdenes,
   createOrden,
   createOrdenesLote,
+  updateEstadoOrden,
   updateOrden,
 } from "../../features/orders/services/ordersApi";
 import { listProductos } from "../../features/productos/services";
@@ -410,15 +411,30 @@ export function AppNavigator() {
   };
 
   const updateOrderStatus = async (orderId, status) => {
-    const updatedOrder = await updateOrden(orderId, { estado: status });
+    const previousOrders = orders;
 
     setOrders((prevOrders) =>
-      prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+      prevOrders.map((order) =>
+        order.id === orderId ? { ...order, status, estado: status } : order
+      )
     );
 
-    setNotifications((prevNotifications) =>
-      addNotification(prevNotifications, buildOrderStatusNotification(updatedOrder))
-    );
+    try {
+      const updatedOrder = await updateEstadoOrden(orderId, status);
+
+      setOrders((prevOrders) =>
+        prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+      );
+
+      setNotifications((prevNotifications) =>
+        addNotification(prevNotifications, buildOrderStatusNotification(updatedOrder))
+      );
+
+      return updatedOrder;
+    } catch (error) {
+      setOrders(previousOrders);
+      throw error;
+    }
   };
 
   const addOrderObservation = async (orderId, observation) => {

@@ -40,6 +40,9 @@ export function PasswordInput({
           placeholder={placeholder}
           placeholderTextColor="#B8B8B8"
           secureTextEntry={isSecure}
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="password"
           style={{
             flex: 1,
             color: colors.black,

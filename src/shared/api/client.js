@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "http://localhost:3000";
+const DEFAULT_API_URL = "https://movil-backend.vercel.app/";
 
 let authToken = null;
 

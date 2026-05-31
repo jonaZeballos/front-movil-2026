@@ -6,6 +6,7 @@ const statusColors = {
   Listo: { bg: "#DCFCE7", text: "#166534" },
   Entregado: { bg: "#BBF7D0", text: "#14532D" },
   "Sin solucion": { bg: "#FEE2E2", text: "#B91C1C" },
+  Anulado: { bg: "#F3F4F6", text: "#4B5563" },
 };
 
 export function StatusBadge({ status }) {

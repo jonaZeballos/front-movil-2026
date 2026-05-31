@@ -230,6 +230,14 @@ export function RegisterEquipmentScreen({
   };
 
   const handleClientSelect = (cliente) => {
+    if (cliente.enListaNegra) {
+      Alert.alert(
+        "Cliente en lista negra",
+        cliente.motivoListaNegra || "Este cliente requiere revision del administrador."
+      );
+      return;
+    }
+
     setSelectedClient(cliente);
     clearError("client");
     setClientModalVisible(false);
@@ -459,6 +467,9 @@ function ClientPickerModal({
                 </View>
                 <View style={styles.clientInfo}>
                   <Text style={styles.clientName}>{item.nombre || item.razonSocial || "Cliente sin nombre"}</Text>
+                  {item.enListaNegra ? (
+                    <Text style={styles.clientBlacklist}>Lista negra</Text>
+                  ) : null}
                   <Text style={styles.clientMeta}>
                     Doc: {item.numeroDocumento || "Sin documento"} · {item.telefono || "Sin telefono"}
                   </Text>
@@ -790,6 +801,12 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontWeight: "900",
     fontSize: 14,
+  },
+  clientBlacklist: {
+    marginTop: 2,
+    color: "#B91C1C",
+    fontSize: 12,
+    fontWeight: "900",
   },
   clientMeta: {
     marginTop: 2,

@@ -1,11 +1,27 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { UserCard } from "../components/UserCard";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 
-export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
+export function UsersManagementScreen({ users = [], onBack, onCreateUser, onToggleBlockUser }) {
+  const handleToggleBlock = (user) => {
+    const action = user.bloqueado ? "desbloquear" : "bloquear";
+    Alert.alert(
+      `${action === "bloquear" ? "Bloquear" : "Desbloquear"} usuario`,
+      `Deseas ${action} a ${user.name || user.email}?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: action === "bloquear" ? "Bloquear" : "Desbloquear",
+          style: action === "bloquear" ? "destructive" : "default",
+          onPress: () => onToggleBlockUser?.(user),
+        },
+      ]
+    );
+  };
+
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
@@ -27,7 +43,7 @@ export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
           {users.map((user) => (
-            <UserCard key={user.id} user={user} />
+            <UserCard key={user.id} user={user} onToggleBlock={handleToggleBlock} />
           ))}
         </ScrollView>
 

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export function UserCard({ user, onPress }) {
+export function UserCard({ user, onPress, onToggleBlock }) {
   const roleConfig = getRoleConfig(user.role);
 
   return (
@@ -16,9 +16,20 @@ export function UserCard({ user, onPress }) {
         <View style={[styles.roleBadge, { backgroundColor: roleConfig.backgroundColor }]}>
           <Text style={[styles.roleText, { color: roleConfig.color }]}>{roleConfig.label}</Text>
         </View>
+        {user.bloqueado ? (
+          <View style={styles.blockedBadge}>
+            <Text style={styles.blockedText}>Bloqueado</Text>
+          </View>
+        ) : null}
       </View>
 
-      <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      <Pressable style={styles.actionButton} onPress={() => onToggleBlock?.(user)}>
+        <Ionicons
+          name={user.bloqueado ? "lock-open-outline" : "lock-closed-outline"}
+          size={20}
+          color={user.bloqueado ? "#047857" : "#B91C1C"}
+        />
+      </Pressable>
     </Pressable>
   );
 }
@@ -103,5 +114,26 @@ const styles = StyleSheet.create({
   roleText: {
     fontSize: 12,
     fontWeight: "700",
+  },
+  blockedBadge: {
+    marginTop: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignSelf: "flex-start",
+    backgroundColor: "#FEE2E2",
+  },
+  blockedText: {
+    color: "#B91C1C",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  actionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: "#F9FAFB",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

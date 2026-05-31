@@ -26,6 +26,19 @@ export async function createUser(userData) {
   return mapUser({ ...user, role });
 }
 
+export async function blockUser(userId, motivo) {
+  return apiRequest(`/api/usuarios/${userId}/bloquear`, {
+    method: "PATCH",
+    body: JSON.stringify({ motivo }),
+  }).then(mapUser);
+}
+
+export async function unblockUser(userId) {
+  return apiRequest(`/api/usuarios/${userId}/desbloquear`, {
+    method: "PATCH",
+  }).then(mapUser);
+}
+
 function mapUser(user) {
   const name = user.name || [user.nombres, user.apellidos].filter(Boolean).join(" ").trim();
 
@@ -34,6 +47,9 @@ function mapUser(user) {
     name,
     email: user.email,
     role: user.role || user.rol,
+    bloqueado: Boolean(user.bloqueado),
+    motivoBloqueo: user.motivoBloqueo || null,
+    fechaBloqueo: user.fechaBloqueo || null,
     initials: getInitials(name || user.email || "U"),
   };
 }

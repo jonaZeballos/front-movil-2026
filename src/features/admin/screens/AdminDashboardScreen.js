@@ -61,6 +61,13 @@ const options = [
     iconColor: "#F04C75",
   },
   {
+    id: "lista_negra",
+    label: "Lista negra",
+    iconPack: MaterialCommunityIcons,
+    iconName: "account-cancel-outline",
+    iconColor: "#B91C1C",
+  },
+  {
     id: MODULES.EQUIPOS,
     label: "Equipos",
     iconPack: MaterialCommunityIcons,
@@ -169,6 +176,7 @@ export function AdminDashboardScreen({
   const handleOptionPress = (id) => {
     if (id === MODULES.USUARIOS) onOpenUsers?.();
     if (id === MODULES.CLIENTES) onOpenClientes?.();
+    if (id === "lista_negra") onOpenClientes?.();
     if (id === MODULES.EQUIPOS) onOpenEquipos?.();
     if (id === MODULES.ORDENES) onOpenOrders?.();
     if (id === MODULES.VENTAS) onOpenSales?.();

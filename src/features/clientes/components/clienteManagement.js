@@ -20,6 +20,8 @@ export default function GestionClientes({
   onRegistrar,
   onSelectCliente,
   onOpenHistory,
+  onAddToBlacklist,
+  onRemoveFromBlacklist,
 }) {
   const [busqueda, setBusqueda] = useState("");
   const clientList = Array.isArray(clientes) ? clientes : [];
@@ -60,6 +62,11 @@ export default function GestionClientes({
           <View style={{ flex: 1 }}>
             <Text style={styles.cardName}>{item.nombre || "Cliente sin nombre"}</Text>
             <Text style={styles.cardEmail}>{item.correo || item.email || "Sin correo"}</Text>
+            {item.enListaNegra ? (
+              <View style={styles.blacklistBadge}>
+                <Text style={styles.blacklistBadgeText}>Lista negra</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -103,6 +110,27 @@ export default function GestionClientes({
             <Text style={styles.historyButtonText}>Historial</Text>
           </Pressable>
         </View>
+
+        <Pressable
+          style={[styles.blacklistButton, item.enListaNegra && styles.removeBlacklistButton]}
+          onPress={() =>
+            item.enListaNegra ? onRemoveFromBlacklist?.(item) : onAddToBlacklist?.(item)
+          }
+        >
+          <Feather
+            name={item.enListaNegra ? "check-circle" : "slash"}
+            size={16}
+            color={item.enListaNegra ? "#047857" : "#B91C1C"}
+          />
+          <Text
+            style={[
+              styles.blacklistButtonText,
+              item.enListaNegra && styles.removeBlacklistButtonText,
+            ]}
+          >
+            {item.enListaNegra ? "Quitar de lista negra" : "Agregar a lista negra"}
+          </Text>
+        </Pressable>
       </View>
     );
   };
@@ -302,6 +330,19 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     marginTop: 3,
   },
+  blacklistBadge: {
+    marginTop: 6,
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    backgroundColor: "#FEE2E2",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  blacklistBadgeText: {
+    color: "#B91C1C",
+    fontSize: 11,
+    fontWeight: "900",
+  },
   cardDetail: {
     fontSize: 13,
     color: "#6B7280",
@@ -367,6 +408,30 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "900",
+  },
+  blacklistButton: {
+    marginTop: 10,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+  blacklistButtonText: {
+    color: "#B91C1C",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  removeBlacklistButton: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+  },
+  removeBlacklistButtonText: {
+    color: "#047857",
   },
   emptyCard: {
     marginTop: 30,

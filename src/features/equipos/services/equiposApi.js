@@ -18,6 +18,19 @@ export function createEquipo(equipoData) {
   }).then(mapEquipo);
 }
 
+export function deactivateEquipo(equipoId, motivo) {
+  return apiRequest(`/api/equipos/${equipoId}/baja`, {
+    method: "PATCH",
+    body: JSON.stringify({ motivo }),
+  }).then(mapEquipo);
+}
+
+export function restoreEquipo(equipoId) {
+  return apiRequest(`/api/equipos/${equipoId}/restaurar`, {
+    method: "PATCH",
+  }).then(mapEquipo);
+}
+
 function mapEquipo(equipo) {
   return {
     ...equipo,

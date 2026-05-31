@@ -55,6 +55,13 @@ export function updateEstadoOrden(orderId, estado) {
   }).then(mapOrden);
 }
 
+export function cancelOrden(orderId, motivo) {
+  return apiRequest(`/api/ordenes/${orderId}/anular`, {
+    method: "PATCH",
+    body: JSON.stringify({ motivo }),
+  }).then(mapOrden);
+}
+
 function mapOrden(orden) {
   const equipmentName = orden.equipmentName || orden.equipoNombre || orden.equipo?.nombre || orden.equipo?.modelo || "Equipo";
   const cliente = orden.cliente && typeof orden.cliente === "object" ? orden.cliente : null;

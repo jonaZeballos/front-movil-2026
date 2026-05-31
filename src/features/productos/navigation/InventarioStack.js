@@ -14,10 +14,12 @@ import {
   listProductos,
   updateProductoStock,
 } from "../services";
+import { useNavigationActionGuard } from "../../../shared/navigation/useNavigationActionGuard";
 
 const Stack = createNativeStackNavigator();
 
 export function InventarioStack({ onProductsChange }) {
+  const { createGuardedNavigation } = useNavigationActionGuard();
   const [productos, setProductos] = useState([]);
   const [stockMovements, setStockMovements] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +79,7 @@ export function InventarioStack({ onProductsChange }) {
       <Stack.Screen name="Inventario">
         {({ navigation }) => (
           <InventarioManagementScreen
-            navigation={navigation}
+            navigation={createGuardedNavigation(navigation)}
             productos={productos}
             isLoading={isLoading}
             onRefresh={refreshProductos}
@@ -86,29 +88,37 @@ export function InventarioStack({ onProductsChange }) {
       </Stack.Screen>
 
       <Stack.Screen name="ProductoRegister">
-        {({ navigation }) => (
-          <ProductoRegisterScreen
-            navigation={navigation}
-            onGuardar={async (data) => {
-              await handleAddProducto(data);
-              navigation.goBack();
-            }}
-          />
-        )}
+        {({ navigation }) => {
+          const guardedNavigation = createGuardedNavigation(navigation);
+
+          return (
+            <ProductoRegisterScreen
+              navigation={guardedNavigation}
+              onGuardar={async (data) => {
+                await handleAddProducto(data);
+                guardedNavigation.goBack();
+              }}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="StockControl">
-        {({ navigation }) => (
-          <StockControlScreen
-            navigation={navigation}
-            productos={productos}
-            stockMovements={stockMovements}
-            onOpenLowStock={() => navigation.navigate("LowStock")}
-            onOpenMovement={(product) =>
-              navigation.navigate("StockMovement", { productId: product.id })
-            }
-          />
-        )}
+        {({ navigation }) => {
+          const guardedNavigation = createGuardedNavigation(navigation);
+
+          return (
+            <StockControlScreen
+              navigation={guardedNavigation}
+              productos={productos}
+              stockMovements={stockMovements}
+              onOpenLowStock={() => guardedNavigation.navigate("LowStock")}
+              onOpenMovement={(product) =>
+                guardedNavigation.navigate("StockMovement", { productId: product.id })
+              }
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="StockMovement">
@@ -117,7 +127,7 @@ export function InventarioStack({ onProductsChange }) {
 
           return (
             <StockMovementScreen
-              navigation={navigation}
+              navigation={createGuardedNavigation(navigation)}
               product={product}
               onSaveMovement={handleSaveMovement}
             />
@@ -126,15 +136,19 @@ export function InventarioStack({ onProductsChange }) {
       </Stack.Screen>
 
       <Stack.Screen name="LowStock">
-        {({ navigation }) => (
-          <LowStockScreen
-            navigation={navigation}
-            productos={productos}
-            onOpenMovement={(product) =>
-              navigation.navigate("StockMovement", { productId: product.id })
-            }
-          />
-        )}
+        {({ navigation }) => {
+          const guardedNavigation = createGuardedNavigation(navigation);
+
+          return (
+            <LowStockScreen
+              navigation={guardedNavigation}
+              productos={productos}
+              onOpenMovement={(product) =>
+                guardedNavigation.navigate("StockMovement", { productId: product.id })
+              }
+            />
+          );
+        }}
       </Stack.Screen>
     </Stack.Navigator>
   );

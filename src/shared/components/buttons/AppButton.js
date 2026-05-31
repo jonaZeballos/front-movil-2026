@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Pressable, Text } from "react-native";
 
 import { colors } from "../../theme/colors";
@@ -15,13 +16,36 @@ export function AppButton({
   fontSize = 16,
   lineHeight = 20,
   disabled = false,
+  pressLockMs = 700,
   style,
   textStyle,
 }) {
+  const pressLockRef = useRef(false);
+
+  const handlePress = () => {
+    if (disabled || pressLockRef.current) return;
+
+    pressLockRef.current = true;
+    let pressResult;
+
+    try {
+      pressResult = onPress?.();
+    } catch (error) {
+      pressLockRef.current = false;
+      throw error;
+    }
+
+    Promise.resolve(pressResult).finally(() => {
+      setTimeout(() => {
+        pressLockRef.current = false;
+      }, pressLockMs);
+    });
+  };
+
   return (
     <Pressable
       disabled={disabled}
-      onPress={onPress}
+      onPress={handlePress}
       style={({ pressed }) => [
         {
           width,

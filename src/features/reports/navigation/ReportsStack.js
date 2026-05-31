@@ -5,10 +5,12 @@ import { ReportsDashboardScreen } from "../screens/ReportsDashboardScreen";
 import { SalesReportScreen } from "../screens/SalesReportScreen";
 import { ServicesReportScreen } from "../screens/ServicesReportScreen";
 import { getReportsSummary, getSalesReport, getServicesReport } from "../services";
+import { useNavigationActionGuard } from "../../../shared/navigation/useNavigationActionGuard";
 
 const Stack = createNativeStackNavigator();
 
 export function ReportsStack({ ventas = [], ordenes = [] }) {
+  const { createGuardedNavigation } = useNavigationActionGuard();
   const [summary, setSummary] = useState(null);
   const [salesReport, setSalesReport] = useState(null);
   const [servicesReport, setServicesReport] = useState(null);
@@ -44,7 +46,7 @@ export function ReportsStack({ ventas = [], ordenes = [] }) {
       <Stack.Screen name="ReportsDashboard">
         {({ navigation }) => (
           <ReportsDashboardScreen
-            navigation={navigation}
+            navigation={createGuardedNavigation(navigation)}
             ventas={ventas}
             ordenes={ordenes}
             summary={summary}
@@ -54,13 +56,13 @@ export function ReportsStack({ ventas = [], ordenes = [] }) {
 
       <Stack.Screen name="SalesReport">
         {({ navigation }) => (
-          <SalesReportScreen navigation={navigation} ventas={ventas} salesReport={salesReport} />
+          <SalesReportScreen navigation={createGuardedNavigation(navigation)} ventas={ventas} salesReport={salesReport} />
         )}
       </Stack.Screen>
 
       <Stack.Screen name="ServicesReport">
         {({ navigation }) => (
-          <ServicesReportScreen navigation={navigation} ordenes={ordenes} servicesReport={servicesReport} />
+          <ServicesReportScreen navigation={createGuardedNavigation(navigation)} ordenes={ordenes} servicesReport={servicesReport} />
         )}
       </Stack.Screen>
     </Stack.Navigator>

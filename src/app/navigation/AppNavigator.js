@@ -95,6 +95,9 @@ const Stack = createNativeStackNavigator();
 
 const LOGOUT_CONFIRM_ROUTES = ["AdminDashboard", "SalesDashboard", "Home"];
 
+const getDashboardRouteForRole = (role) =>
+  role === "admin" ? "AdminDashboard" : role === "ventas" ? "SalesDashboard" : "Home";
+
 export function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
   const navigationActionLockRef = useRef({ key: null, expiresAt: 0 });
@@ -256,8 +259,7 @@ export function AppNavigator() {
         console.warn("No se pudo cargar la informacion inicial.", error);
       });
 
-      const dashboardRoute =
-        role === "admin" ? "AdminDashboard" : role === "ventas" ? "SalesDashboard" : "Home";
+      const dashboardRoute = getDashboardRouteForRole(role);
 
       resetToRoute(navigation, dashboardRoute);
 
@@ -309,6 +311,11 @@ export function AppNavigator() {
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (currentRouteName === "QuotationSummary" && navigationRef.isReady()) {
+        resetToRoute(navigationRef, getDashboardRouteForRole(session?.role));
+        return true;
+      }
+
       if (!LOGOUT_CONFIRM_ROUTES.includes(currentRouteName)) {
         return false;
       }
@@ -318,7 +325,7 @@ export function AppNavigator() {
     });
 
     return () => subscription.remove();
-  }, [currentRouteName]);
+  }, [currentRouteName, navigationRef, session?.role]);
 
   const handleOpenNotifications = (navigation) => {
     pushOnce(navigation, "Notifications");
@@ -772,13 +779,11 @@ export function AppNavigator() {
           )}
         </Stack.Screen>
 
-        <Stack.Screen name="QuotationSummary">
+        <Stack.Screen name="QuotationSummary" options={{ gestureEnabled: false }}>
           {({ navigation, route }) => (
             <QuotationSummaryScreen
               quotation={route.params?.quotation}
-              onBackToOrders={() =>
-                route.params?.returnToPrevious ? goBackOnce(navigation) : navigateOnce(navigation, "Cotizaciones")
-              }
+              onBackToMainMenu={() => resetToRoute(navigation, getDashboardRouteForRole(session?.role))}
               onViewDetail={() => {}}
             />
           )}

@@ -9,7 +9,7 @@ import { ShareQuotationPdfButton } from "../components/ShareQuotationPdfButton";
 import { QuotationSummaryCard } from "../components/QuotationSummaryCard";
 import { ShareQuotationButton } from "../components/ShareQuotationButton";
 
-export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail }) {
+export function QuotationSummaryScreen({ quotation, onBackToMainMenu, onViewDetail }) {
   if (!quotation) {
     return (
       <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
@@ -21,8 +21,8 @@ export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail
               Genera una cotizacion desde una orden para ver el resumen.
             </Text>
             <AppButton
-              title="Volver a ordenes"
-              onPress={onBackToOrders}
+              title="Regresar al menu principal"
+              onPress={onBackToMainMenu}
               backgroundColor={colors.primary}
               borderRadius={18}
               minHeight={52}
@@ -37,7 +37,7 @@ export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={onBackToOrders} style={styles.backButton}>
+          <Pressable onPress={onBackToMainMenu} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
@@ -56,8 +56,8 @@ export function QuotationSummaryScreen({ quotation, onBackToOrders, onViewDetail
             <ShareQuotationPdfButton quotation={quotation} />
 
             <AppButton
-              title="Volver a ordenes"
-              onPress={onBackToOrders}
+              title="Regresar al menu principal"
+              onPress={onBackToMainMenu}
               backgroundColor={colors.primary}
               borderRadius={18}
               minHeight={52}

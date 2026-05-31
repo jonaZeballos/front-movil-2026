@@ -2,9 +2,7 @@ import { apiRequest } from "../../../shared/api/client";
 
 export const orderStatuses = [
   "Recibido",
-  "En diagnostico",
   "Cotizado",
-  "En reparacion",
   "Listo",
   "Entregado",
   "Sin solucion",
@@ -50,9 +48,17 @@ export function updateOrden(orderId, data) {
   }).then(mapOrden);
 }
 
+export function updateEstadoOrden(orderId, estado) {
+  return apiRequest(`/api/ordenes/${orderId}/estado`, {
+    method: "PATCH",
+    body: JSON.stringify({ estado }),
+  }).then(mapOrden);
+}
+
 function mapOrden(orden) {
   const equipmentName = orden.equipmentName || orden.equipoNombre || orden.equipo?.nombre || orden.equipo?.modelo || "Equipo";
-  const clientName = orden.clientName || orden.clienteNombre || orden.cliente?.nombre || orden.equipo?.cliente?.nombre || "Cliente";
+  const cliente = orden.cliente && typeof orden.cliente === "object" ? orden.cliente : null;
+  const clientName = orden.clientName || orden.clienteNombre || cliente?.nombre || cliente?.razonSocial || orden.equipo?.cliente?.nombre || "Cliente";
   const status = orden.status || orden.estado;
   const failure = orden.failure || orden.diagnostico;
 
@@ -66,7 +72,8 @@ function mapOrden(orden) {
     falla: failure,
     diagnostico: orden.diagnostico || failure,
     clientName,
-    cliente: clientName,
+    cliente,
+    clienteNombre: clientName,
     equipmentName,
     equipo: equipmentName,
     equipmentSerial: orden.equipmentSerial || orden.equipo?.nroSerie || orden.equipo?.serial,

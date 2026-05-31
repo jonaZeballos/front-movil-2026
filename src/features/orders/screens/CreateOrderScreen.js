@@ -7,7 +7,6 @@ import { colors } from "../../../shared/theme/colors";
 import { OrderFormModal } from "../components/OrderFormModal";
 
 export function CreateOrderScreen({ clientes = [], equipments = [], onCreateOrder, onBack }) {
-  const [formVisible, setFormVisible] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const submitLockRef = useRef(false);
 
@@ -41,37 +40,25 @@ export function CreateOrderScreen({ clientes = [], equipments = [], onCreateOrde
           </View>
         </View>
 
-        <View style={styles.card}>
-          <View style={styles.iconBox}>
-            <MaterialCommunityIcons name="clipboard-text-outline" size={30} color="#5655B9" />
-          </View>
-          <Text style={styles.cardTitle}>Formulario de orden</Text>
-          <Text style={styles.cardText}>
-            Selecciona cliente, uno o varios equipos, prioridad y registra el diagnostico o falla de la orden.
-          </Text>
-
-          {equipments.length === 0 ? (
+        {equipments.length === 0 ? (
+          <View style={styles.card}>
+            <View style={styles.iconBox}>
+              <MaterialCommunityIcons name="clipboard-text-outline" size={30} color="#5655B9" />
+            </View>
+            <Text style={styles.cardTitle}>No hay equipos registrados</Text>
             <Text style={styles.emptyText}>
               No hay equipos registrados. Registra un equipo antes de crear una orden.
             </Text>
-          ) : null}
-
-          <Pressable
-            style={[styles.primaryButton, equipments.length === 0 && styles.disabledButton]}
-            onPress={() => setFormVisible(true)}
-            disabled={equipments.length === 0}
-          >
-            <Text style={styles.primaryButtonText}>Abrir formulario</Text>
-          </Pressable>
-        </View>
+          </View>
+        ) : null}
 
         <OrderFormModal
-          visible={formVisible && equipments.length > 0}
+          visible={equipments.length > 0}
           clientes={clientes}
           equipments={equipments}
           submitLabel="Crear orden"
           isSubmitting={isSaving}
-          onClose={() => setFormVisible(false)}
+          onClose={onBack}
           onSubmit={handleCreate}
         />
       </View>
@@ -132,35 +119,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "900",
   },
-  cardText: {
-    marginTop: 6,
-    color: "#6B7280",
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: "center",
-  },
   emptyText: {
     marginTop: 14,
     color: "#B45309",
     fontSize: 13,
     lineHeight: 18,
     textAlign: "center",
-  },
-  primaryButton: {
-    width: "100%",
-    height: 54,
-    borderRadius: 17,
-    backgroundColor: "#5655B9",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 18,
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "900",
-  },
-  disabledButton: {
-    opacity: 0.55,
   },
 });

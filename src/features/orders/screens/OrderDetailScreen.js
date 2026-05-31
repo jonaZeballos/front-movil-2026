@@ -85,6 +85,20 @@ export function OrderDetailScreen({
   const handleUpdateStatus = async (status) => {
     if (statusLockRef.current || savingStatus || order.status === status) return;
 
+    Alert.alert(
+      "Confirmar cambio de estado",
+      `Deseas cambiar la orden ${order.code || ""} a "${status}"?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Confirmar",
+          onPress: () => updateStatus(status),
+        },
+      ]
+    );
+  };
+
+  const updateStatus = async (status) => {
     statusLockRef.current = true;
     setSavingStatus(status);
 

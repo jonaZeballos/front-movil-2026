@@ -53,7 +53,7 @@ const options = [
   },
   {
     id: "inventario",
-    label: "Inventario",
+    label: "Inv. tienda",
     iconPack: MaterialCommunityIcons,
     iconName: "archive-outline",
     iconColor: "#E29217",

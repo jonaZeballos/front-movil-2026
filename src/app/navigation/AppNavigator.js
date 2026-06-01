@@ -104,6 +104,9 @@ const LOGOUT_CONFIRM_ROUTES = ["AdminDashboard", "SalesDashboard", "Home"];
 const getDashboardRouteForRole = (role) =>
   role === "admin" ? "AdminDashboard" : role === "ventas" ? "SalesDashboard" : "Home";
 
+const getTechnicians = (users = []) =>
+  users.filter((user) => String(user.role || user.rol || "").toLowerCase() === "tecnico");
+
 export function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
   const navigationActionLockRef = useRef({ key: null, expiresAt: 0 });
@@ -627,7 +630,8 @@ export function AppNavigator() {
               onOpenEquipos={() => pushOnce(navigation, "EquipmentList")}
               onOpenOrders={() => pushOnce(navigation, "OrdersList")}
               onOpenSales={() => pushOnce(navigation, "RegisterSale")}
-              onOpenInventory={() => navigateOnce(navigation, "Inventario")}
+              onOpenInventory={() => navigateOnce(navigation, "InventarioTienda")}
+              onOpenTechnicalInventory={() => navigateOnce(navigation, "InventarioTecnico")}
               onOpenQuotations={() => pushOnce(navigation, "Cotizaciones")}
               onOpenReports={() => pushOnce(navigation, "Reports")}
               onOpenRolesPermissions={() => pushOnce(navigation, "RolesPermissions")}
@@ -677,7 +681,7 @@ export function AppNavigator() {
               onOpenNotifications={() => handleOpenNotifications(navigation)}
               onLogout={() => confirmLogout()}
               onOpenClientes={() => pushOnce(navigation, "Clientes")}
-              onOpenInventory={() => navigateOnce(navigation, "Inventario")}
+              onOpenInventory={() => navigateOnce(navigation, "InventarioTienda")}
               onOpenSales={() => pushOnce(navigation, "RegisterSale")}
               onOpenReports={() => pushOnce(navigation, "Reports")}
             />
@@ -767,6 +771,7 @@ export function AppNavigator() {
               onOpenEquipos={() => pushOnce(navigation, "EquipmentList")}
               onOpenClientes={() => pushOnce(navigation, "Clientes")}
               onOpenQuotations={() => pushOnce(navigation, "Cotizaciones")}
+              onOpenTechnicalInventory={() => navigateOnce(navigation, "InventarioTecnico")}
             />
           )}
         </Stack.Screen>
@@ -784,8 +789,24 @@ export function AppNavigator() {
           )}
         </Stack.Screen>
 
-        <Stack.Screen name="Inventario">
-          {() => <InventarioStack onProductsChange={setProducts} />}
+        <Stack.Screen name="InventarioTienda">
+          {() => (
+            <InventarioStack
+              onProductsChange={setProducts}
+              role={session?.role}
+              inventoryType="tienda"
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="InventarioTecnico">
+          {() => (
+            <InventarioStack
+              role={session?.role}
+              inventoryType="tecnico"
+              technicians={getTechnicians(users)}
+            />
+          )}
         </Stack.Screen>
 
         <Stack.Screen name="Cotizaciones">

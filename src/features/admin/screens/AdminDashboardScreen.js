@@ -97,10 +97,17 @@ const options = [
   },
   {
     id: MODULES.INVENTARIO,
-    label: "Inventario",
+    label: "Inv. tienda",
     iconPack: MaterialIcons,
     iconName: "inventory",
     iconColor: "#E29217",
+  },
+  {
+    id: "inventario_tecnico",
+    label: "Inv. tecnico",
+    iconPack: MaterialCommunityIcons,
+    iconName: "toolbox-outline",
+    iconColor: "#0F766E",
   },
   {
     id: MODULES.REPORTES,
@@ -130,6 +137,7 @@ export function AdminDashboardScreen({
   onOpenOrders,
   onOpenSales,
   onOpenInventory,
+  onOpenTechnicalInventory,
   onOpenQuotations,
   onOpenReports,
   onOpenRolesPermissions,
@@ -182,6 +190,7 @@ export function AdminDashboardScreen({
     if (id === MODULES.VENTAS) onOpenSales?.();
     if (id === MODULES.COTIZACIONES) onOpenQuotations?.();
     if (id === MODULES.INVENTARIO) onOpenInventory?.();
+    if (id === "inventario_tecnico") onOpenTechnicalInventory?.();
     if (id === MODULES.REPORTES) onOpenReports?.();
     if (id === MODULES.ROLES_PERMISOS) onOpenRolesPermissions?.();
   };

@@ -92,6 +92,13 @@ const options = [
     iconName: "file-document-edit-outline",
     iconColor: "#0F766E",
   },
+  {
+    id: "inventario_tecnico",
+    label: "Inv. tecnico",
+    iconPack: MaterialCommunityIcons,
+    iconName: "toolbox-outline",
+    iconColor: "#E29217",
+  },
 ];
 
 const recentOrders = [
@@ -134,6 +141,7 @@ export function HomeScreen({
   onOpenEquipos,
   onOpenClientes,
   onOpenQuotations,
+  onOpenTechnicalInventory,
 }) {
   const displayName = getUserDisplayName(user, "Tecnico");
   const businessName = getBusinessName(user);
@@ -214,6 +222,12 @@ export function HomeScreen({
   const handleOpenQuotations = () => {
     if (onOpenQuotations) {
       onOpenQuotations();
+    }
+  };
+
+  const handleOpenTechnicalInventory = () => {
+    if (onOpenTechnicalInventory) {
+      onOpenTechnicalInventory();
     }
   };
 
@@ -341,6 +355,7 @@ export function HomeScreen({
               const isEquiposOption = item.id === "equipos";
               const isClientesOption = item.id === "clientes";
               const isQuotationsOption = item.id === "cotizaciones";
+              const isTechnicalInventoryOption = item.id === "inventario_tecnico";
 
               return (
                 <Pressable
@@ -355,6 +370,8 @@ export function HomeScreen({
                       ? handleOpenClientes
                       : isQuotationsOption
                       ? handleOpenQuotations
+                      : isTechnicalInventoryOption
+                      ? handleOpenTechnicalInventory
                       : undefined
                   }
                 >

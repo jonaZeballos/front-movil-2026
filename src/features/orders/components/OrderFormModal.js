@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -131,6 +132,14 @@ export function OrderFormModal({
   };
 
   const selectClient = (client) => {
+    if (client.enListaNegra) {
+      Alert.alert(
+        "Cliente en lista negra",
+        client.motivoListaNegra || "Este cliente requiere revision del administrador."
+      );
+      return;
+    }
+
     setSelectedClient(client);
     setSelectedEquipment(null);
     setSelectedEquipments([]);
@@ -258,7 +267,7 @@ export function OrderFormModal({
           renderItem={(item) => (
             <SelectionItem
               title={getClientName(item)}
-              subtitle={`Doc: ${item.numeroDocumento || "Sin documento"} · ${item.telefono || "Sin telefono"}`}
+              subtitle={`${item.enListaNegra ? "Lista negra · " : ""}Doc: ${item.numeroDocumento || "Sin documento"} · ${item.telefono || "Sin telefono"}`}
               icon="account-outline"
               onPress={() => selectClient(item)}
             />

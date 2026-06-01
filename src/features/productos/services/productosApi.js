@@ -27,6 +27,25 @@ export function updateProducto(productoId, productoData) {
   }).then(mapProducto);
 }
 
+export function deactivateProducto(productoId, motivo) {
+  return apiRequest(`/api/productos/${productoId}/desactivar`, {
+    method: "PATCH",
+    body: JSON.stringify({ motivo }),
+  }).then(mapProducto);
+}
+
+export function restoreProducto(productoId) {
+  return apiRequest(`/api/productos/${productoId}/restaurar`, {
+    method: "PATCH",
+  }).then(mapProducto);
+}
+
+export function deleteProducto(productoId) {
+  return apiRequest(`/api/productos/${productoId}`, {
+    method: "DELETE",
+  });
+}
+
 function mapProducto(producto) {
   return {
     ...producto,

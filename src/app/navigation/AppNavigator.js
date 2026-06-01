@@ -57,12 +57,16 @@ import {
   registerBusinessOwner,
 } from "../../features/auth/services/authApi";
 import {
+  blockUser,
   createUser as createUserRequest,
   listUsers,
+  unblockUser,
 } from "../../features/admin/services/usersApi";
 import {
+  addClienteToBlacklist,
   listClientes,
   createCliente,
+  removeClienteFromBlacklist,
 } from "../../features/clientes/services/clientesApi";
 import {
   listEquipos,
@@ -72,6 +76,7 @@ import {
   listOrdenes,
   createOrden,
   createOrdenesLote,
+  cancelOrden,
   updateEstadoOrden,
   updateOrden,
 } from "../../features/orders/services/ordersApi";
@@ -437,6 +442,14 @@ export function AppNavigator() {
     }
   };
 
+  const cancelOrder = async (orderId, motivo = "Anulada por administrador") => {
+    const updatedOrder = await cancelOrden(orderId, motivo);
+    setOrders((prevOrders) =>
+      prevOrders.map((order) => (order.id === orderId ? updatedOrder : order))
+    );
+    return updatedOrder;
+  };
+
   const addOrderObservation = async (orderId, observation) => {
     const updatedOrder = await updateOrden(orderId, { observacion: observation });
 
@@ -477,6 +490,16 @@ export function AppNavigator() {
     setUsers(usersData);
   };
 
+  const toggleBlockUser = async (user) => {
+    const updatedUser = user.bloqueado
+      ? await unblockUser(user.id)
+      : await blockUser(user.id, "Bloqueado por administrador");
+
+    setUsers((prevUsers) =>
+      prevUsers.map((item) => (item.id === updatedUser.id ? updatedUser : item))
+    );
+  };
+
   const saveCliente = async (clienteData) => {
     const savedCliente = await createCliente(clienteData);
 
@@ -493,6 +516,26 @@ export function AppNavigator() {
     );
 
     return savedCliente;
+  };
+
+  const updateClienteInState = (updatedCliente) => {
+    setClientes((prevClientes) =>
+      prevClientes.map((cliente) =>
+        String(cliente.id) === String(updatedCliente.id) ? updatedCliente : cliente
+      )
+    );
+  };
+
+  const addClientToBlacklist = async (clienteId, motivo) => {
+    const updatedCliente = await addClienteToBlacklist(clienteId, motivo);
+    updateClienteInState(updatedCliente);
+    return updatedCliente;
+  };
+
+  const removeClientFromBlacklist = async (clienteId) => {
+    const updatedCliente = await removeClienteFromBlacklist(clienteId);
+    updateClienteInState(updatedCliente);
+    return updatedCliente;
   };
 
   if (isSplashVisible) {
@@ -604,6 +647,7 @@ export function AppNavigator() {
               users={users}
               onBack={() => goBackOnce(navigation)}
               onCreateUser={() => pushOnce(navigation, "CreateUser")}
+              onToggleBlockUser={toggleBlockUser}
             />
           )}
         </Stack.Screen>
@@ -734,6 +778,8 @@ export function AppNavigator() {
               ordenes={orders}
               equipos={equipments}
               onGuardarCliente={saveCliente}
+              onAddToBlacklist={addClientToBlacklist}
+              onRemoveFromBlacklist={removeClientFromBlacklist}
             />
           )}
         </Stack.Screen>
@@ -840,6 +886,7 @@ export function AppNavigator() {
                 order={order}
                 onBack={() => goBackOnce(navigation)}
                 onUpdateStatus={updateOrderStatus}
+                onCancelOrder={session?.role === "admin" ? cancelOrder : undefined}
                 onAddObservation={addOrderObservation}
                 onViewQuotation={(quotation) =>
                 pushOnce(navigation, "QuotationSummary", { quotation, returnToPrevious: true })

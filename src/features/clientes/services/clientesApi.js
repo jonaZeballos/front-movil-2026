@@ -20,6 +20,19 @@ export function createCliente(clienteData) {
   }).then(mapCliente);
 }
 
+export function addClienteToBlacklist(clienteId, motivo) {
+  return apiRequest(`/api/clientes/${clienteId}/lista-negra`, {
+    method: "PATCH",
+    body: JSON.stringify({ motivo }),
+  }).then(mapCliente);
+}
+
+export function removeClienteFromBlacklist(clienteId) {
+  return apiRequest(`/api/clientes/${clienteId}/quitar-lista-negra`, {
+    method: "PATCH",
+  }).then(mapCliente);
+}
+
 function mapCliente(cliente) {
   return {
     ...cliente,

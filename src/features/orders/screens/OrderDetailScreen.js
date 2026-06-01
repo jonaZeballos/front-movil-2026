@@ -35,12 +35,14 @@ export function OrderDetailScreen({
   order,
   onBack,
   onUpdateStatus,
+  onCancelOrder,
   onAddObservation,
   onViewQuotation,
   onGenerateQuotation,
 }) {
   const [observation, setObservation] = useState("");
   const [savingStatus, setSavingStatus] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [isSavingObservation, setIsSavingObservation] = useState(false);
   const statusLockRef = useRef(false);
   const observationLockRef = useRef(false);
@@ -113,6 +115,33 @@ export function OrderDetailScreen({
     }
   };
 
+  const handleCancelOrder = () => {
+    if (!onCancelOrder || isCancelling || order.status === "Anulado") return;
+
+    Alert.alert(
+      "Anular orden",
+      `Deseas anular la orden ${order.code || ""}? Esta accion quedara registrada.`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Anular",
+          style: "destructive",
+          onPress: async () => {
+            setIsCancelling(true);
+            try {
+              await onCancelOrder(order.id, "Anulada por administrador");
+              Alert.alert("Confirmacion", "La orden fue anulada correctamente.");
+            } catch (error) {
+              Alert.alert("No se pudo anular", error.message || "Intenta nuevamente.");
+            } finally {
+              setIsCancelling(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const quotation = order.cotizacion ? buildOrderQuotation(order) : null;
   const quotationActive = isCotizacionActiva(quotation);
   const validoHasta = getCotizacionValidoHasta(quotation);
@@ -179,6 +208,21 @@ export function OrderDetailScreen({
                 );
               })}
             </View>
+            {onCancelOrder ? (
+              <Pressable
+                style={[styles.cancelButton, isCancelling && styles.disabledButton]}
+                onPress={handleCancelOrder}
+                disabled={isCancelling || order.status === "Anulado"}
+              >
+                {isCancelling ? (
+                  <ActivityIndicator color="#B91C1C" />
+                ) : (
+                  <Text style={styles.cancelButtonText}>
+                    {order.status === "Anulado" ? "Orden anulada" : "Anular orden"}
+                  </Text>
+                )}
+              </Pressable>
+            ) : null}
           </View>
 
           {quotation ? (
@@ -395,6 +439,21 @@ const styles = StyleSheet.create({
   },
   statusButtonTextActive: {
     color: "#FFFFFF",
+  },
+  cancelButton: {
+    marginTop: 12,
+    minHeight: 48,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    backgroundColor: "#FEE2E2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelButtonText: {
+    color: "#B91C1C",
+    fontSize: 14,
+    fontWeight: "900",
   },
   observationItem: {
     backgroundColor: "#F9FAFB",

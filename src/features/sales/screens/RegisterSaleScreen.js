@@ -243,6 +243,13 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
           onSearch={setClientSearch}
           onClose={() => setClientModalVisible(false)}
           onSelect={(client) => {
+            if (client.enListaNegra) {
+              Alert.alert(
+                "Cliente en lista negra",
+                client.motivoListaNegra || "Este cliente requiere revision del administrador."
+              );
+              return;
+            }
             setSelectedClientId(client.id);
             setClientModalVisible(false);
           }}
@@ -310,6 +317,9 @@ function ClientPickerModal({ visible, clients, search, onSearch, onClose, onSele
                 </View>
                 <View style={styles.clientRowText}>
                   <Text style={styles.clientName}>{getClientName(item)}</Text>
+                  {item.enListaNegra ? (
+                    <Text style={styles.clientBlacklist}>Lista negra</Text>
+                  ) : null}
                   <Text style={styles.clientMeta}>
                     {item.numeroDocumento || "Sin documento"} · {item.telefono || "Sin telefono"}
                   </Text>
@@ -520,6 +530,12 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontFamily: fontFamilies.bold,
     fontSize: 14,
+  },
+  clientBlacklist: {
+    marginTop: 2,
+    color: "#B91C1C",
+    fontFamily: fontFamilies.bold,
+    fontSize: 12,
   },
   clientMeta: {
     marginTop: 2,

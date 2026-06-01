@@ -12,6 +12,7 @@ import {
   AdminDashboardScreen,
   UsersManagementScreen,
   CreateUserScreen,
+  AdminSettingsScreen,
 } from "../../features/admin";
 import { RolesPermissionsScreen } from "../../features/admin/screens/RolesPermissionsScreen";
 import {
@@ -103,6 +104,9 @@ const LOGOUT_CONFIRM_ROUTES = ["AdminDashboard", "SalesDashboard", "Home"];
 
 const getDashboardRouteForRole = (role) =>
   role === "admin" ? "AdminDashboard" : role === "ventas" ? "SalesDashboard" : "Home";
+
+const getTechnicians = (users = []) =>
+  users.filter((user) => String(user.role || user.rol || "").toLowerCase() === "tecnico");
 
 export function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
@@ -490,6 +494,24 @@ export function AppNavigator() {
     setUsers(usersData);
   };
 
+  const updateSessionUser = (partialUser) => {
+    setSession((prevSession) => {
+      if (!prevSession) return prevSession;
+
+      return {
+        ...prevSession,
+        user: {
+          ...prevSession.user,
+          ...partialUser,
+          negocio: {
+            ...(prevSession.user?.negocio || {}),
+            ...(partialUser.negocio || {}),
+          },
+        },
+      };
+    });
+  };
+
   const toggleBlockUser = async (user) => {
     const updatedUser = user.bloqueado
       ? await unblockUser(user.id)
@@ -624,13 +646,25 @@ export function AppNavigator() {
               onLogout={() => confirmLogout()}
               onOpenUsers={() => pushOnce(navigation, "UsersManagement")}
               onOpenClientes={() => pushOnce(navigation, "Clientes")}
+              onOpenBlacklist={() => pushOnce(navigation, "Clientes", { mode: "blacklist" })}
               onOpenEquipos={() => pushOnce(navigation, "EquipmentList")}
               onOpenOrders={() => pushOnce(navigation, "OrdersList")}
               onOpenSales={() => pushOnce(navigation, "RegisterSale")}
-              onOpenInventory={() => navigateOnce(navigation, "Inventario")}
+              onOpenInventory={() => navigateOnce(navigation, "InventarioTienda")}
+              onOpenTechnicalInventory={() => navigateOnce(navigation, "InventarioTecnico")}
               onOpenQuotations={() => pushOnce(navigation, "Cotizaciones")}
               onOpenReports={() => pushOnce(navigation, "Reports")}
               onOpenRolesPermissions={() => pushOnce(navigation, "RolesPermissions")}
+              onOpenSettings={() => pushOnce(navigation, "AdminSettings")}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="AdminSettings">
+          {({ navigation }) => (
+            <AdminSettingsScreen
+              onBack={() => goBackOnce(navigation)}
+              onSessionUserUpdate={updateSessionUser}
             />
           )}
         </Stack.Screen>
@@ -677,7 +711,7 @@ export function AppNavigator() {
               onOpenNotifications={() => handleOpenNotifications(navigation)}
               onLogout={() => confirmLogout()}
               onOpenClientes={() => pushOnce(navigation, "Clientes")}
-              onOpenInventory={() => navigateOnce(navigation, "Inventario")}
+              onOpenInventory={() => navigateOnce(navigation, "InventarioTienda")}
               onOpenSales={() => pushOnce(navigation, "RegisterSale")}
               onOpenReports={() => pushOnce(navigation, "Reports")}
             />
@@ -767,16 +801,18 @@ export function AppNavigator() {
               onOpenEquipos={() => pushOnce(navigation, "EquipmentList")}
               onOpenClientes={() => pushOnce(navigation, "Clientes")}
               onOpenQuotations={() => pushOnce(navigation, "Cotizaciones")}
+              onOpenTechnicalInventory={() => navigateOnce(navigation, "InventarioTecnico")}
             />
           )}
         </Stack.Screen>
 
         <Stack.Screen name="Clientes">
-          {() => (
+          {({ route }) => (
             <RegisterStack
               clientes={clientes}
               ordenes={orders}
               equipos={equipments}
+              mode={route.params?.mode}
               onGuardarCliente={saveCliente}
               onAddToBlacklist={addClientToBlacklist}
               onRemoveFromBlacklist={removeClientFromBlacklist}
@@ -784,8 +820,24 @@ export function AppNavigator() {
           )}
         </Stack.Screen>
 
-        <Stack.Screen name="Inventario">
-          {() => <InventarioStack onProductsChange={setProducts} />}
+        <Stack.Screen name="InventarioTienda">
+          {() => (
+            <InventarioStack
+              onProductsChange={setProducts}
+              role={session?.role}
+              inventoryType="tienda"
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="InventarioTecnico">
+          {() => (
+            <InventarioStack
+              role={session?.role}
+              inventoryType="tecnico"
+              technicians={getTechnicians(users)}
+            />
+          )}
         </Stack.Screen>
 
         <Stack.Screen name="Cotizaciones">

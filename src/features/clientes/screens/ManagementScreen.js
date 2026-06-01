@@ -10,6 +10,7 @@ export function ManagementScreen({
   clientes = [],
   ordenes = [],
   equipos = [],
+  mode,
   onAddToBlacklist,
   onRemoveFromBlacklist,
 }) {
@@ -81,6 +82,7 @@ export function ManagementScreen({
         clientes={clientes}
         ordenes={ordenes}
         equipos={equipos}
+        mode={mode}
         onRegistrar={handleRegistrar}
         onBack={handleBack}
         onSelectCliente={handleSelectCliente}

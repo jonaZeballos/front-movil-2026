@@ -4,7 +4,15 @@ import { Alert } from "react-native";
 import RegistroProducto from "../components/productoRegister";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 
-export default function ProductoRegisterScreen({ navigation, onGuardar }) {
+export default function ProductoRegisterScreen({
+  navigation,
+  onGuardar,
+  categorias = [],
+  initialCategoriaId,
+  technicians = [],
+  inventoryType = "tienda",
+  role,
+}) {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleGuardar = async (productoData) => {
@@ -33,6 +41,11 @@ export default function ProductoRegisterScreen({ navigation, onGuardar }) {
         onGuardar={handleGuardar}
         onCancelar={handleVolver}
         isSaving={isSaving}
+        categorias={categorias}
+        initialCategoriaId={initialCategoriaId}
+        technicians={technicians}
+        inventoryType={inventoryType}
+        role={role}
       />
     </ScreenContainer>
   );

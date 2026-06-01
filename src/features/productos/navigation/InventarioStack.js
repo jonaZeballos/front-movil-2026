@@ -11,6 +11,8 @@ import {
 import {
   applyStockMovement,
   createProducto,
+  createCategoriaProducto,
+  listCategoriasProducto,
   listProductos,
   updateProductoStock,
 } from "../services";
@@ -18,22 +20,34 @@ import { useNavigationActionGuard } from "../../../shared/navigation/useNavigati
 
 const Stack = createNativeStackNavigator();
 
-export function InventarioStack({ onProductsChange }) {
+export function InventarioStack({
+  onProductsChange,
+  role,
+  inventoryType = "tienda",
+  technicians = [],
+}) {
   const { createGuardedNavigation } = useNavigationActionGuard();
   const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [stockMovements, setStockMovements] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const canManageCategories = role === "admin";
+  const title = inventoryType === "tecnico" ? "Inventario tecnico" : "Inventario tienda";
 
   const refreshProductos = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await listProductos();
-      setProductos(data);
-      onProductsChange?.(data);
+      const [productosData, categoriasData] = await Promise.all([
+        listProductos("", "", inventoryType),
+        listCategoriasProducto(inventoryType),
+      ]);
+      setProductos(productosData);
+      setCategorias(categoriasData);
+      onProductsChange?.(productosData);
     } finally {
       setIsLoading(false);
     }
-  }, [onProductsChange]);
+  }, [inventoryType, onProductsChange]);
 
   useEffect(() => {
     refreshProductos().catch((error) => {
@@ -42,8 +56,14 @@ export function InventarioStack({ onProductsChange }) {
   }, [refreshProductos]);
 
   const handleAddProducto = async (producto) => {
-    await createProducto(producto);
+    await createProducto({ ...producto, tipoInventario: inventoryType });
     await refreshProductos();
+  };
+
+  const handleCreateCategoria = async (categoria) => {
+    const savedCategoria = await createCategoriaProducto({ ...categoria, tipoInventario: inventoryType });
+    setCategorias((prevCategorias) => [...prevCategorias, savedCategoria].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+    return savedCategoria;
   };
 
   const handleSaveMovement = async (movement) => {
@@ -81,19 +101,29 @@ export function InventarioStack({ onProductsChange }) {
           <InventarioManagementScreen
             navigation={createGuardedNavigation(navigation)}
             productos={productos}
+            categorias={categorias}
             isLoading={isLoading}
+            title={title}
+            inventoryType={inventoryType}
             onRefresh={refreshProductos}
+            onCreateCategoria={canManageCategories ? handleCreateCategoria : undefined}
+            canManageCategories={canManageCategories}
           />
         )}
       </Stack.Screen>
 
       <Stack.Screen name="ProductoRegister">
-        {({ navigation }) => {
+        {({ navigation, route }) => {
           const guardedNavigation = createGuardedNavigation(navigation);
 
           return (
             <ProductoRegisterScreen
               navigation={guardedNavigation}
+              categorias={categorias}
+              technicians={technicians}
+              inventoryType={inventoryType}
+              role={role}
+              initialCategoriaId={route.params?.categoriaId}
               onGuardar={async (data) => {
                 await handleAddProducto(data);
                 guardedNavigation.goBack();

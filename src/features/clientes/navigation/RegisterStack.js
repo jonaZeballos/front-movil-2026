@@ -13,6 +13,7 @@ export function RegisterStack({
   onGuardarCliente,
   onAddToBlacklist,
   onRemoveFromBlacklist,
+  mode,
 }) {
   const { createGuardedNavigation } = useNavigationActionGuard();
 
@@ -39,6 +40,7 @@ export function RegisterStack({
               clientes={clientes}
               ordenes={ordenes}
               equipos={equipos}
+              mode={mode}
               onAddToBlacklist={onAddToBlacklist}
               onRemoveFromBlacklist={onRemoveFromBlacklist}
             />

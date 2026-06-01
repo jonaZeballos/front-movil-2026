@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "https://movil-backend.vercel.app/";
+const DEFAULT_API_URL = "http://192.168.1.13:3000";
 
 let authToken = null;
 
@@ -11,7 +11,8 @@ export function getApiBaseUrl() {
 }
 
 export async function apiRequest(path, options = {}) {
-  const url = `${getApiBaseUrl()}${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = `${getApiBaseUrl()}${normalizedPath}`;
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),

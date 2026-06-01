@@ -4,6 +4,10 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { colors } from "../../../shared/theme/colors";
 
 export function ProductCard({ product }) {
+  const technicianName =
+    product.tecnico?.nombre ||
+    [product.tecnico?.nombres, product.tecnico?.apellidos].filter(Boolean).join(" ").trim();
+
   return (
     <View style={styles.card}>
       <View style={styles.cardRow}>
@@ -13,7 +17,7 @@ export function ProductCard({ product }) {
         <View style={styles.cardInfo}>
           <Text style={styles.cardName}>{product.nombre}</Text>
           <Text style={styles.cardSub}>
-            Marca: {product.marca} - Modelo: {product.modelo}
+            {product.categoria?.nombre || "Sin categoria"} - Marca: {product.marca || "-"} - Modelo: {product.modelo || "-"}
           </Text>
         </View>
       </View>
@@ -25,6 +29,9 @@ export function ProductCard({ product }) {
           {product.precioTexto || `Bs. ${Number(product.precio || 0).toFixed(2)}`}
         </Text>
       </View>
+      {technicianName ? (
+        <Text style={styles.technicianText}>Tecnico: {technicianName}</Text>
+      ) : null}
     </View>
   );
 }
@@ -80,5 +87,11 @@ const styles = StyleSheet.create({
   lowStock: {
     color: "#DC2626",
     fontWeight: "800",
+  },
+  technicianText: {
+    marginTop: 8,
+    color: "#6B7280",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

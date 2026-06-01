@@ -2,8 +2,12 @@ import { apiRequest } from "../../../shared/api/client";
 
 export const MIN_STOCK_DEFAULT = 5;
 
-export async function listProductos(search = "") {
-  const query = search ? `?buscar=${encodeURIComponent(search)}` : "";
+export async function listProductos(search = "", categoriaId = "", tipoInventario = "tienda") {
+  const params = new URLSearchParams();
+  if (search) params.set("buscar", search);
+  if (categoriaId) params.set("categoriaId", categoriaId);
+  if (tipoInventario) params.set("tipoInventario", tipoInventario);
+  const query = params.toString() ? `?${params.toString()}` : "";
   const productos = await apiRequest(`/api/productos${query}`);
   return productos.map(mapProducto);
 }
@@ -19,6 +23,9 @@ export async function createProducto(productoData) {
       precio: parseMoney(productoData.precio),
       stock: parseInteger(productoData.stock),
       stockMinimo: parseInteger(productoData.stockMinimo ?? productoData.stock_minimo ?? 1),
+      idCategoria: productoData.idCategoria ?? productoData.categoriaId ?? null,
+      idTecnico: productoData.idTecnico ?? null,
+      tipoInventario: productoData.tipoInventario || "tienda",
     }),
   });
 
@@ -34,6 +41,27 @@ export async function updateProductoStock(productId, stock) {
   return mapProducto(producto);
 }
 
+export async function listCategoriasProducto(tipoInventario = "tienda") {
+  const params = new URLSearchParams();
+  if (tipoInventario) params.set("tipoInventario", tipoInventario);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const categorias = await apiRequest(`/api/productos/categorias${query}`);
+  return categorias.map(mapCategoriaProducto);
+}
+
+export async function createCategoriaProducto(categoriaData) {
+  const categoria = await apiRequest("/api/productos/categorias", {
+    method: "POST",
+    body: JSON.stringify({
+      nombre: categoriaData.nombre,
+      descripcion: categoriaData.descripcion,
+      tipoInventario: categoriaData.tipoInventario || "tienda",
+    }),
+  });
+
+  return mapCategoriaProducto(categoria);
+}
+
 function mapProducto(producto) {
   return {
     ...producto,
@@ -46,6 +74,20 @@ function mapProducto(producto) {
     price: Number(producto.price || producto.precio || 0),
     stock: Number(producto.stock || 0),
     stockMinimo: Number(producto.stockMinimo || producto.stock_minimo || 1),
+    idCategoria: producto.idCategoria || producto.categoria?.id || null,
+    idTecnico: producto.idTecnico || producto.tecnico?.id || null,
+    tipoInventario: producto.tipoInventario || "tienda",
+    categoria: producto.categoria || null,
+    tecnico: producto.tecnico || null,
+  };
+}
+
+function mapCategoriaProducto(categoria) {
+  return {
+    ...categoria,
+    nombre: categoria.nombre || "",
+    tipoInventario: categoria.tipoInventario || "tienda",
+    productosCount: Number(categoria.productosCount || 0),
   };
 }
 

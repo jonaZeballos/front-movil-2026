@@ -123,6 +123,13 @@ const options = [
     iconName: "shield-account-outline",
     iconColor: "#5655B9",
   },
+  {
+    id: "configuracion",
+    label: "Configuracion",
+    iconPack: Ionicons,
+    iconName: "settings-outline",
+    iconColor: "#374151",
+  },
 ];
 
 export function AdminDashboardScreen({
@@ -133,6 +140,7 @@ export function AdminDashboardScreen({
   onLogout,
   onOpenUsers,
   onOpenClientes,
+  onOpenBlacklist,
   onOpenEquipos,
   onOpenOrders,
   onOpenSales,
@@ -141,6 +149,7 @@ export function AdminDashboardScreen({
   onOpenQuotations,
   onOpenReports,
   onOpenRolesPermissions,
+  onOpenSettings,
 }) {
   const displayName = getUserDisplayName(user, "Administrador");
   const businessName = getBusinessName(user);
@@ -184,7 +193,7 @@ export function AdminDashboardScreen({
   const handleOptionPress = (id) => {
     if (id === MODULES.USUARIOS) onOpenUsers?.();
     if (id === MODULES.CLIENTES) onOpenClientes?.();
-    if (id === "lista_negra") onOpenClientes?.();
+    if (id === "lista_negra") onOpenBlacklist?.();
     if (id === MODULES.EQUIPOS) onOpenEquipos?.();
     if (id === MODULES.ORDENES) onOpenOrders?.();
     if (id === MODULES.VENTAS) onOpenSales?.();
@@ -193,6 +202,7 @@ export function AdminDashboardScreen({
     if (id === "inventario_tecnico") onOpenTechnicalInventory?.();
     if (id === MODULES.REPORTES) onOpenReports?.();
     if (id === MODULES.ROLES_PERMISOS) onOpenRolesPermissions?.();
+    if (id === "configuracion") onOpenSettings?.();
   };
 
   return (

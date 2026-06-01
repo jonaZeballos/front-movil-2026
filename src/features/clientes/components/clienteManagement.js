@@ -16,6 +16,7 @@ export default function GestionClientes({
   clientes = [],
   ordenes = [],
   equipos = [],
+  mode,
   onBack,
   onRegistrar,
   onSelectCliente,
@@ -24,9 +25,17 @@ export default function GestionClientes({
   onRemoveFromBlacklist,
 }) {
   const [busqueda, setBusqueda] = useState("");
+  const [viewMode, setViewMode] = useState("full");
+  const isBlacklistMode = mode === "blacklist";
+  const isCompact = viewMode === "compact";
+  const isSimple = viewMode === "simple";
   const clientList = Array.isArray(clientes) ? clientes : [];
 
   const filtrados = clientList.filter((cliente) => {
+    if (isBlacklistMode && !cliente.enListaNegra) {
+      return false;
+    }
+
     const nombre = String(cliente.nombre || "").toLowerCase();
     const razonSocial = String(cliente.razonSocial || "").toLowerCase();
     const telefono = String(cliente.telefono || "");
@@ -50,8 +59,11 @@ export default function GestionClientes({
   const renderCliente = ({ item }) => {
     const stats = getClientStats(item, ordenes, equipos);
 
+    const CardWrapper = isSimple ? Pressable : View;
+    const cardWrapperProps = isSimple ? { onPress: () => onSelectCliente?.(item) } : {};
+
     return (
-      <View style={styles.card}>
+      <CardWrapper style={[styles.card, isSimple && styles.simpleCard]} {...cardWrapperProps}>
         <View style={styles.cardRow}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -61,7 +73,9 @@ export default function GestionClientes({
 
           <View style={{ flex: 1 }}>
             <Text style={styles.cardName}>{item.nombre || "Cliente sin nombre"}</Text>
-            <Text style={styles.cardEmail}>{item.correo || item.email || "Sin correo"}</Text>
+            {!isSimple ? (
+              <Text style={styles.cardEmail}>{item.correo || item.email || "Sin correo"}</Text>
+            ) : null}
             {item.enListaNegra ? (
               <View style={styles.blacklistBadge}>
                 <Text style={styles.blacklistBadgeText}>Lista negra</Text>
@@ -71,9 +85,11 @@ export default function GestionClientes({
         </View>
 
         <Text style={styles.cardDetail}>
-          {item.telefono || "Sin telefono"} · {item.direccion || "Sin direccion"}
+          {item.telefono || "Sin telefono"}
+          {!isCompact && !isSimple ? ` - ${item.direccion || "Sin direccion"}` : ""}
         </Text>
 
+        {!isCompact && !isSimple ? (
         <View style={styles.statsRow}>
           <View style={styles.statChip}>
             <Text style={styles.statNumber}>{stats.totalEquipos}</Text>
@@ -92,7 +108,9 @@ export default function GestionClientes({
             <Text style={styles.statText}>Pendientes</Text>
           </View>
         </View>
+        ) : null}
 
+        {!isSimple ? (
         <View style={styles.actionsRow}>
           <Pressable
             style={styles.detailButton}
@@ -109,29 +127,31 @@ export default function GestionClientes({
             <Feather name="clock" size={16} color="#FFFFFF" />
             <Text style={styles.historyButtonText}>Historial</Text>
           </Pressable>
-        </View>
 
-        <Pressable
-          style={[styles.blacklistButton, item.enListaNegra && styles.removeBlacklistButton]}
-          onPress={() =>
-            item.enListaNegra ? onRemoveFromBlacklist?.(item) : onAddToBlacklist?.(item)
-          }
-        >
-          <Feather
-            name={item.enListaNegra ? "check-circle" : "slash"}
-            size={16}
-            color={item.enListaNegra ? "#047857" : "#B91C1C"}
-          />
-          <Text
-            style={[
-              styles.blacklistButtonText,
-              item.enListaNegra && styles.removeBlacklistButtonText,
-            ]}
+          <Pressable
+            style={[styles.blacklistButton, item.enListaNegra && styles.removeBlacklistButton]}
+            onPress={() =>
+              item.enListaNegra ? onRemoveFromBlacklist?.(item) : onAddToBlacklist?.(item)
+            }
           >
-            {item.enListaNegra ? "Quitar de lista negra" : "Agregar a lista negra"}
-          </Text>
-        </Pressable>
-      </View>
+            <Feather
+              name={item.enListaNegra ? "check-circle" : "slash"}
+              size={15}
+              color={item.enListaNegra ? "#047857" : "#B91C1C"}
+            />
+            <Text
+              style={[
+                styles.blacklistButtonText,
+                item.enListaNegra && styles.removeBlacklistButtonText,
+              ]}
+              numberOfLines={1}
+            >
+              {item.enListaNegra ? "Quitar" : "Lista negra"}
+            </Text>
+          </Pressable>
+        </View>
+        ) : null}
+      </CardWrapper>
     );
   };
 
@@ -145,7 +165,9 @@ export default function GestionClientes({
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>Gestion de clientes</Text>
           <Text style={styles.headerSubtitle}>
-            Registro, detalle e historial de clientes
+            {isBlacklistMode
+              ? "Clientes bloqueados para nuevas operaciones"
+              : "Registro, detalle e historial de clientes"}
           </Text>
         </View>
       </View>
@@ -166,8 +188,37 @@ export default function GestionClientes({
       </View>
 
       <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>Clientes registrados</Text>
+        <Text style={styles.listTitle}>
+          {isBlacklistMode ? "Clientes en lista negra" : "Clientes registrados"}
+        </Text>
         <Text style={styles.listCount}>{filtrados.length}</Text>
+      </View>
+
+      <View style={styles.viewToggle}>
+        <Pressable
+          style={[styles.viewToggleButton, viewMode === "full" && styles.viewToggleButtonActive]}
+          onPress={() => setViewMode("full")}
+        >
+          <Text style={[styles.viewToggleText, viewMode === "full" && styles.viewToggleTextActive]}>
+            Completa
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.viewToggleButton, viewMode === "compact" && styles.viewToggleButtonActive]}
+          onPress={() => setViewMode("compact")}
+        >
+          <Text style={[styles.viewToggleText, viewMode === "compact" && styles.viewToggleTextActive]}>
+            Compacta
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.viewToggleButton, viewMode === "simple" && styles.viewToggleButtonActive]}
+          onPress={() => setViewMode("simple")}
+        >
+          <Text style={[styles.viewToggleText, viewMode === "simple" && styles.viewToggleTextActive]}>
+            Simple
+          </Text>
+        </Pressable>
       </View>
 
       <FlatList
@@ -179,18 +230,24 @@ export default function GestionClientes({
         ListEmptyComponent={
           <View style={styles.emptyCard}>
             <Feather name="users" size={38} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>No hay clientes registrados</Text>
+            <Text style={styles.emptyTitle}>
+              {isBlacklistMode ? "No hay clientes en lista negra" : "No hay clientes registrados"}
+            </Text>
             <Text style={styles.emptyText}>
-              Este negocio todavia no tiene clientes. Registra el primero para consultar su historial.
+              {isBlacklistMode
+                ? "Cuando agregues un cliente a lista negra aparecera aqui."
+                : "Este negocio todavia no tiene clientes. Registra el primero para consultar su historial."}
             </Text>
           </View>
         }
       />
 
-      <Pressable style={styles.registerBtn} onPress={onRegistrar}>
-        <Text style={{ fontSize: 22, color: colors.surface }}>+</Text>
-        <Text style={styles.registerBtnText}>Registrar cliente</Text>
-      </Pressable>
+      {!isBlacklistMode ? (
+        <Pressable style={styles.registerBtn} onPress={onRegistrar}>
+          <Text style={{ fontSize: 22, color: colors.surface }}>+</Text>
+          <Text style={styles.registerBtnText}>Registrar cliente</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -289,6 +346,32 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontWeight: "700",
   },
+  viewToggle: {
+    flexDirection: "row",
+    marginHorizontal: 18,
+    marginBottom: 10,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    padding: 4,
+  },
+  viewToggleButton: {
+    flex: 1,
+    height: 36,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewToggleButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  viewToggleText: {
+    color: "#6B7280",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  viewToggleTextActive: {
+    color: "#FFFFFF",
+  },
   listContainer: {
     paddingHorizontal: 14,
     paddingBottom: 16,
@@ -300,6 +383,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "#F1F1F4",
+  },
+  simpleCard: {
+    paddingVertical: 12,
   },
   cardRow: {
     flexDirection: "row",
@@ -410,8 +496,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   blacklistButton: {
-    marginTop: 10,
-    height: 42,
+    flex: 1,
+    height: 44,
     borderRadius: 14,
     backgroundColor: "#FEE2E2",
     borderWidth: 1,
@@ -423,7 +509,7 @@ const styles = StyleSheet.create({
   },
   blacklistButtonText: {
     color: "#B91C1C",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "900",
   },
   removeBlacklistButton: {

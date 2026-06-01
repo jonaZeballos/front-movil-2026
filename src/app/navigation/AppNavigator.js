@@ -12,6 +12,7 @@ import {
   AdminDashboardScreen,
   UsersManagementScreen,
   CreateUserScreen,
+  AdminSettingsScreen,
 } from "../../features/admin";
 import { RolesPermissionsScreen } from "../../features/admin/screens/RolesPermissionsScreen";
 import {
@@ -493,6 +494,24 @@ export function AppNavigator() {
     setUsers(usersData);
   };
 
+  const updateSessionUser = (partialUser) => {
+    setSession((prevSession) => {
+      if (!prevSession) return prevSession;
+
+      return {
+        ...prevSession,
+        user: {
+          ...prevSession.user,
+          ...partialUser,
+          negocio: {
+            ...(prevSession.user?.negocio || {}),
+            ...(partialUser.negocio || {}),
+          },
+        },
+      };
+    });
+  };
+
   const toggleBlockUser = async (user) => {
     const updatedUser = user.bloqueado
       ? await unblockUser(user.id)
@@ -627,6 +646,7 @@ export function AppNavigator() {
               onLogout={() => confirmLogout()}
               onOpenUsers={() => pushOnce(navigation, "UsersManagement")}
               onOpenClientes={() => pushOnce(navigation, "Clientes")}
+              onOpenBlacklist={() => pushOnce(navigation, "Clientes", { mode: "blacklist" })}
               onOpenEquipos={() => pushOnce(navigation, "EquipmentList")}
               onOpenOrders={() => pushOnce(navigation, "OrdersList")}
               onOpenSales={() => pushOnce(navigation, "RegisterSale")}
@@ -635,6 +655,16 @@ export function AppNavigator() {
               onOpenQuotations={() => pushOnce(navigation, "Cotizaciones")}
               onOpenReports={() => pushOnce(navigation, "Reports")}
               onOpenRolesPermissions={() => pushOnce(navigation, "RolesPermissions")}
+              onOpenSettings={() => pushOnce(navigation, "AdminSettings")}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="AdminSettings">
+          {({ navigation }) => (
+            <AdminSettingsScreen
+              onBack={() => goBackOnce(navigation)}
+              onSessionUserUpdate={updateSessionUser}
             />
           )}
         </Stack.Screen>
@@ -777,11 +807,12 @@ export function AppNavigator() {
         </Stack.Screen>
 
         <Stack.Screen name="Clientes">
-          {() => (
+          {({ route }) => (
             <RegisterStack
               clientes={clientes}
               ordenes={orders}
               equipos={equipments}
+              mode={route.params?.mode}
               onGuardarCliente={saveCliente}
               onAddToBlacklist={addClientToBlacklist}
               onRemoveFromBlacklist={removeClientFromBlacklist}

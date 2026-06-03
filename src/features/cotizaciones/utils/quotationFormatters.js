@@ -1,3 +1,6 @@
+import { addDays, formatDate } from "../../../shared/utils/dates";
+import { getUserDisplayName } from "../../../shared/utils/formatters";
+
 export function toDisplayText(value, fallback = "No registrado") {
   if (value === null || value === undefined) return fallback;
 
@@ -26,6 +29,21 @@ export function toDisplayText(value, fallback = "No registrado") {
   return fallback;
 }
 
+export function isInternalServitechEmail(email) {
+  return /@servitech\.local$/i.test(String(email || "").trim());
+}
+
+export function getRealEmail(...values) {
+  for (const value of values) {
+    const email = String(value || "").trim();
+    if (email && !isInternalServitechEmail(email)) {
+      return email;
+    }
+  }
+
+  return "";
+}
+
 export function getClienteNombre(cliente) {
   return toDisplayText(cliente, "Cliente sin nombre");
 }
@@ -47,11 +65,7 @@ export function getCotizacionValidoHasta(cotizacion) {
   const fechaBase = cotizacion.fechaEmision || cotizacion.fechaCreacion;
   if (!fechaBase) return null;
 
-  const fecha = new Date(fechaBase);
-  if (Number.isNaN(fecha.getTime())) return null;
-
-  fecha.setDate(fecha.getDate() + 1);
-  return fecha.toISOString();
+  return addDays(fechaBase, 1);
 }
 
 export function isCotizacionActiva(cotizacion) {
@@ -65,12 +79,7 @@ export function isCotizacionActiva(cotizacion) {
 }
 
 export function formatQuotationDate(value, fallback = "Sin fecha") {
-  if (!value) return fallback;
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return fallback;
-
-  return date.toLocaleDateString("es-BO");
+  return formatDate(value, fallback);
 }
 
 export function formatQuotationMoney(value) {
@@ -116,12 +125,11 @@ export function getQuotationPhone(quotation = {}) {
 
 export function getQuotationEmail(quotation = {}) {
   const cliente = getQuotationClient(quotation);
-  return toDisplayText(cliente.email || cliente.correo || cliente.mail, "Sin correo");
+  return getRealEmail(cliente.email, cliente.correo, cliente.emailReal, cliente.mail);
 }
 
-export function getUserDisplayName(user = {}) {
-  const fullName = [user.nombres, user.apellidos].filter(Boolean).join(" ").trim();
-  return fullName || user.nombre || user.name || user.username || user.email || "Usuario no disponible";
+export function getQuotationEmailText(quotation = {}) {
+  return getQuotationEmail(quotation) || "Sin correo";
 }
 
 export function getQuotationCreator(quotation = {}) {

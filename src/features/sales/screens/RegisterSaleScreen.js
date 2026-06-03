@@ -27,7 +27,7 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
   const [quantities, setQuantities] = useState({});
   const [quantityErrors, setQuantityErrors] = useState({});
   const [discount, setDiscount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0]);
+  const [paymentMethod, setPaymentMethod] = useState(null);
 
   const filteredClients = useMemo(
     () => clientes.filter((client) => clientMatchesSearch(client, clientSearch)),
@@ -120,7 +120,7 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
     }
 
     if (!paymentMethod) {
-      Alert.alert("Método de pago", "Selecciona el método de pago de la venta.");
+      Alert.alert("Metodo de pago", "Seleccione un método de pago.");
       return;
     }
 

@@ -11,6 +11,7 @@ import {
   getQuotationBusiness,
   getQuotationClient,
   getQuotationCreator,
+  getQuotationEmailText,
   getQuotationEquipment,
   getQuotationOrder,
   getQuotationOrders,
@@ -108,7 +109,8 @@ function buildQuotationPdfHtml(quotation) {
               <div class="section">Cliente</div>
               ${row("Nombre", getClienteNombre(cliente))}
               ${row("Telefono", getQuotationPhone(quotation))}
-              ${row("Realizada por", getQuotationCreator(quotation))}
+              ${row("Email", getQuotationEmailText(quotation))}
+              ${row("Cotizacion realizada por", getQuotationCreator(quotation))}
             </div>
           </div>
 

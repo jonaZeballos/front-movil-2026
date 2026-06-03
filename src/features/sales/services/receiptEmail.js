@@ -8,6 +8,9 @@ import {
   getReceiptClientName,
   getReceiptDate,
   getReceiptNumber,
+  getReceiptPaymentLabel,
+  getReceiptSeller,
+  isInternalServitechEmail,
 } from "./receiptFormatters";
 
 export async function sendReceiptByEmail(receipt) {
@@ -17,7 +20,7 @@ export async function sendReceiptByEmail(receipt) {
 
   const email = normalizeEmail(getReceiptClientEmail(receipt));
   if (!email) {
-    throw new Error("El cliente no tiene correo registrado");
+    throw new Error("El cliente no tiene correo registrado.");
   }
 
   const isAvailable = await MailComposer.isAvailableAsync();
@@ -44,7 +47,9 @@ function buildEmailBody(receipt) {
     `Adjuntamos el comprobante de venta ${getReceiptNumber(receipt)}.`,
     "",
     `Total: ${formatCurrency(receipt.total)}`,
+    `Metodo de pago: ${getReceiptPaymentLabel(receipt)}`,
     `Fecha de emision: ${getReceiptDate(receipt)}`,
+    `Venta realizada por: ${getReceiptSeller(receipt)}`,
     "",
     `Gracias por confiar en ${getReceiptBusinessName(receipt)}.`,
   ].join("\n");
@@ -52,5 +57,6 @@ function buildEmailBody(receipt) {
 
 function normalizeEmail(value) {
   const email = String(value || "").trim();
+  if (isInternalServitechEmail(email)) return "";
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
 }

@@ -5,6 +5,7 @@ import {
   getReceiptClientName,
   getReceiptDate,
   getReceiptNumber,
+  getReceiptPaymentLabel,
   getReceiptProducts,
   getReceiptSeller,
 } from "./receiptFormatters";
@@ -39,7 +40,7 @@ export function buildReceiptWhatsAppMessage(receipt) {
     `Subtotal: ${formatCurrency(receipt.subtotal)}`,
     `Descuento: ${formatCurrency(receipt.descuento)}`,
     `Total pagado: ${formatCurrency(receipt.total)}`,
-    `Metodo de pago: ${getPaymentLabel(receipt.metodoPago)}`,
+    `Metodo de pago: ${getReceiptPaymentLabel(receipt)}`,
     "",
     "Gracias por su compra.",
   ].join("\n");
@@ -58,9 +59,3 @@ export async function sendReceiptByWhatsApp(receipt) {
   return openWhatsApp({ message: buildReceiptWhatsAppMessage(receipt), phone });
 }
 
-function getPaymentLabel(method) {
-  if (!method) return "No registrado";
-  if (typeof method === "string") return method;
-
-  return method.label || method.name || method.id || "No registrado";
-}

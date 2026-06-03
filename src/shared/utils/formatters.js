@@ -43,6 +43,19 @@ export function getEquipmentName(equipment) {
   );
 }
 
+export function getUserDisplayName(user = {}) {
+  const fullName = [user?.nombres, user?.apellidos].filter(Boolean).join(" ").trim();
+
+  return (
+    fullName ||
+    user?.nombre ||
+    user?.name ||
+    user?.username ||
+    user?.email ||
+    "Usuario no disponible"
+  );
+}
+
 export function cleanText(value, fallback = "No registrado") {
   const text = String(value || "").trim();
   return text || fallback;

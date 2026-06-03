@@ -4,11 +4,12 @@ import * as Sharing from "expo-sharing";
 import { formatCurrency } from "./salesApi";
 import {
   getReceiptBusinessName,
-  getReceiptClientEmail,
+  getReceiptClientEmailText,
   getReceiptClientName,
   getReceiptClientPhone,
   getReceiptDate,
   getReceiptNumber,
+  getReceiptPaymentLabel,
   getReceiptProducts,
   getReceiptSeller,
 } from "./receiptFormatters";
@@ -98,7 +99,7 @@ function buildReceiptHtml(receipt) {
           <div class="section">
             <div class="section-title">Cliente</div>
             <p class="text"><strong>${escapeHtml(getReceiptClientName(receipt))}</strong></p>
-            <p class="muted">${escapeHtml(getReceiptClientEmail(receipt))} | ${escapeHtml(getReceiptClientPhone(receipt))}</p>
+            <p class="muted">${escapeHtml(getReceiptClientEmailText(receipt))} | ${escapeHtml(getReceiptClientPhone(receipt))}</p>
             <p class="muted">Venta realizada por: ${escapeHtml(getReceiptSeller(receipt))}</p>
           </div>
 
@@ -114,7 +115,7 @@ function buildReceiptHtml(receipt) {
           </div>
 
           <div class="footer">
-            <p>Metodo de pago: ${escapeHtml(getPaymentLabel(receipt.metodoPago))}</p>
+            <p>Metodo de pago: ${escapeHtml(getReceiptPaymentLabel(receipt))}</p>
             <p>Emitido: ${escapeHtml(getReceiptDate(receipt))}</p>
             <p>Gracias por su compra.</p>
           </div>
@@ -122,12 +123,6 @@ function buildReceiptHtml(receipt) {
       </body>
     </html>
   `;
-}
-
-function getPaymentLabel(method) {
-  if (!method) return "No registrado";
-  if (typeof method === "string") return method;
-  return method.label || method.id || "No registrado";
 }
 
 function escapeHtml(value) {

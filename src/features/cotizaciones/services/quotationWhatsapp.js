@@ -8,7 +8,13 @@ import {
   normalizeWhatsAppPhone,
   openWhatsApp,
 } from "../../../shared/utils";
-import { getQuotationCreator, getQuotationOrders } from "../utils/quotationFormatters";
+import {
+  formatQuotationDate,
+  getCotizacionValidoHasta,
+  getQuotationCreator,
+  getQuotationEmailText,
+  getQuotationOrders,
+} from "../utils/quotationFormatters";
 import { getCotizacionWhatsapp } from "./cotizacionesApi";
 
 export function buildQuotationWhatsAppMessage(quotation) {
@@ -23,19 +29,19 @@ export function buildQuotationWhatsAppMessage(quotation) {
   const orders = getQuotationOrders(quotation);
   const isGrouped = orders.length > 1;
   const phone = normalizeWhatsAppPhone(getClientPhone(cliente));
-  const emitida = new Date(quotation.fechaCreacion || Date.now());
-  const validaHasta = new Date(emitida);
-  validaHasta.setDate(validaHasta.getDate() + 1);
+  const emitida = quotation.fechaEmision || quotation.fechaCreacion;
+  const validaHasta = getCotizacionValidoHasta(quotation);
 
   const subtotal = Number(quotation.manoObra || 0) + Number(quotation.repuestos || 0);
 
   return [
     `*${cleanText(negocio.nombre, "ServiTech")} - Cotizacion ${cleanText(quotation.numero, "Sin numero")}*`,
-    `Fecha de emision: ${emitida.toLocaleDateString("es-BO")}`,
-    `Fecha de validez: ${validaHasta.toLocaleDateString("es-BO")}`,
+    `Fecha de emision: ${formatQuotationDate(emitida)}`,
+    `Fecha de validez: ${formatQuotationDate(validaHasta)}`,
     "",
     `Cliente: ${getClientName(cliente)}`,
     `Telefono: ${phone || "No registrado"}`,
+    `Email: ${getQuotationEmailText(quotation)}`,
     `Cotizacion realizada por: ${getQuotationCreator(quotation)}`,
     isGrouped ? "Ordenes incluidas:" : `Orden: ${getOrderCode(order)}`,
     ...(isGrouped
@@ -56,7 +62,7 @@ export function buildQuotationWhatsAppMessage(quotation) {
     "",
     `Observaciones: ${cleanText(quotation.observaciones, "Sin observaciones")}`,
     "",
-    `Cotizacion valida hasta ${validaHasta.toLocaleDateString("es-BO")}.`,
+    `Cotizacion valida hasta ${formatQuotationDate(validaHasta)}.`,
   ].join("\n");
 }
 
@@ -69,8 +75,16 @@ export function getQuotationClientPhone(quotation) {
 
 export async function sendQuotationByWhatsApp(quotation) {
   const remote = quotation?.id ? await getCotizacionWhatsapp(quotation.id).catch(() => null) : null;
-  const message = remote?.mensaje || buildQuotationWhatsAppMessage(quotation);
-  const phone = getQuotationClientPhone(remote?.cotizacion || quotation) || getPhoneFromWaUrl(remote?.whatsappUrl);
+  const remoteQuotation = remote?.cotizacion || {};
+  const mergedQuotation = {
+    ...remoteQuotation,
+    ...quotation,
+    realizadoPor: quotation?.realizadoPor || remoteQuotation.realizadoPor,
+  };
+  const message = getQuotationCreator(mergedQuotation) === "Usuario no disponible"
+    ? remote?.mensaje || buildQuotationWhatsAppMessage(mergedQuotation)
+    : buildQuotationWhatsAppMessage(mergedQuotation);
+  const phone = getQuotationClientPhone(mergedQuotation) || getPhoneFromWaUrl(remote?.whatsappUrl);
 
   if (!phone) {
     throw new Error("El cliente no tiene teléfono registrado");

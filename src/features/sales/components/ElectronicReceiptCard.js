@@ -4,11 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { formatCurrency } from "../services/salesApi";
 import {
-  getReceiptClientEmail,
+  getReceiptClientEmailText,
   getReceiptClientName,
   getReceiptClientPhone,
   getReceiptDate,
   getReceiptNumber,
+  getReceiptPaymentLabel,
   getReceiptProducts,
   getReceiptSeller,
 } from "../services/receiptFormatters";
@@ -39,7 +40,7 @@ export function ElectronicReceiptCard({ receipt }) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Cliente</Text>
         <Text style={styles.mainText}>{getReceiptClientName(receipt)}</Text>
-        <Text style={styles.mutedText}>{getReceiptClientEmail(receipt)}</Text>
+        <Text style={styles.mutedText}>{getReceiptClientEmailText(receipt)}</Text>
         <Text style={styles.mutedText}>{getReceiptClientPhone(receipt)}</Text>
         <Text style={styles.mutedText}>Venta realizada por: {getReceiptSeller(receipt)}</Text>
       </View>
@@ -81,17 +82,11 @@ export function ElectronicReceiptCard({ receipt }) {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Metodo de pago: {getPaymentLabel(receipt.metodoPago)}</Text>
+        <Text style={styles.footerText}>Metodo de pago: {getReceiptPaymentLabel(receipt)}</Text>
         <Text style={styles.footerText}>Emitido: {getReceiptDate(receipt)}</Text>
       </View>
     </View>
   );
-}
-
-function getPaymentLabel(method) {
-  if (!method) return "No registrado";
-  if (typeof method === "string") return method;
-  return method.label || method.id || "No registrado";
 }
 
 const styles = StyleSheet.create({

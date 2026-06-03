@@ -20,6 +20,7 @@ import {
   formatCurrency,
   generateReceipt,
 } from "../services/salesApi";
+import { getRealEmail } from "../services/receiptFormatters";
 
 export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
   const [isSaving, setIsSaving] = useState(false);
@@ -27,6 +28,11 @@ export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
   const handleConfirm = async () => {
     if (!saleDraft) {
       Alert.alert("Venta no disponible", "No se encontraron datos de la venta.");
+      return;
+    }
+
+    if (!saleDraft.metodoPago) {
+      Alert.alert("Metodo de pago", "Seleccione un método de pago.");
       return;
     }
 
@@ -42,7 +48,7 @@ export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
           precioUnitario: item.unitPrice,
           subtotal: item.total,
         })),
-        metodoPago: saleDraft.metodoPago?.id,
+        metodoPago: saleDraft.metodoPago,
         subtotal: saleDraft.subtotal,
         descuento: saleDraft.descuento,
         total: saleDraft.total,
@@ -105,7 +111,11 @@ export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
             <Text style={styles.cardLabel}>Cliente</Text>
             <Text style={styles.clientName}>{getClientName(saleDraft.cliente)}</Text>
             <Text style={styles.clientMeta}>
-              {saleDraft.cliente?.email || "Sin correo registrado"}
+              {getRealEmail(
+                saleDraft.cliente?.email,
+                saleDraft.cliente?.correo,
+                saleDraft.cliente?.emailReal
+              ) || "Sin correo registrado"}
             </Text>
           </View>
 
@@ -135,7 +145,7 @@ export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
 
             <View>
               <Text style={styles.cardLabel}>Método de pago</Text>
-              <Text style={styles.paymentText}>{saleDraft.metodoPago?.label}</Text>
+              <Text style={styles.paymentText}>{saleDraft.metodoPago?.label || "No registrado"}</Text>
             </View>
           </View>
 

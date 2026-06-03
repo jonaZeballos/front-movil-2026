@@ -2,7 +2,8 @@ import { apiRequest } from "../../../shared/api/client";
 
 export const paymentMethods = [
   { id: "efectivo", label: "Efectivo", iconName: "cash-outline" },
-  { id: "qr", label: "Pago QR", iconName: "qr-code-outline" },
+  { id: "qr", label: "QR", iconName: "qr-code-outline" },
+  { id: "tarjeta", label: "Tarjeta", iconName: "card-outline" },
   { id: "transferencia", label: "Transferencia", iconName: "card-outline" },
 ];
 
@@ -24,6 +25,7 @@ export async function createSale(saleDraft) {
       clienteNombre: saleDraft.clienteNombre,
       items: saleDraft.productos || saleDraft.items || [],
       descuento: saleDraft.descuento,
+      metodoPago: getPaymentMethodId(saleDraft.metodoPago ?? saleDraft.paymentMethod),
     }),
   });
 
@@ -37,6 +39,49 @@ export async function generateReceipt(saleId) {
   return mapReceipt(receipt);
 }
 
+function isInternalServitechEmail(email) {
+  return /@servitech\.local$/i.test(String(email || "").trim());
+}
+
+function getRealClientEmail(client = {}) {
+  const candidates = [client.email, client.correo, client.emailReal, client.mail];
+  return candidates
+    .map((value) => String(value || "").trim())
+    .find((value) => value && !isInternalServitechEmail(value)) || "";
+}
+
+function mapClient(client = {}) {
+  const email = getRealClientEmail(client);
+
+  return {
+    ...client,
+    email: email || null,
+    correo: email || null,
+  };
+}
+
+function getPaymentMethodId(method) {
+  if (!method) return null;
+  if (typeof method === "string") return method;
+  return method.id || method.value || method.label || method.name || null;
+}
+
+function normalizePaymentMethod(method) {
+  if (!method) return null;
+  if (typeof method === "object") return method;
+
+  const text = String(method).trim();
+  const normalized = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  const known = paymentMethods.find(
+    (item) => item.id === normalized || item.label.toLowerCase() === normalized
+  );
+
+  return known || { id: normalized || text, label: text };
+}
+
 export function buildElectronicReceipt(saleDraft, savedSale = {}) {
   const receipt = savedSale.recibo || savedSale.receipt || savedSale;
 
@@ -46,10 +91,10 @@ export function buildElectronicReceipt(saleDraft, savedSale = {}) {
     number: receipt.number || savedSale.reciboCodigo,
     numero: receipt.numero || savedSale.numero,
     reciboCodigo: receipt.reciboCodigo || savedSale.reciboCodigo,
-    issuedAt: receipt.issuedAt || savedSale.fechaCreacion || new Date().toISOString(),
-    cliente: saleDraft.cliente || savedSale.cliente,
+    issuedAt: receipt.issuedAt || savedSale.fechaCreacion || null,
+    cliente: mapClient(saleDraft.cliente || savedSale.cliente || {}),
     productos: saleDraft.productos || savedSale.productos || savedSale.detalles || [],
-    metodoPago: saleDraft.metodoPago,
+    metodoPago: normalizePaymentMethod(receipt.metodoPago || savedSale.metodoPago || saleDraft.metodoPago),
     subtotal: saleDraft.subtotal,
     descuento: saleDraft.descuento,
     total: saleDraft.total || savedSale.total,
@@ -65,16 +110,17 @@ function mapVenta(venta) {
     number: venta.reciboCodigo || venta.numero,
     numero: venta.numero,
     reciboCodigo: venta.reciboCodigo,
-    issuedAt: venta.fechaCreacion,
+    issuedAt: venta.fechaCreacion || null,
     createdAt: venta.fechaCreacion,
-    cliente: venta.cliente || {
+    cliente: mapClient(venta.cliente || {
       id: venta.idCliente,
       nombre: venta.clienteNombre || "Cliente mostrador",
-    },
+    }),
     productos: productos.map(mapVentaDetalle),
     total: Number(venta.total || 0),
     subtotal: productos.reduce((sum, item) => sum + Number(item.subtotal || item.total || 0), 0),
     descuento: Number(venta.descuento || 0),
+    metodoPago: normalizePaymentMethod(venta.metodoPago),
     status: venta.status || "Emitido",
   };
 }
@@ -108,13 +154,13 @@ function mapReceipt(receipt) {
     id: source.id || venta.id,
     saleId: source.saleId || venta.id,
     number: source.number || source.reciboCodigo || venta.reciboCodigo || `REC-${Date.now()}`,
-    issuedAt: source.issuedAt || source.fechaCreacion || venta.fechaCreacion || new Date().toISOString(),
-    cliente: source.cliente || venta.cliente || {
+    issuedAt: source.issuedAt || source.fechaCreacion || venta.fechaCreacion || null,
+    cliente: mapClient(source.cliente || venta.cliente || {
       id: venta.idCliente,
       nombre: venta.clienteNombre || "Cliente mostrador",
-    },
+    }),
     productos: productos.map(mapVentaDetalle),
-    metodoPago: source.metodoPago || "No registrado",
+    metodoPago: normalizePaymentMethod(source.metodoPago || venta.metodoPago),
     negocio: source.negocio || venta.negocio,
     realizadoPor: source.realizadoPor || venta.realizadoPor,
     subtotal: Number(source.subtotal || venta.subtotal || venta.total || 0),

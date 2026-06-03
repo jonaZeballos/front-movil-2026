@@ -8,9 +8,11 @@ import {
   getQuotationBusiness,
   getQuotationClient,
   getQuotationCreator,
+  getQuotationEmailText,
   getQuotationEmail,
   getQuotationOrder,
   getQuotationOrders,
+  isInternalServitechEmail,
   toDisplayText,
 } from "../utils/quotationFormatters";
 import { createQuotationPdf } from "./quotationPdf";
@@ -22,7 +24,7 @@ export async function sendQuotationByEmail(quotation) {
 
   const email = normalizeEmail(getQuotationEmail(quotation));
   if (!email) {
-    throw new Error("El cliente no tiene correo registrado");
+    throw new Error("El cliente no tiene correo registrado.");
   }
 
   const isAvailable = await MailComposer.isAvailableAsync();
@@ -63,6 +65,7 @@ function buildQuotationEmailBody(quotation) {
     "",
     `Total: ${formatQuotationMoney(quotation.total)}`,
     `Valida hasta: ${formatQuotationDate(validoHasta)}`,
+    `Email del cliente: ${getQuotationEmailText(quotation)}`,
     `Cotizacion realizada por: ${getQuotationCreator(quotation)}`,
     "",
     `Gracias por confiar en ${toDisplayText(negocio.nombre, "ServiTech")}.`,
@@ -71,5 +74,6 @@ function buildQuotationEmailBody(quotation) {
 
 function normalizeEmail(value) {
   const email = String(value || "").trim();
+  if (isInternalServitechEmail(email)) return "";
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
 }

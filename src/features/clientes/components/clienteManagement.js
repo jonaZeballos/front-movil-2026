@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 14,
-    paddingBottom: 16,
+    paddingBottom: 128,
   },
   card: {
     backgroundColor: colors.surface,
@@ -540,7 +540,8 @@ const styles = StyleSheet.create({
   },
   registerBtn: {
     marginHorizontal: 14,
-    marginVertical: 16,
+    marginTop: 16,
+    marginBottom: 104,
     backgroundColor: "#534AB7",
     borderRadius: 18,
     padding: 16,

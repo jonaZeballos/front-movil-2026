@@ -18,7 +18,7 @@ import { SendReceiptEmailButton } from "../components/SendReceiptEmailButton";
 import { SendReceiptWhatsappButton } from "../components/SendReceiptWhatsappButton";
 import { downloadReceiptPdf } from "../services/receiptPdf";
 
-export function ElectronicReceiptScreen({ receipt, onBackToSales }) {
+export function ElectronicReceiptScreen({ receipt }) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadPdf = async () => {
@@ -62,11 +62,6 @@ export function ElectronicReceiptScreen({ receipt, onBackToSales }) {
         >
           <ElectronicReceiptCard receipt={receipt} />
 
-          <Pressable style={styles.primaryButton} onPress={onBackToSales}>
-            <Ionicons name="home-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>Volver al panel de ventas</Text>
-          </Pressable>
-
           <SendReceiptWhatsappButton receipt={receipt} />
           <SendReceiptEmailButton receipt={receipt} />
 
@@ -99,7 +94,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingTop: 22,
-    paddingBottom: 34,
+    paddingBottom: 28,
     alignItems: "center",
   },
   successIcon: {
@@ -134,7 +129,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 34,
+    paddingBottom: 118,
   },
   primaryButton: {
     marginTop: 18,

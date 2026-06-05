@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   Feather,
   FontAwesome5,
@@ -135,7 +135,11 @@ export function SalesDashboardScreen({
           </View>
         </View>
 
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentInner}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.cardsRow}>
             {dynamicSalesCards.map((item) => (
               <SalesMetricCard key={item.id} item={item} />
@@ -160,7 +164,7 @@ export function SalesDashboardScreen({
               Registra ventas, consulta inventario y atiende clientes del negocio actual.
             </Text>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </ScreenContainer>
   );
@@ -331,19 +335,21 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    marginTop: -6,
+    marginTop: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     backgroundColor: colors.dashboardBg,
-    paddingTop: 10,
+  },
+  contentInner: {
+    paddingTop: 16,
     paddingHorizontal: 14,
-    paddingBottom: 24,
+    paddingBottom: 118,
   },
   cardsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     columnGap: 8,
-    marginTop: -34,
+    marginTop: 0,
     marginBottom: 12,
   },
   sectionTitle: {

@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   content: {
-    paddingBottom: 30,
+    paddingBottom: 118,
   },
   emptyCard: {
     marginTop: 60,

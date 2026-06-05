@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     columnGap: 8,
     marginTop: 10,
-    marginBottom: 16,
+    marginBottom: 104,
   },
   createButtonText: {
     color: "#FFFFFF",
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   listContent: {
-    paddingBottom: 16,
+    paddingBottom: 128,
   },
   equipmentCard: {
     backgroundColor: "#FFFFFF",

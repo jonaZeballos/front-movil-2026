@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 34,
+    paddingBottom: 118,
   },
   clientCard: {
     backgroundColor: "#FFFFFF",

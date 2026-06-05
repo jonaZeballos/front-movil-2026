@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, BackHandler } from "react-native";
+import { Alert, BackHandler, Keyboard, Platform, StyleSheet, View } from "react-native";
 import {
   NavigationContainer,
   CommonActions,
+  DefaultTheme,
   useNavigationContainerRef,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Asset } from "expo-asset";
 
 import {
@@ -97,6 +99,8 @@ import {
 } from "../../features/equipos";
 import { RegisterStack } from "../../features/clientes/navigation/RegisterStack";
 import { InventarioStack } from "../../features/productos/navigation/InventarioStack";
+import { RoleBottomNav } from "../../shared/components/RoleBottomNav";
+import { colors } from "../../shared/theme/colors";
 
 const Stack = createNativeStackNavigator();
 
@@ -108,13 +112,37 @@ const getDashboardRouteForRole = (role) =>
 const getTechnicians = (users = []) =>
   users.filter((user) => String(user.role || user.rol || "").toLowerCase() === "tecnico");
 
+const navigationTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: colors.primary,
+    background: colors.dashboardBg,
+    card: colors.dashboardBg,
+    text: colors.text,
+    border: "#E5E7EB",
+    notification: colors.primary,
+  },
+};
+
+const PUBLIC_ROUTES = new Set([
+  "Onboarding",
+  "AuthEntry",
+  "Login",
+  "RegisterStepOne",
+  "RegisterStepTwo",
+  "RegisterSuccess",
+]);
+
 export function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
   const navigationActionLockRef = useRef({ key: null, expiresAt: 0 });
+  const insets = useSafeAreaInsets();
 
   const [isSplashVisible, setIsSplashVisible] = useState(true);
   const [session, setSession] = useState(null);
   const [currentRouteName, setCurrentRouteName] = useState(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const [orders, setOrders] = useState([]);
   const [equipments, setEquipments] = useState([]);
@@ -159,6 +187,25 @@ export function AppNavigator() {
   const goBackOnce = (navigation) => {
     runNavigationOnce("goBack", () => navigation.goBack(), 400);
   };
+
+  const navigateFromBottomNav = (navigation, routeName) => {
+    if (!routeName) return;
+
+    const dashboardRoutes = ["AdminDashboard", "Home", "SalesDashboard"];
+    if (dashboardRoutes.includes(routeName)) {
+      resetToRoute(navigation, routeName);
+      return;
+    }
+
+    navigateOnce(navigation, routeName);
+  };
+
+  const shouldShowBottomNav =
+    Boolean(session) &&
+    !isKeyboardVisible &&
+    currentRouteName &&
+    !PUBLIC_ROUTES.has(currentRouteName);
+  const bottomNavPadding = Platform.OS === "ios" ? Math.max(insets.bottom, 4) : Math.min(insets.bottom, 8);
 
   useEffect(() => {
     let isMounted = true;
@@ -336,6 +383,20 @@ export function AppNavigator() {
 
     return () => subscription.remove();
   }, [currentRouteName, navigationRef, session?.role]);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setIsKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleOpenNotifications = (navigation) => {
     pushOnce(navigation, "Notifications");
@@ -567,17 +628,21 @@ export function AppNavigator() {
   return (
     <NavigationContainer
       ref={navigationRef}
+      theme={navigationTheme}
       onReady={() => setCurrentRouteName(navigationRef.getCurrentRoute()?.name)}
       onStateChange={() => setCurrentRouteName(navigationRef.getCurrentRoute()?.name)}
     >
-      <Stack.Navigator
-        initialRouteName="Onboarding"
-        screenOptions={{
-          headerShown: false,
-          animation: "slide_from_right",
-          gestureEnabled: true,
-        }}
-      >
+      <View style={styles.appShell}>
+        <View style={styles.navigatorShell}>
+          <Stack.Navigator
+            initialRouteName="Onboarding"
+            screenOptions={{
+              headerShown: false,
+              animation: "slide_from_right",
+              gestureEnabled: true,
+              contentStyle: { backgroundColor: colors.dashboardBg },
+            }}
+          >
         <Stack.Screen name="Onboarding" options={{ gestureEnabled: false }}>
           {({ navigation }) => (
             <OnboardingScreen onComplete={() => replaceOnce(navigation, "AuthEntry")} />
@@ -755,7 +820,6 @@ export function AppNavigator() {
           {({ navigation, route }) => (
             <ElectronicReceiptScreen
               receipt={route.params?.receipt}
-              onBackToSales={() => navigateOnce(navigation, "SalesDashboard")}
             />
           )}
         </Stack.Screen>
@@ -898,7 +962,6 @@ export function AppNavigator() {
             <QuotationSummaryScreen
               quotation={route.params?.quotation}
               onBackToMainMenu={() => resetToRoute(navigation, getDashboardRouteForRole(session?.role))}
-              onViewDetail={() => {}}
             />
           )}
         </Stack.Screen>
@@ -1010,7 +1073,41 @@ export function AppNavigator() {
             />
           )}
         </Stack.Screen>
-      </Stack.Navigator>
+          </Stack.Navigator>
+        </View>
+
+        {shouldShowBottomNav ? (
+          <View style={[styles.bottomNavSafeArea, { paddingBottom: bottomNavPadding }]}>
+            <RoleBottomNav
+              role={session?.role}
+              currentRoute={currentRouteName}
+              onNavigate={(routeName) => navigateFromBottomNav(navigationRef, routeName)}
+              onLogout={confirmLogout}
+            />
+          </View>
+        ) : null}
+      </View>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  appShell: {
+    flex: 1,
+    backgroundColor: colors.dashboardBg,
+  },
+  navigatorShell: {
+    flex: 1,
+    backgroundColor: colors.dashboardBg,
+  },
+  bottomNavSafeArea: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.dashboardBg,
+    paddingHorizontal: 8,
+    paddingTop: 4,
+    zIndex: 20,
+  },
+});

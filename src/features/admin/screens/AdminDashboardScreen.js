@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   Feather,
   FontAwesome5,
@@ -251,7 +251,11 @@ export function AdminDashboardScreen({
           </View>
         </View>
 
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentInner}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.serviceGrid}>
             {summaryCards.map((item) => {
               const IconPack = item.iconPack;
@@ -309,7 +313,7 @@ export function AdminDashboardScreen({
               permisos.
             </Text>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </ScreenContainer>
   );
@@ -479,19 +483,21 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    marginTop: -6,
+    marginTop: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     backgroundColor: colors.dashboardBg,
-    paddingTop: 10,
+  },
+  contentInner: {
+    paddingTop: 16,
     paddingHorizontal: 14,
-    paddingBottom: 24,
+    paddingBottom: 118,
   },
   serviceGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
     columnGap: 8,
-    marginTop: -34,
+    marginTop: 0,
     marginBottom: 12,
   },
   serviceCard: {

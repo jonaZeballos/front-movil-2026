@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   listContent: {
-    paddingBottom: 12,
+    paddingBottom: 128,
   },
   productCard: {
     backgroundColor: "#FFFFFF",
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+    marginBottom: 104,
   },
   createButtonText: {
     color: "#FFFFFF",

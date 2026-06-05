@@ -1,7 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { AppButton } from "../../../shared/components/buttons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
 import { ShareQuotationEmailButton } from "../components/ShareQuotationEmailButton";
@@ -9,7 +8,10 @@ import { ShareQuotationPdfButton } from "../components/ShareQuotationPdfButton";
 import { QuotationSummaryCard } from "../components/QuotationSummaryCard";
 import { ShareQuotationButton } from "../components/ShareQuotationButton";
 
-export function QuotationSummaryScreen({ quotation, onBackToMainMenu, onViewDetail }) {
+export function QuotationSummaryScreen({
+  quotation,
+  onBackToMainMenu,
+}) {
   if (!quotation) {
     return (
       <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
@@ -20,13 +22,6 @@ export function QuotationSummaryScreen({ quotation, onBackToMainMenu, onViewDeta
             <Text style={styles.emptyText}>
               Genera una cotizacion desde una orden para ver el resumen.
             </Text>
-            <AppButton
-              title="Regresar al menu principal"
-              onPress={onBackToMainMenu}
-              backgroundColor={colors.primary}
-              borderRadius={18}
-              minHeight={52}
-            />
           </View>
         </View>
       </ScreenContainer>
@@ -42,8 +37,8 @@ export function QuotationSummaryScreen({ quotation, onBackToMainMenu, onViewDeta
           </Pressable>
 
           <View style={styles.headerText}>
-            <Text style={styles.title}>Resumen</Text>
-            <Text style={styles.subtitle}>Cotizacion pendiente de aprobacion</Text>
+            <Text style={styles.title}>Resumen de cotizacion</Text>
+            <Text style={styles.subtitle}>Revisa los datos antes de compartirla</Text>
           </View>
         </View>
 
@@ -54,14 +49,6 @@ export function QuotationSummaryScreen({ quotation, onBackToMainMenu, onViewDeta
             <ShareQuotationButton quotation={quotation} />
             <ShareQuotationEmailButton quotation={quotation} />
             <ShareQuotationPdfButton quotation={quotation} />
-
-            <AppButton
-              title="Regresar al menu principal"
-              onPress={onBackToMainMenu}
-              backgroundColor={colors.primary}
-              borderRadius={18}
-              minHeight={52}
-            />
           </View>
         </ScrollView>
       </View>
@@ -103,7 +90,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   content: {
-    paddingBottom: 28,
+    paddingBottom: 118,
   },
   actions: {
     marginTop: 16,

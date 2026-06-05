@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   content: {
-    paddingBottom: 30,
+    paddingBottom: 118,
   },
   emptyCard: {
     marginTop: 40,

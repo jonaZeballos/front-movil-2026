@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingTop: 10,
-    paddingBottom: 20,
+    paddingBottom: 126,
   },
   loadingBox: {
     paddingVertical: 20,

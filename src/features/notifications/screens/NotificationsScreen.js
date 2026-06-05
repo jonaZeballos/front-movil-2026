@@ -107,6 +107,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   content: {
-    paddingBottom: 30,
+    paddingBottom: 118,
   },
 });

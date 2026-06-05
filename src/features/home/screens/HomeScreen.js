@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   MaterialCommunityIcons,
   Ionicons,
@@ -278,7 +278,11 @@ export function HomeScreen({
           </View>
         </View>
 
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentInner}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.serviceGrid}>
             {dynamicServiceCards.map((item, index) => {
               const IconPack = item.iconPack;
@@ -394,7 +398,7 @@ export function HomeScreen({
               Revisa clientes, equipos, ordenes y cotizaciones asociadas al negocio actual.
             </Text>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </ScreenContainer>
   );
@@ -570,20 +574,22 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    marginTop: -6,
+    marginTop: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     backgroundColor: colors.dashboardBg,
-    paddingTop: 10,
+  },
+  contentInner: {
+    paddingTop: 16,
     paddingHorizontal: 14,
-    paddingBottom: 24,
+    paddingBottom: 118,
   },
   serviceGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     rowGap: 10,
-    marginTop: -34,
+    marginTop: 0,
     marginBottom: 8,
   },
   serviceCard: {

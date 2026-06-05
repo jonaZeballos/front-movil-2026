@@ -10,6 +10,9 @@ import {
   Text,
   TextInput,
   View,
+  Platform,
+  Keyboard,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
@@ -433,60 +436,72 @@ function ClientPickerModal({
 }) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
-          <View style={styles.modalHeader}>
-            <View>
-              <Text style={styles.modalTitle}>Seleccionar cliente</Text>
-              <Text style={styles.modalSubtitle}>Busca por nombre, documento, telefono o correo</Text>
-            </View>
-            <Pressable style={styles.modalClose} onPress={onClose}>
-              <Ionicons name="close" size={22} color="#111827" />
-            </Pressable>
-          </View>
-
-          <SearchInput
-            value={search}
-            onChangeText={onSearch}
-            placeholder="Buscar cliente por nombre, CI o telefono"
-            style={styles.modalSearch}
-          />
-
-          <FlatList
-            data={clients}
-            keyExtractor={(item) => String(item.id)}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.clientList}
-            renderItem={({ item }) => (
-              <Pressable style={styles.clientItem} onPress={() => onSelect(item)}>
-                <View style={styles.clientAvatar}>
-                  <Text style={styles.clientAvatarText}>{getInitials(item.nombre || item.razonSocial)}</Text>
-                </View>
-                <View style={styles.clientInfo}>
-                  <Text style={styles.clientName}>{item.nombre || item.razonSocial || "Cliente sin nombre"}</Text>
-                  {item.enListaNegra ? (
-                    <Text style={styles.clientBlacklist}>Lista negra</Text>
-                  ) : null}
-                  <Text style={styles.clientMeta}>
-                    Doc: {item.numeroDocumento || "Sin documento"} · {item.telefono || "Sin telefono"}
-                  </Text>
-                  <Text style={styles.clientMeta}>{item.correo || item.email || "Sin correo"}</Text>
-                </View>
-              </Pressable>
-            )}
-            ListEmptyComponent={
-              <View style={styles.modalEmpty}>
-                <Feather name="users" size={34} color="#9CA3AF" />
-                <Text style={styles.modalEmptyTitle}>No hay clientes registrados</Text>
-                <Text style={styles.modalEmptyText}>Registre un cliente primero.</Text>
-                <Pressable style={styles.modalCreateButton} onPress={onCreateClient}>
-                  <Text style={styles.modalCreateButtonText}>Registrar cliente</Text>
-                </Pressable>
+      <Pressable style={styles.modalOverlay} onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardAvoidingView}
+        >
+          <Pressable
+            style={styles.modalCard}
+            onPress={(e) => {
+              e.stopPropagation();
+              Keyboard.dismiss();
+            }}
+          >
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Seleccionar cliente</Text>
+                <Text style={styles.modalSubtitle}>Busca por nombre, documento, telefono o correo</Text>
               </View>
-            }
-          />
-        </View>
-      </View>
+              <Pressable style={styles.modalClose} onPress={onClose}>
+                <Ionicons name="close" size={22} color="#111827" />
+              </Pressable>
+            </View>
+
+            <SearchInput
+              value={search}
+              onChangeText={onSearch}
+              placeholder="Buscar cliente por nombre, CI o telefono"
+              style={styles.modalSearch}
+            />
+
+            <FlatList
+              data={clients}
+              keyExtractor={(item) => String(item.id)}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              contentContainerStyle={styles.clientList}
+              renderItem={({ item }) => (
+                <Pressable style={styles.clientItem} onPress={() => onSelect(item)}>
+                  <View style={styles.clientAvatar}>
+                    <Text style={styles.clientAvatarText}>{getInitials(item.nombre || item.razonSocial)}</Text>
+                  </View>
+                  <View style={styles.clientInfo}>
+                    <Text style={styles.clientName}>{item.nombre || item.razonSocial || "Cliente sin nombre"}</Text>
+                    {item.enListaNegra ? (
+                      <Text style={styles.clientBlacklist}>Lista negra</Text>
+                    ) : null}
+                    <Text style={styles.clientMeta}>
+                      Doc: {item.numeroDocumento || "Sin documento"} · {item.telefono || "Sin telefono"}
+                    </Text>
+                    <Text style={styles.clientMeta}>{item.correo || item.email || "Sin correo"}</Text>
+                  </View>
+                </Pressable>
+              )}
+              ListEmptyComponent={
+                <View style={styles.modalEmpty}>
+                  <Feather name="users" size={34} color="#9CA3AF" />
+                  <Text style={styles.modalEmptyTitle}>No hay clientes registrados</Text>
+                  <Text style={styles.modalEmptyText}>Registre un cliente primero.</Text>
+                  <Pressable style={styles.modalCreateButton} onPress={onCreateClient}>
+                    <Text style={styles.modalCreateButtonText}>Registrar cliente</Text>
+                  </Pressable>
+                </View>
+              }
+            />
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Pressable>
     </Modal>
   );
 }
@@ -821,5 +836,9 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "900",
     fontSize: 13,
+  },
+  keyboardAvoidingView: {
+    width: "100%",
+    justifyContent: "flex-end",
   },
 });

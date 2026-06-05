@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { SearchInput } from "../../../shared/components/SearchInput";
@@ -8,6 +9,30 @@ import { colors } from "../../../shared/theme/colors";
 
 export function EquipmentListScreen({ equipments, onRegister, onOpenEquipment, onBack }) {
   const [query, setQuery] = useState("");
+  const isFocused = useIsFocused();
+  const [isOpeningRegister, setIsOpeningRegister] = useState(false);
+  const isOpeningRegisterRef = useRef(false);
+
+  useEffect(() => {
+    if (isFocused) {
+      isOpeningRegisterRef.current = false;
+      setIsOpeningRegister(false);
+    }
+  }, [isFocused]);
+
+  const handleRegisterPress = async () => {
+    if (isOpeningRegisterRef.current) return;
+
+    isOpeningRegisterRef.current = true;
+    setIsOpeningRegister(true);
+
+    try {
+      await onRegister?.();
+    } catch (error) {
+      isOpeningRegisterRef.current = false;
+      setIsOpeningRegister(false);
+    }
+  };
 
   const filteredItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -87,9 +112,22 @@ export function EquipmentListScreen({ equipments, onRegister, onOpenEquipment, o
 
         </ScrollView>
 
-        <Pressable style={styles.createButton} onPress={onRegister}>
-          <Ionicons name="add" size={22} color="#FFFFFF" />
-          <Text style={styles.createButtonText}>Registrar equipo</Text>
+        <Pressable
+          style={[styles.createButton, isOpeningRegister && styles.disabledButton]}
+          onPress={handleRegisterPress}
+          disabled={isOpeningRegister}
+        >
+          {isOpeningRegister ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color="#FFFFFF" size="small" />
+              <Text style={styles.createButtonText}>Abriendo...</Text>
+            </View>
+          ) : (
+            <>
+              <Ionicons name="add" size={22} color="#FFFFFF" />
+              <Text style={styles.createButtonText}>Registrar equipo</Text>
+            </>
+          )}
         </Pressable>
       </View>
     </ScreenContainer>
@@ -231,5 +269,13 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  disabledButton: {
+    opacity: 0.7,
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
   },
 });

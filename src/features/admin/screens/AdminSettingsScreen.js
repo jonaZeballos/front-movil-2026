@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   saveFooter: {
     paddingHorizontal: 18,
     paddingTop: 10,
-    paddingBottom: 14,
+    paddingBottom: 52,
     backgroundColor: colors.dashboardBg,
   },
   saveButtonText: {

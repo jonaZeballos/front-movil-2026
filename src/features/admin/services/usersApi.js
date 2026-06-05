@@ -9,18 +9,23 @@ export async function createUser(userData) {
   const role = userData.role === "ventas" ? "ventas" : "tecnico";
   const endpoint = role === "ventas" ? "/api/usuarios/registro-ventas" : "/api/usuarios/registro-tecnico";
   const name = userData.name || [userData.nombres, userData.apellidos].filter(Boolean).join(" ").trim();
+  const phone = userData.numero || userData.telefono || userData.phone;
+  const payload = {
+    name,
+    nombres: userData.nombres,
+    apellidos: userData.apellidos,
+    username: userData.username,
+    email: userData.email,
+    password: userData.password,
+  };
+
+  if (phone) {
+    payload.numero = phone;
+  }
 
   const user = await apiRequest(endpoint, {
     method: "POST",
-    body: JSON.stringify({
-      name,
-      nombres: userData.nombres,
-      apellidos: userData.apellidos,
-      username: userData.username,
-      email: userData.email,
-      password: userData.password,
-      numero: userData.numero || userData.phone || "0",
-    }),
+    body: JSON.stringify(payload),
   });
 
   return mapUser({ ...user, role });

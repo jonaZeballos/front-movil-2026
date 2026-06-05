@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "http://10.57.138.182:3000";
+const DEFAULT_API_URL = "http://192.168.0.9:3000";
 
 let authToken = null;
 

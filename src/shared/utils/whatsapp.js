@@ -1,21 +1,8 @@
 import { Linking } from "react-native";
+import { normalizeWhatsAppBolivianPhone } from "./validators";
 
 export function normalizeWhatsAppPhone(phone) {
-  if (!phone) return "";
-
-  const digits = String(phone).replace(/\D/g, "");
-
-  if (!digits) return "";
-
-  if (digits.length === 8) {
-    return `591${digits}`;
-  }
-
-  if (digits.length === 9 && digits.startsWith("0")) {
-    return `591${digits.slice(1)}`;
-  }
-
-  return digits;
+  return normalizeWhatsAppBolivianPhone(phone);
 }
 
 export function buildWhatsAppUrl({ message, phone }) {

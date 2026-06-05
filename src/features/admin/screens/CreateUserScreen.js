@@ -15,9 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
+import { EMAIL_FORMAT_MESSAGE, isInternalEmail, isValidEmail } from "../../../shared/utils/validators";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
-const EMAIL_REGEX = /\S+@\S+\.\S+/;
 
 export function CreateUserScreen({ onBack, onSave }) {
   const [form, setForm] = useState({
@@ -67,8 +67,8 @@ export function CreateUserScreen({ onBack, onSave }) {
 
     if (!email) {
       nextErrors.email = "Ingrese un correo electronico.";
-    } else if (!EMAIL_REGEX.test(email)) {
-      nextErrors.email = "Ingrese un correo valido, ejemplo: usuario@correo.com.";
+    } else if (!isValidEmail(email) || isInternalEmail(email)) {
+      nextErrors.email = EMAIL_FORMAT_MESSAGE;
     }
 
     if (!password) {

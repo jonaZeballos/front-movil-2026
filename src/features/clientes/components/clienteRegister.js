@@ -13,8 +13,17 @@ import {
 import { Feather } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
-
-const EMAIL_REGEX = /\S+@\S+\.\S+/;
+import {
+  BOLIVIAN_CI_MESSAGE,
+  BOLIVIAN_MOBILE_MESSAGE,
+  EMAIL_FORMAT_MESSAGE,
+  isInternalEmail,
+  isValidBolivianCI,
+  isValidBolivianMobile,
+  isValidEmail,
+  normalizeBolivianPhone,
+  normalizeDigits,
+} from "../../../shared/utils/validators";
 
 export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false }) {
   const [form, setForm] = useState({
@@ -42,9 +51,9 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
     const nombres = form.nombres.trim();
     const apellidos = form.apellidos.trim();
     const documentoRaw = form.numeroDocumento.trim();
-    const documento = documentoRaw.replace(/\D/g, "");
+    const documento = normalizeDigits(documentoRaw);
     const telefonoRaw = form.telefono.trim();
-    const telefono = telefonoRaw.replace(/\D/g, "");
+    const telefono = normalizeBolivianPhone(telefonoRaw);
     const correo = form.correo.trim();
     const direccion = form.direccion.trim();
 
@@ -57,19 +66,19 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
     }
 
     if (!documentoRaw) {
-      nextErrors.numeroDocumento = "Ingrese un documento CI/NIT valido.";
+      nextErrors.numeroDocumento = BOLIVIAN_CI_MESSAGE;
     } else if (documentoRaw !== documento) {
-      nextErrors.numeroDocumento = "El documento debe contener solo numeros.";
-    } else if (documento.length < 5 || documento.length > 15) {
-      nextErrors.numeroDocumento = "Ingrese un documento CI/NIT valido.";
+      nextErrors.numeroDocumento = BOLIVIAN_CI_MESSAGE;
+    } else if (!isValidBolivianCI(documento)) {
+      nextErrors.numeroDocumento = BOLIVIAN_CI_MESSAGE;
     }
 
-    if (!telefonoRaw || telefonoRaw !== telefono || !/^\d{8}$/.test(telefono)) {
-      nextErrors.telefono = "Ingrese un telefono boliviano valido de 8 digitos.";
+    if (!telefonoRaw || !isValidBolivianMobile(telefono)) {
+      nextErrors.telefono = BOLIVIAN_MOBILE_MESSAGE;
     }
 
-    if (!correo || !EMAIL_REGEX.test(correo)) {
-      nextErrors.correo = "Ingrese un correo valido, ejemplo: cliente@correo.com.";
+    if (!correo || !isValidEmail(correo) || isInternalEmail(correo)) {
+      nextErrors.correo = EMAIL_FORMAT_MESSAGE;
     }
 
     if (direccion && direccion.length < 5) {
@@ -84,8 +93,8 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
     if (isSaving) return;
     if (!validate()) return;
 
-    const documento = form.numeroDocumento.trim();
-    const telefono = form.telefono.trim();
+    const documento = normalizeDigits(form.numeroDocumento);
+    const telefono = normalizeBolivianPhone(form.telefono);
     const nombres = form.nombres.trim();
     const apellidos = form.apellidos.trim();
     const nombre = [nombres, apellidos].join(" ");
@@ -141,13 +150,13 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
           />
 
           <Field
-            label="Documento CI/NIT"
+            label="CI"
             icon="credit-card"
-            placeholder="Ingrese CI o NIT"
+            placeholder="Ingrese CI de 5 a 8 digitos"
             keyboardType="number-pad"
             value={form.numeroDocumento}
             error={errors.numeroDocumento}
-            onChangeText={(value) => handleChange("numeroDocumento", value)}
+            onChangeText={(value) => handleChange("numeroDocumento", normalizeDigits(value).slice(0, 8))}
           />
 
           <Field
@@ -157,7 +166,7 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
             keyboardType="phone-pad"
             value={form.telefono}
             error={errors.telefono}
-            onChangeText={(value) => handleChange("telefono", value)}
+            onChangeText={(value) => handleChange("telefono", normalizeBolivianPhone(value).slice(0, 8))}
           />
 
           <Field

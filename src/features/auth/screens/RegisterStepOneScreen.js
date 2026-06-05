@@ -7,6 +7,14 @@ import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import tw from "../../../shared/styles/tw";
 import { colors } from "../../../shared/theme/colors";
 import { textPresets } from "../../../shared/theme/typography";
+import {
+  BOLIVIAN_MOBILE_MESSAGE,
+  EMAIL_FORMAT_MESSAGE,
+  isInternalEmail,
+  isValidBolivianMobile,
+  isValidEmail,
+  normalizeBolivianPhone,
+} from "../../../shared/utils/validators";
 import { AuthInput } from "../components/AuthInput";
 import { AuthTopBar } from "../components/AuthTopBar";
 
@@ -42,7 +50,7 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedUsername = username.trim();
     const trimmedBusinessName = businessName.trim();
-    const trimmedPhone = phone.replace(/\D/g, "");
+    const trimmedPhone = normalizeBolivianPhone(phone);
     const nextErrors = {};
 
     if (!trimmedNombres || trimmedNombres.length < 2) {
@@ -59,8 +67,8 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
 
     if (!trimmedEmail) {
       nextErrors.email = "Ingrese un correo electronico.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      nextErrors.email = "Ingrese un correo valido, ejemplo: usuario@correo.com.";
+    } else if (!isValidEmail(trimmedEmail) || isInternalEmail(trimmedEmail)) {
+      nextErrors.email = EMAIL_FORMAT_MESSAGE;
     }
 
     if (!trimmedUsername) {
@@ -77,8 +85,8 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
 
     if (!trimmedPhone) {
       nextErrors.phone = "Ingrese un numero de telefono.";
-    } else if (!/^\d{8}$/.test(trimmedPhone)) {
-      nextErrors.phone = "Ingrese un telefono boliviano valido de 8 digitos.";
+    } else if (!isValidBolivianMobile(trimmedPhone)) {
+      nextErrors.phone = BOLIVIAN_MOBILE_MESSAGE;
     }
 
     setErrors(nextErrors);
@@ -134,8 +142,8 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
               <AuthInput value={businessName} onChangeText={(text) => { setBusinessName(text); clearFieldError("businessName"); }} placeholder="Nombre del negocio" icon="briefcase" error={errors.businessName} />
               <AuthInput
                 value={phone}
-                onChangeText={(text) => { setPhone(text.replace(/\D/g, "").slice(0, 8)); clearFieldError("phone"); }}
-                placeholder="Telefono boliviano (8 digitos)"
+                onChangeText={(text) => { setPhone(normalizeBolivianPhone(text).slice(0, 8)); clearFieldError("phone"); }}
+                placeholder="Celular boliviano 6XXXXXXX o 7XXXXXXX"
                 icon="phone"
                 keyboardType="number-pad"
                 maxLength={8}

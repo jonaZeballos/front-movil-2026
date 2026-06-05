@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "movil-react-native",
-    "slug": "movil-react-native",
+    "name": "ServiTech",
+    "slug": "servitech",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,9 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.servitech.app"
     },
     "android": {
+      "package": "com.servitech.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

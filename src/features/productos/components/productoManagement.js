@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
   View,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -17,6 +18,12 @@ import { colors } from "../../../shared/theme/colors";
 import { ProductCard } from "./ProductCard";
 import { ProductListHeader } from "./ProductListHeader";
 import { ProductSearchBox } from "./ProductSearchBox";
+
+const inventoryRegisterButtonMargin = Platform.select({
+  ios: 65,
+  android: 56,
+  default: 56,
+});
 
 export default function GestionInventario({
   productos = [],
@@ -119,6 +126,7 @@ export default function GestionInventario({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.categoriesScroller}
         contentContainerStyle={styles.categoriesRow}
       >
         {categorias.map((categoria) => {
@@ -188,12 +196,12 @@ export default function GestionInventario({
         {filtrados.map((item) => (
           <ProductCard key={item.id} product={item} />
         ))}
-
-        <Pressable style={styles.registerBtn} onPress={() => onRegistrar?.(selectedCategoria)}>
-          <Ionicons name="add" size={22} color="#FFFFFF" />
-          <Text style={styles.registerBtnText}>{registerLabel}</Text>
-        </Pressable>
       </ScrollView>
+
+      <Pressable style={styles.registerBtn} onPress={() => onRegistrar?.(selectedCategoria)}>
+        <Ionicons name="add" size={22} color="#FFFFFF" />
+        <Text style={styles.registerBtnText}>{registerLabel}</Text>
+      </Pressable>
 
       <Modal transparent visible={categoryModalVisible} animationType="fade">
         <View style={styles.modalBackdrop}>
@@ -323,13 +331,19 @@ const styles = StyleSheet.create({
   },
   categoriesRow: {
     columnGap: 10,
-    paddingBottom: 16,
+    paddingBottom: 8,
     paddingHorizontal: 2,
     paddingRight: 8,
   },
+  categoriesScroller: {
+    flexGrow: 0,
+    minHeight: 112,
+    maxHeight: 112,
+    marginBottom: 8,
+  },
   categoryCard: {
-    width: 154,
-    minHeight: 92,
+    width: 164,
+    height: 104,
     borderRadius: 18,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
@@ -353,6 +367,7 @@ const styles = StyleSheet.create({
   categoryCount: {
     color: "#6B7280",
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: "700",
   },
   categoryCountSelected: {
@@ -388,7 +403,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingTop: 10,
-    paddingBottom: 126,
+    paddingBottom: 18,
   },
   loadingBox: {
     paddingVertical: 20,
@@ -421,6 +436,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     columnGap: 8,
     marginTop: 10,
+    marginBottom: inventoryRegisterButtonMargin,
     paddingHorizontal: 14,
   },
   registerBtnText: {

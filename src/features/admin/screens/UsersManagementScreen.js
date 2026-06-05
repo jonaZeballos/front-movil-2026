@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { UserCard } from "../components/UserCard";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
+import { bottomActionMargin } from "../../../shared/styles/bottomActions";
 
 export function UsersManagementScreen({ users = [], onBack, onCreateUser, onToggleBlockUser }) {
   const handleToggleBlock = (user) => {
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     columnGap: 8,
     marginTop: 10,
-    marginBottom: 16,
+    marginBottom: bottomActionMargin,
   },
   createButtonText: {
     color: "#FFFFFF",

@@ -143,7 +143,7 @@ export function RegisterStepOneScreen({ onBack, onNext, onGoToLogin }) {
               <AuthInput
                 value={phone}
                 onChangeText={(text) => { setPhone(normalizeBolivianPhone(text).slice(0, 8)); clearFieldError("phone"); }}
-                placeholder="Celular boliviano 6XXXXXXX o 7XXXXXXX"
+                placeholder="Ingrese numero de celular"
                 icon="phone"
                 keyboardType="number-pad"
                 maxLength={8}

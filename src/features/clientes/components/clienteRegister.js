@@ -162,7 +162,7 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
           <Field
             label="Telefono"
             icon="phone"
-            placeholder="Ingrese telefono boliviano de 8 digitos"
+            placeholder="Ingresa tu numero de telefono"
             keyboardType="phone-pad"
             value={form.telefono}
             error={errors.telefono}
@@ -284,7 +284,8 @@ const styles = StyleSheet.create({
   formCard: {
     backgroundColor: colors.surface,
     marginHorizontal: 14,
-    marginVertical: 12,
+    marginTop: 12,
+    marginBottom: 14,
     borderRadius: 18,
     padding: 16,
   },
@@ -334,10 +335,13 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     marginHorizontal: 14,
-    marginVertical: 10,
+    marginTop: 0,
+    marginBottom: 18,
+    minHeight: 56,
     backgroundColor: "#534AB7",
     borderRadius: 18,
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
   },

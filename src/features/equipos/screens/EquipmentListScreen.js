@@ -6,6 +6,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
+import { bottomActionMargin } from "../../../shared/styles/bottomActions";
 
 export function EquipmentListScreen({ equipments, onRegister, onOpenEquipment, onBack }) {
   const [query, setQuery] = useState("");
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     columnGap: 8,
     marginTop: 10,
-    marginBottom: 104,
+    marginBottom: bottomActionMargin,
   },
   createButtonText: {
     color: "#FFFFFF",

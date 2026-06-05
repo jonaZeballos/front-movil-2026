@@ -44,6 +44,13 @@ export async function unblockUser(userId) {
   }).then(mapUser);
 }
 
+export async function changeUserRole(userId, role) {
+  return apiRequest(`/api/usuarios/${userId}/rol`, {
+    method: "PATCH",
+    body: JSON.stringify({ rol: role }),
+  }).then(mapUser);
+}
+
 function mapUser(user) {
   const name = user.name || [user.nombres, user.apellidos].filter(Boolean).join(" ").trim();
 

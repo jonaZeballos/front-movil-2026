@@ -435,19 +435,15 @@ function ClientPickerModal({
   onCreateClient,
 }) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.modalOverlay} onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardAvoidingView}
+        <Pressable
+          style={styles.modalCard}
+          onPress={(e) => {
+            e.stopPropagation();
+            Keyboard.dismiss();
+          }}
         >
-          <Pressable
-            style={styles.modalCard}
-            onPress={(e) => {
-              e.stopPropagation();
-              Keyboard.dismiss();
-            }}
-          >
             <View style={styles.modalHeader}>
               <View>
                 <Text style={styles.modalTitle}>Seleccionar cliente</Text>
@@ -470,6 +466,7 @@ function ClientPickerModal({
               keyExtractor={(item) => String(item.id)}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
+              style={styles.clientFlatList}
               contentContainerStyle={styles.clientList}
               renderItem={({ item }) => (
                 <Pressable style={styles.clientItem} onPress={() => onSelect(item)}>
@@ -500,7 +497,6 @@ function ClientPickerModal({
               }
             />
           </Pressable>
-        </KeyboardAvoidingView>
       </Pressable>
     </Modal>
   );
@@ -730,15 +726,20 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.38)",
-    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
   },
   modalCard: {
-    maxHeight: "82%",
+    width: "100%",
+    maxHeight: 480,
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderRadius: 22,
     padding: 18,
+  },
+  clientFlatList: {
+    maxHeight: 230,
   },
   modalHeader: {
     flexDirection: "row",
@@ -836,9 +837,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "900",
     fontSize: 13,
-  },
-  keyboardAvoidingView: {
-    width: "100%",
-    justifyContent: "flex-end",
   },
 });

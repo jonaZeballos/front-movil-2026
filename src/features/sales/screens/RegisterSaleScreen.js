@@ -185,17 +185,20 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
           <Text style={styles.sectionTitle}>Cliente</Text>
 
           <Pressable style={styles.clientPickerButton} onPress={() => setClientModalVisible(true)}>
-            <Ionicons name="search" size={19} color="#6B7280" />
-            <View style={styles.clientPickerText}>
-              <Text style={styles.clientPickerTitle}>
-                {selectedClient ? getClientName(selectedClient) : "Seleccionar cliente"}
-              </Text>
-              <Text style={styles.clientPickerMeta}>
-                {selectedClient
-                  ? selectedClient.email || selectedClient.correo || selectedClient.telefono || "Cliente seleccionado"
-                  : "Buscar cliente por nombre, CI, telefono o correo"}
-              </Text>
-            </View>
+            <Ionicons
+              name="person-outline"
+              size={19}
+              color={selectedClient ? "#5655B9" : "#6B7280"}
+            />
+            <Text
+              style={[
+                styles.clientPickerTitle,
+                !selectedClient && styles.clientPickerPlaceholder,
+              ]}
+              numberOfLines={1}
+            >
+              {selectedClient ? getClientName(selectedClient) : "Selecciona un cliente para la venta"}
+            </Text>
             <Ionicons name="chevron-forward" size={20} color="#6B7280" />
           </Pressable>
 
@@ -414,7 +417,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   clientPickerButton: {
-    minHeight: 56,
+    height: 56,
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     paddingHorizontal: 14,
@@ -424,19 +427,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  clientPickerText: {
-    flex: 1,
-  },
   clientPickerTitle: {
+    flex: 1,
     color: "#111111",
     fontFamily: fontFamilies.bold,
     fontSize: 14,
   },
-  clientPickerMeta: {
-    marginTop: 3,
-    color: "#777782",
+  clientPickerPlaceholder: {
+    color: "#9CA3AF",
     fontFamily: fontFamilies.medium,
-    fontSize: 12,
   },
   inputBox: {
     marginBottom: 14,

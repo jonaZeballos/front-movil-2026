@@ -260,6 +260,8 @@ export function OrderFormModal({
         <SelectionModal
           visible={picker === "client"}
           title="Seleccionar cliente"
+          subtitle="Busca por nombre, documento, teléfono o correo"
+          searchPlaceholder="Buscar cliente por nombre, CI, teléfono o correo"
           search={clientSearch}
           onSearch={setClientSearch}
           emptyText="No hay clientes registrados."
@@ -279,6 +281,8 @@ export function OrderFormModal({
         <SelectionModal
           visible={picker === "equipment"}
           title="Seleccionar equipo"
+          subtitle="Busca por tipo, marca, modelo o número de serie"
+          searchPlaceholder="Buscar equipo por tipo, marca, modelo o serie"
           search={equipmentSearch}
           onSearch={setEquipmentSearch}
           emptyText={selectedClient ? "Este cliente no tiene equipos registrados." : "Seleccione un cliente primero."}
@@ -368,6 +372,8 @@ function OptionGroup({ label, options, value, error, onChange }) {
 function SelectionModal({
   visible,
   title,
+  subtitle,
+  searchPlaceholder,
   search,
   onSearch,
   emptyText,
@@ -384,7 +390,12 @@ function SelectionModal({
       <View style={styles.selectionOverlay}>
         <View style={styles.selectionCard}>
           <View style={styles.selectionHeader}>
-            <Text style={styles.selectionTitle}>{title}</Text>
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={styles.selectionTitle}>{title}</Text>
+              {!!subtitle && (
+                <Text style={styles.selectionSubtitle}>{subtitle}</Text>
+              )}
+            </View>
             <Pressable onPress={onClose}>
               <Ionicons name="close" size={22} color="#111827" />
             </Pressable>
@@ -392,7 +403,7 @@ function SelectionModal({
           <SearchInput
             value={search}
             onChangeText={onSearch}
-            placeholder="Buscar"
+            placeholder={searchPlaceholder || "Buscar"}
             style={styles.modalSearch}
           />
           <FlatList
@@ -612,6 +623,11 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontSize: 18,
     fontWeight: "900",
+  },
+  selectionSubtitle: {
+    marginTop: 3,
+    color: "#6B7280",
+    fontSize: 12,
   },
   modalSearch: {
     marginTop: 14,

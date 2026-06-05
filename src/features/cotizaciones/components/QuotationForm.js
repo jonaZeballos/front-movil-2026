@@ -42,8 +42,8 @@ export function QuotationForm({ form, errors, onChange }) {
       />
 
       <Field
-        label="Observaciones"
-        placeholder="Notas adicionales para el cliente"
+        label="Observaciones (opcional)"
+        placeholder="Opcional. Agrega detalles adicionales para el cliente."
         value={form.observaciones}
         error={errors.observaciones}
         multiline

@@ -19,9 +19,10 @@ import { SendReceiptEmailButton } from "../components/SendReceiptEmailButton";
 import { SendReceiptWhatsappButton } from "../components/SendReceiptWhatsappButton";
 import { downloadReceiptPdf } from "../services/receiptPdf";
 
-export function ElectronicReceiptScreen({ receipt }) {
+export function ElectronicReceiptScreen({ receipt, onBackToMainMenu, onBackToSales }) {
   const navigation = useNavigation();
   const [isDownloading, setIsDownloading] = useState(false);
+  const handleBackToMainMenu = onBackToMainMenu || onBackToSales || (() => navigation.navigate("SalesDashboard"));
 
   const handleDownloadPdf = async () => {
     if (!receipt) {
@@ -47,7 +48,7 @@ export function ElectronicReceiptScreen({ receipt }) {
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable onPress={handleBackToMainMenu} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
@@ -81,6 +82,11 @@ export function ElectronicReceiptScreen({ receipt }) {
                 <Text style={styles.secondaryButtonText}>Compartir PDF</Text>
               </>
             )}
+          </Pressable>
+
+          <Pressable style={styles.primaryButton} onPress={handleBackToMainMenu}>
+            <Ionicons name="home-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.primaryButtonText}>Volver al menu principal</Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -139,6 +145,21 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#2386F5",
+    fontFamily: fontFamilies.bold,
+    fontSize: 15,
+  },
+  primaryButton: {
+    marginTop: 10,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  primaryButtonText: {
+    color: "#FFFFFF",
     fontFamily: fontFamilies.bold,
     fontSize: 15,
   },

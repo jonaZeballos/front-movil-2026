@@ -12,30 +12,22 @@ import {
   filterReportItemsByPeriod,
   formatReportCurrency,
   getSaleDate,
+  normalizeReportSale,
 } from "../services";
 
 export function SalesReportScreen({ navigation, ventas = [], salesReport }) {
   const [period, setPeriod] = useState("todos");
-  const ventasData = salesReport?.ventas || ventas;
+  const ventasData = useMemo(
+    () => (salesReport?.ventas || ventas).map(normalizeReportSale),
+    [salesReport, ventas]
+  );
 
   const filteredVentas = useMemo(
     () => filterReportItemsByPeriod(ventasData, period, getSaleDate),
     [ventasData, period]
   );
 
-  const stats = useMemo(() => {
-    if (salesReport) {
-      return {
-        totalVentas: salesReport.totalVentas || 0,
-        totalIngresos: salesReport.ingresos || 0,
-        promedioVenta: salesReport.ticketPromedio || 0,
-        productosVendidos: salesReport.unidadesVendidas || 0,
-        metodosPago: {},
-      };
-    }
-
-    return calculateSalesReport(filteredVentas);
-  }, [filteredVentas, salesReport]);
+  const stats = useMemo(() => calculateSalesReport(filteredVentas), [filteredVentas]);
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>

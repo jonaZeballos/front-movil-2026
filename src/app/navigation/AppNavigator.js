@@ -810,7 +810,7 @@ export function AppNavigator() {
                   addNotification(prevNotifications, buildSaleNotification(receipt))
                 );
 
-                replaceOnce(navigation, "ElectronicReceipt", { receipt });
+                resetToRoute(navigation, "ElectronicReceipt", { receipt });
               }}
             />
           )}
@@ -820,6 +820,7 @@ export function AppNavigator() {
           {({ navigation, route }) => (
             <ElectronicReceiptScreen
               receipt={route.params?.receipt}
+              onBackToMainMenu={() => resetToRoute(navigation, getDashboardRouteForRole(session?.role))}
             />
           )}
         </Stack.Screen>

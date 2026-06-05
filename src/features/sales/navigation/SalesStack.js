@@ -1,4 +1,5 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { CommonActions } from "@react-navigation/native";
 
 import { SalesDashboardScreen } from "../screens/SalesDashboardScreen";
 import { RegisterSaleScreen } from "../screens/RegisterSaleScreen";
@@ -57,7 +58,12 @@ export function SalesStack({ user, clientes = [], onLogout }) {
             saleDraft={route.params?.saleDraft}
             onBack={() => createGuardedNavigation(navigation).goBack()}
             onConfirm={(receipt) =>
-              createGuardedNavigation(navigation).replace("ElectronicReceipt", { receipt })
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "ElectronicReceipt", params: { receipt } }],
+                })
+              )
             }
           />
         )}

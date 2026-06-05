@@ -20,6 +20,7 @@ export async function updateBusinessSettings(data) {
       emailContacto: data.emailContacto,
       telefono: data.telefono,
       direccion: data.direccion,
+      qrPagoUrl: data.qrPagoUrl,
     }),
   }).then(mapBusiness);
 }
@@ -53,6 +54,7 @@ function mapBusiness(business) {
     emailContacto: business.emailContacto || "",
     telefono: business.telefono || "",
     direccion: business.direccion || "",
+    qrPagoUrl: business.qrPagoUrl || "",
     fechaCreacion: business.fechaCreacion || null,
   };
 }

@@ -26,12 +26,14 @@ export default function RegistroProducto({
   const [nombre, setNombre] = useState("");
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
+  const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
   const [stock, setStock] = useState("");
   const [stockMinimo, setStockMinimo] = useState("1");
   const [selectedCategoriaId, setSelectedCategoriaId] = useState(initialCategoriaId || "");
   const [selectedTecnicoId, setSelectedTecnicoId] = useState("");
   const requiresTecnico = inventoryType === "tecnico" && role === "admin";
+  const isTechnicalInventory = inventoryType === "tecnico";
 
   useEffect(() => {
     if (initialCategoriaId) {
@@ -42,38 +44,49 @@ export default function RegistroProducto({
   const onSubmit = () => {
     if (isSaving) return;
 
-    const parsedPrecio = Number(String(precio).replace(",", "."));
-    const parsedStock = Number(stock);
-    const parsedStockMinimo = Number(stockMinimo);
+    const trimmedPrecio = String(precio).trim();
+    const trimmedStock = String(stock).trim();
+    const trimmedStockMinimo = String(stockMinimo).trim();
+    const parsedPrecio = trimmedPrecio ? Number(trimmedPrecio.replace(",", ".")) : 0;
+    const parsedStock = Number(trimmedStock);
+    const parsedStockMinimo = Number(trimmedStockMinimo);
 
     if (!selectedCategoriaId) {
-      return Alert.alert("Categoria requerida", "Selecciona una categoria para el producto.");
+      return Alert.alert("Categoria requerida", "Seleccione una categoria.");
     }
 
-    if (!nombre.trim()) {
-      return Alert.alert("Producto incompleto", "El nombre del producto es obligatorio.");
+    if (nombre.trim().length < 3) {
+      return Alert.alert(
+        isTechnicalInventory ? "Insumo incompleto" : "Producto incompleto",
+        isTechnicalInventory ? "Ingrese el nombre del insumo." : "Ingrese el nombre del producto."
+      );
     }
 
     if (requiresTecnico && !selectedTecnicoId) {
-      return Alert.alert("Tecnico requerido", "Selecciona el tecnico dueño de este inventario.");
+      return Alert.alert("Tecnico requerido", "Seleccione un tecnico.");
     }
 
-    if (!Number.isFinite(parsedPrecio) || parsedPrecio <= 0) {
-      return Alert.alert("Precio invalido", "El precio debe ser mayor a 0.");
+    if (!isTechnicalInventory && !trimmedPrecio) {
+      return Alert.alert("Precio requerido", "Ingrese un precio de venta valido.");
     }
 
-    if (!Number.isInteger(parsedStock) || parsedStock < 0) {
-      return Alert.alert("Stock invalido", "El stock debe ser un numero entero mayor o igual a 0.");
+    if (trimmedPrecio && (!Number.isFinite(parsedPrecio) || parsedPrecio < 0)) {
+      return Alert.alert("Precio invalido", isTechnicalInventory ? "Ingrese un precio de referencia valido." : "Ingrese un precio de venta valido.");
     }
 
-    if (!Number.isInteger(parsedStockMinimo) || parsedStockMinimo < 0) {
-      return Alert.alert("Stock minimo invalido", "El stock minimo debe ser un numero entero mayor o igual a 0.");
+    if (!trimmedStock || !Number.isInteger(parsedStock) || parsedStock < 0) {
+      return Alert.alert("Stock invalido", "Ingrese un stock valido.");
+    }
+
+    if (!trimmedStockMinimo || !Number.isInteger(parsedStockMinimo) || parsedStockMinimo < 0) {
+      return Alert.alert("Stock minimo invalido", "Ingrese un stock minimo valido.");
     }
 
     const producto = {
       nombre: nombre.trim(),
       marca: marca.trim(),
       modelo: modelo.trim(),
+      descripcion: descripcion.trim(),
       precio: parsedPrecio,
       stock: parsedStock,
       stockMinimo: parsedStockMinimo,
@@ -93,11 +106,11 @@ export default function RegistroProducto({
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <Text style={styles.title}>Registrar nuevo producto</Text>
           <Text style={styles.subtitle}>
-            Llena los campos para añadir un producto al {inventoryType === "tecnico" ? "inventario tecnico" : "inventario de tienda"}
+            Llena los campos para añadir un {isTechnicalInventory ? "insumo al inventario tecnico" : "producto al inventario de tienda"}
           </Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Categoria</Text>
+            <Text style={styles.label}>Categoria *</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -123,7 +136,7 @@ export default function RegistroProducto({
 
           {requiresTecnico ? (
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Tecnico</Text>
+              <Text style={styles.label}>Tecnico *</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -150,10 +163,10 @@ export default function RegistroProducto({
           ) : null}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nombre del producto</Text>
+            <Text style={styles.label}>{isTechnicalInventory ? "Nombre del insumo *" : "Nombre del producto *"}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Ej. Laptop Dell Inspiron"
+              placeholder={isTechnicalInventory ? "Ej. Alcohol isopropilico" : "Ej. Cargador universal laptop"}
               placeholderTextColor="#999"
               value={nombre}
               onChangeText={setNombre}
@@ -161,7 +174,7 @@ export default function RegistroProducto({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Marca</Text>
+            <Text style={styles.label}>Marca (opcional)</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej. Dell"
@@ -172,7 +185,7 @@ export default function RegistroProducto({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Modelo</Text>
+            <Text style={styles.label}>Modelo (opcional)</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej. Inspiron 15"
@@ -183,10 +196,10 @@ export default function RegistroProducto({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Precio</Text>
+            <Text style={styles.label}>{isTechnicalInventory ? "Precio de referencia (opcional)" : "Precio de venta *"}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Ej. 4500"
+              placeholder={isTechnicalInventory ? "Opcional. Ej. 35" : "Ej. 120"}
               placeholderTextColor="#999"
               value={precio}
               onChangeText={setPrecio}
@@ -195,7 +208,7 @@ export default function RegistroProducto({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Stock</Text>
+            <Text style={styles.label}>Stock *</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej. 10"
@@ -207,7 +220,7 @@ export default function RegistroProducto({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Stock minimo</Text>
+            <Text style={styles.label}>Stock minimo *</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej. 2"
@@ -215,6 +228,19 @@ export default function RegistroProducto({
               value={stockMinimo}
               onChangeText={setStockMinimo}
               keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Descripcion (opcional)</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder={isTechnicalInventory ? "Ej. Uso interno para mantenimiento preventivo" : "Ej. Producto disponible para venta al cliente"}
+              placeholderTextColor="#999"
+              value={descripcion}
+              onChangeText={setDescripcion}
+              multiline
+              textAlignVertical="top"
             />
           </View>
 
@@ -228,7 +254,10 @@ export default function RegistroProducto({
               disabled={isSaving}
             >
               {isSaving ? (
-                <ActivityIndicator color="#ffffff" />
+                <View style={styles.loadingRow}>
+                  <ActivityIndicator color="#ffffff" />
+                  <Text style={[styles.buttonText, styles.submitButtonText]}>Guardando...</Text>
+                </View>
               ) : (
                 <Text style={[styles.buttonText, styles.submitButtonText]}>Guardar</Text>
               )}
@@ -283,9 +312,15 @@ const styles = StyleSheet.create({
     color: "#1a1a1a",
     fontSize: 14,
   },
+  textArea: {
+    minHeight: 92,
+    paddingTop: 14,
+  },
   categoryList: {
     columnGap: 8,
     paddingVertical: 2,
+    paddingHorizontal: 2,
+    paddingRight: 8,
   },
   categoryChip: {
     minHeight: 40,
@@ -331,6 +366,11 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
   },
   buttonText: {
     fontSize: 14,

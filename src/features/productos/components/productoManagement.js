@@ -324,9 +324,11 @@ const styles = StyleSheet.create({
   categoriesRow: {
     columnGap: 10,
     paddingBottom: 16,
+    paddingHorizontal: 2,
+    paddingRight: 8,
   },
   categoryCard: {
-    width: 142,
+    width: 154,
     minHeight: 92,
     borderRadius: 18,
     backgroundColor: "#FFFFFF",
@@ -343,6 +345,7 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontSize: 13,
     fontWeight: "900",
+    lineHeight: 17,
   },
   categoryNameSelected: {
     color: "#FFFFFF",

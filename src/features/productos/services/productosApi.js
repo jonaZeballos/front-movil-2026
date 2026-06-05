@@ -19,7 +19,7 @@ export function createProducto(productoData) {
       descripcion: productoData.descripcion,
       precio: productoData.precio,
       stock: productoData.stock,
-      stockMinimo: productoData.stockMinimo || 1,
+      stockMinimo: productoData.stockMinimo ?? 1,
       idCategoria: productoData.idCategoria ?? productoData.categoriaId ?? null,
       idTecnico: productoData.idTecnico ?? null,
       tipoInventario: productoData.tipoInventario || "tienda",

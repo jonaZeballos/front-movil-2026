@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,7 +26,9 @@ import { getRealEmail } from "../services/receiptFormatters";
 export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleConfirm = async () => {
+  const registerSale = async () => {
+    if (isSaving) return;
+
     if (!saleDraft) {
       Alert.alert("Venta no disponible", "No se encontraron datos de la venta.");
       return;
@@ -68,6 +71,35 @@ export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleConfirm = () => {
+    if (isSaving) return;
+
+    if (!saleDraft) {
+      Alert.alert("Venta no disponible", "No se encontraron datos de la venta.");
+      return;
+    }
+
+    if (!saleDraft.metodoPago) {
+      Alert.alert("Metodo de pago", "Seleccione un metodo de pago.");
+      return;
+    }
+
+    Alert.alert(
+      "Confirmar venta",
+      "Se registrara la venta, se descontara el stock y se generara el recibo. Despues no podras volver a editar esta venta.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Confirmar",
+          onPress: registerSale,
+        },
+      ]
+    );
   };
 
   if (!saleDraft) {
@@ -148,6 +180,14 @@ export function SaleSummaryScreen({ saleDraft, user, onBack, onConfirm }) {
               <Text style={styles.paymentText}>{saleDraft.metodoPago?.label || "No registrado"}</Text>
             </View>
           </View>
+
+          {saleDraft.metodoPago?.id === "qr" && saleDraft.qrPagoUrl ? (
+            <View style={styles.qrCard}>
+              <Text style={styles.cardLabel}>QR para cobrar</Text>
+              <Image source={{ uri: saleDraft.qrPagoUrl }} style={styles.qrImage} resizeMode="contain" />
+              <Text style={styles.qrHint}>Confirma la venta cuando el pago haya sido recibido.</Text>
+            </View>
+          ) : null}
 
           <SaleSummaryBox
             subtotal={saleDraft.subtotal}
@@ -319,6 +359,29 @@ const styles = StyleSheet.create({
     color: "#111111",
     fontFamily: fontFamilies.bold,
     fontSize: 15,
+  },
+  qrCard: {
+    marginBottom: 14,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  qrImage: {
+    width: "100%",
+    height: 240,
+    borderRadius: 14,
+    backgroundColor: "#F9FAFB",
+    marginTop: 10,
+  },
+  qrHint: {
+    marginTop: 10,
+    color: "#6B7280",
+    fontFamily: fontFamilies.medium,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "center",
   },
   primaryButton: {
     marginTop: 18,

@@ -3,8 +3,6 @@ import { apiRequest } from "../../../shared/api/client";
 export const paymentMethods = [
   { id: "efectivo", label: "Efectivo", iconName: "cash-outline" },
   { id: "qr", label: "QR", iconName: "qr-code-outline" },
-  { id: "tarjeta", label: "Tarjeta", iconName: "card-outline" },
-  { id: "transferencia", label: "Transferencia", iconName: "card-outline" },
 ];
 
 export function formatCurrency(value) {
@@ -15,6 +13,13 @@ export function formatCurrency(value) {
 export async function listVentas() {
   const ventas = await apiRequest("/api/ventas");
   return ventas.map(mapVenta);
+}
+
+export async function getBusinessPaymentSettings() {
+  const business = await apiRequest("/api/negocios/me");
+  return {
+    qrPagoUrl: business.qrPagoUrl || "",
+  };
 }
 
 export async function createSale(saleDraft) {

@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -19,7 +20,7 @@ import { fontFamilies } from "../../../shared/theme/fonts";
 import { SaleProductItem } from "../components/SaleProductItem";
 import { SaleSummaryBox } from "../components/SaleSummaryBox";
 import { PaymentMethodSelector } from "../components/PaymentMethodSelector";
-import { paymentMethods } from "../services/salesApi";
+import { getBusinessPaymentSettings } from "../services/salesApi";
 
 export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onContinue }) {
   const [selectedClientId, setSelectedClientId] = useState(null);
@@ -29,6 +30,13 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
   const [quantityErrors, setQuantityErrors] = useState({});
   const [discount, setDiscount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(null);
+  const [businessPayment, setBusinessPayment] = useState({ qrPagoUrl: "" });
+
+  useEffect(() => {
+    getBusinessPaymentSettings()
+      .then(setBusinessPayment)
+      .catch(() => setBusinessPayment({ qrPagoUrl: "" }));
+  }, []);
 
   const filteredClients = useMemo(
     () => clientes.filter((client) => clientMatchesSearch(client, clientSearch)),
@@ -125,6 +133,11 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
       return;
     }
 
+    if (paymentMethod.id === "qr" && !businessPayment.qrPagoUrl) {
+      Alert.alert("QR no configurado", "El administrador debe configurar el QR de pago del negocio.");
+      return;
+    }
+
     if (rawDiscount && (!Number.isFinite(parsedDiscount) || parsedDiscount < 0)) {
       Alert.alert("Descuento invalido", "Ingresa un descuento valido mayor o igual a 0.");
       return;
@@ -139,6 +152,7 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
       cliente: selectedClient,
       productos: selectedProducts,
       metodoPago: paymentMethod,
+      qrPagoUrl: paymentMethod.id === "qr" ? businessPayment.qrPagoUrl : "",
       subtotal,
       descuento: discountAmount,
       total,
@@ -206,6 +220,19 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
           <Text style={styles.sectionTitle}>Método de pago</Text>
 
           <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />
+
+          {paymentMethod?.id === "qr" ? (
+            <View style={styles.qrBox}>
+              {businessPayment.qrPagoUrl ? (
+                <>
+                  <Text style={styles.qrTitle}>QR de pago del negocio</Text>
+                  <Image source={{ uri: businessPayment.qrPagoUrl }} style={styles.qrImage} resizeMode="contain" />
+                </>
+              ) : (
+                <Text style={styles.qrEmpty}>El negocio no tiene QR de pago configurado.</Text>
+              )}
+            </View>
+          ) : null}
 
           <Text style={styles.sectionTitle}>Descuento</Text>
 
@@ -433,6 +460,34 @@ const styles = StyleSheet.create({
     color: "#111111",
     fontFamily: fontFamilies.semibold,
     fontSize: 15,
+  },
+  qrBox: {
+    marginTop: 12,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 14,
+    alignItems: "center",
+  },
+  qrTitle: {
+    color: "#111827",
+    fontFamily: fontFamilies.bold,
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  qrImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: 14,
+    backgroundColor: "#F9FAFB",
+  },
+  qrEmpty: {
+    color: "#D14343",
+    fontFamily: fontFamilies.medium,
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 18,
   },
   primaryButton: {
     marginTop: 18,

@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#ECECF2",
   },
   quantityInput: {
-    minWidth: 44,
-    height: 34,
+    minWidth: 48,
+    height: 38,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -124,6 +124,10 @@ const styles = StyleSheet.create({
     color: "#111111",
     fontFamily: fontFamilies.bold,
     fontSize: 16,
+    lineHeight: 20,
     paddingHorizontal: 4,
+    paddingVertical: Platform.OS === "android" ? 0 : 6,
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
 });

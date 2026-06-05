@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "http://192.168.0.9:3000";
+const DEFAULT_API_URL = "http://192.168.1.19:3000";
 
 let authToken = null;
 
@@ -10,7 +10,7 @@ export function getApiBaseUrl() {
   return (process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
 }
 
-export async function apiRequest(path, options = {}) {
+export async function apiRequest(path, options = {}) { 
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = `${getApiBaseUrl()}${normalizedPath}`;
   const headers = {

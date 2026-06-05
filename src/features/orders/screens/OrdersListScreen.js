@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
+import { bottomActionMargin } from "../../../shared/styles/bottomActions";
 import { OrderCard } from "../components/OrderCard";
 
 export function OrdersListScreen({ orders, onCreateOrder, onOpenOrder, onBack }) {
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     columnGap: 8,
     marginTop: 10,
-    marginBottom: 104,
+    marginBottom: bottomActionMargin,
   },
   createButtonText: {
     color: "#FFFFFF",

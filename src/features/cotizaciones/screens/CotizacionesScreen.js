@@ -5,6 +5,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
+import { bottomActionMargin } from "../../../shared/styles/bottomActions";
 import { OrderQuotationCard } from "../components/OrderQuotationCard";
 import {
   getClienteNombre,
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     columnGap: 8,
     marginTop: 10,
-    marginBottom: 104,
+    marginBottom: bottomActionMargin,
   },
   createButtonText: {
     color: "#FFFFFF",

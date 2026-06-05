@@ -10,6 +10,7 @@ import { Feather } from "@expo/vector-icons";
 
 import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
+import { clientBottomActionMargin } from "../../../shared/styles/bottomActions";
 import { getClientStats } from "../services/clientHistoryApi";
 
 export default function GestionClientes({
@@ -510,8 +511,11 @@ const styles = StyleSheet.create({
   registerBtn: {
     marginHorizontal: 14,
     marginTop: 16,
-    marginBottom: 104,
+    marginBottom: clientBottomActionMargin,
     backgroundColor: "#534AB7",
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
     borderRadius: 18,
     padding: 16,
     alignItems: "center",

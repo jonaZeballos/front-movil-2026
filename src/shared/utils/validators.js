@@ -1,6 +1,5 @@
 export const EMAIL_FORMAT_MESSAGE = "Ingrese un correo valido, ejemplo: usuario@correo.com.";
-export const BOLIVIAN_MOBILE_MESSAGE =
-  "Ingrese un celular boliviano valido de 8 digitos que empiece con 6 o 7.";
+export const BOLIVIAN_MOBILE_MESSAGE = "Ingresa tu numero de telefono.";
 export const BOLIVIAN_CI_MESSAGE = "Ingrese un CI valido, solo numeros de 5 a 8 digitos.";
 export const BOLIVIAN_NIT_MESSAGE = "Ingrese un NIT valido, solo numeros de 7 a 15 digitos.";
 

@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
+import { bottomActionMargin } from "../../../shared/styles/bottomActions";
 import { listProductos } from "../../productos/services/productosApi";
 import { createVenta } from "../services/salesApi";
 
@@ -253,11 +254,14 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   quantity: {
-    minWidth: 20,
+    minWidth: 26,
+    minHeight: 24,
     textAlign: "center",
     color: "#111827",
     fontSize: 16,
+    lineHeight: 20,
     fontWeight: "900",
+    includeFontPadding: false,
   },
   emptyBox: {
     marginTop: 40,
@@ -301,7 +305,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 104,
+    marginBottom: bottomActionMargin,
   },
   createButtonText: {
     color: "#FFFFFF",

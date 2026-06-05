@@ -92,20 +92,23 @@ export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation, o
         </View>
 
         <View style={styles.clientSection}>
-          <Text style={styles.sectionTitle}>Selecciona cliente</Text>
+          <Text style={styles.sectionTitle}>Cliente</Text>
           <Pressable
             style={styles.clientPickerButton}
             onPress={() => setClientPickerVisible(true)}
           >
-            <Feather name="search" size={18} color="#6B7280" />
-            <View style={styles.clientPickerText}>
-              <Text style={styles.clientPickerTitle}>
-                {selectedClient?.name || "Seleccionar cliente"}
-              </Text>
-              <Text style={styles.clientPickerMeta}>
-                {selectedClient ? `${selectedClient.count} orden${selectedClient.count === 1 ? "" : "es"} disponible${selectedClient.count === 1 ? "" : "s"}` : "Buscar por nombre, documento, telefono o correo"}
-              </Text>
-            </View>
+            <Feather name="user" size={18} color={selectedClient ? "#5655B9" : "#6B7280"} />
+            <Text
+              style={[
+                styles.clientPickerTitle,
+                !selectedClient && styles.clientPickerPlaceholder,
+              ]}
+              numberOfLines={1}
+            >
+              {selectedClient
+                ? selectedClient.name
+                : "Selecciona un cliente para ver sus órdenes"}
+            </Text>
             <Ionicons name="chevron-forward" size={20} color="#6B7280" />
           </Pressable>
         </View>
@@ -334,7 +337,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   clientPickerButton: {
-    minHeight: 56,
+    height: 56,
     borderRadius: 18,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
@@ -344,19 +347,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     columnGap: 10,
   },
-  clientPickerText: {
-    flex: 1,
-  },
   clientPickerTitle: {
+    flex: 1,
     color: "#111827",
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  clientPickerMeta: {
-    marginTop: 3,
-    color: "#6B7280",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
+  },
+  clientPickerPlaceholder: {
+    color: "#9CA3AF",
+    fontWeight: "500",
   },
   selectionText: {
     marginBottom: 10,

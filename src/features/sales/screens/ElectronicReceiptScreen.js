@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { colors } from "../../../shared/theme/colors";
@@ -19,6 +20,7 @@ import { SendReceiptWhatsappButton } from "../components/SendReceiptWhatsappButt
 import { downloadReceiptPdf } from "../services/receiptPdf";
 
 export function ElectronicReceiptScreen({ receipt }) {
+  const navigation = useNavigation();
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadPdf = async () => {
@@ -42,23 +44,24 @@ export function ElectronicReceiptScreen({ receipt }) {
   };
 
   return (
-    <ScreenContainer backgroundColor={colors.primary} edges={["top"]}>
-      <View style={styles.root}>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
+      <View style={styles.container}>
         <View style={styles.header}>
-          <View style={styles.successIcon}>
-            <Ionicons name="checkmark" size={34} color="#FFFFFF" />
-          </View>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={22} color="#111827" />
+          </Pressable>
 
-          <Text style={styles.headerTitle}>Venta registrada</Text>
-          <Text style={styles.headerSubtitle}>
-            El recibo electrónico fue generado correctamente
-          </Text>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>Venta registrada</Text>
+            <Text style={styles.subtitle}>
+              El recibo electrónico fue generado correctamente
+            </Text>
+          </View>
         </View>
 
         <ScrollView
-          style={styles.content}
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
         >
           <ElectronicReceiptCard receipt={receipt} />
 
@@ -74,8 +77,8 @@ export function ElectronicReceiptScreen({ receipt }) {
               <ActivityIndicator color="#2386F5" />
             ) : (
               <>
-                <Ionicons name="download-outline" size={19} color="#2386F5" />
-                <Text style={styles.secondaryButtonText}>Descargar recibo en PDF</Text>
+                <Ionicons name="share-social-outline" size={20} color="#2386F5" />
+                <Text style={styles.secondaryButtonText}>Compartir PDF</Text>
               </>
             )}
           </Pressable>
@@ -86,65 +89,41 @@ export function ElectronicReceiptScreen({ receipt }) {
 }
 
 const styles = StyleSheet.create({
-  root: {
+  container: {
     flex: 1,
-    backgroundColor: colors.dashboardBg,
+    paddingHorizontal: 18,
+    paddingTop: 14,
   },
   header: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 28,
-    alignItems: "center",
-  },
-  successIcon: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: "#10B981",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 4,
-    borderColor: "rgba(255,255,255,0.28)",
-  },
-  headerTitle: {
-    marginTop: 12,
-    color: "#FFFFFF",
-    fontFamily: fontFamilies.bold,
-    fontSize: 25,
-  },
-  headerSubtitle: {
-    marginTop: 4,
-    color: "#DEE1FF",
-    fontFamily: fontFamilies.medium,
-    fontSize: 13,
-    textAlign: "center",
-  },
-  content: {
-    flex: 1,
-    marginTop: -14,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: colors.dashboardBg,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 118,
-  },
-  primaryButton: {
-    marginTop: 18,
-    height: 54,
-    borderRadius: 18,
-    backgroundColor: "#2386F5",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+    marginBottom: 18,
   },
-  primaryButtonText: {
-    color: "#FFFFFF",
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  headerText: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    color: "#111827",
     fontFamily: fontFamilies.bold,
-    fontSize: 15,
+  },
+  subtitle: {
+    marginTop: 3,
+    color: "#6B7280",
+    fontSize: 13,
+    fontFamily: fontFamilies.medium,
+  },
+  content: {
+    paddingBottom: 118,
   },
   secondaryButton: {
     marginTop: 10,

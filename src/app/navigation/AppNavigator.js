@@ -64,6 +64,7 @@ import {
   createUser as createUserRequest,
   listUsers,
   unblockUser,
+  changeUserRole,
 } from "../../features/admin/services/usersApi";
 import {
   addClienteToBlacklist,
@@ -573,11 +574,18 @@ export function AppNavigator() {
     });
   };
 
-  const toggleBlockUser = async (user) => {
+  const toggleBlockUser = async (user, motivo) => {
     const updatedUser = user.bloqueado
       ? await unblockUser(user.id)
-      : await blockUser(user.id, "Bloqueado por administrador");
+      : await blockUser(user.id, motivo);
 
+    setUsers((prevUsers) =>
+      prevUsers.map((item) => (item.id === updatedUser.id ? updatedUser : item))
+    );
+  };
+
+  const onChangeUserRole = async (userId, newRole) => {
+    const updatedUser = await changeUserRole(userId, newRole);
     setUsers((prevUsers) =>
       prevUsers.map((item) => (item.id === updatedUser.id ? updatedUser : item))
     );
@@ -736,7 +744,12 @@ export function AppNavigator() {
 
         <Stack.Screen name="RolesPermissions">
           {({ navigation }) => (
-            <RolesPermissionsScreen onBack={() => goBackOnce(navigation)} />
+            <RolesPermissionsScreen
+              users={users}
+              onBack={() => goBackOnce(navigation)}
+              onChangeUserRole={onChangeUserRole}
+              onToggleBlockUser={toggleBlockUser}
+            />
           )}
         </Stack.Screen>
 

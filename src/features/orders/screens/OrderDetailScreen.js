@@ -31,6 +31,12 @@ import {
 } from "../../cotizaciones/utils/quotationFormatters";
 import { StatusBadge } from "../components/StatusBadge";
 import { orderStatuses } from "../services/ordersApi";
+import {
+  getOrderStateLabel,
+  isBackwardTransition,
+  isFinalOrderState,
+  normalizeOrderState,
+} from "../utils/orderStates";
 
 export function OrderDetailScreen({
   order,
@@ -47,6 +53,7 @@ export function OrderDetailScreen({
   const [isSavingObservation, setIsSavingObservation] = useState(false);
   const statusLockRef = useRef(false);
   const observationLockRef = useRef(false);
+  const currentStatus = normalizeOrderState(order?.status || order?.estado);
 
   if (!order) {
     return (
@@ -85,20 +92,63 @@ export function OrderDetailScreen({
     Alert.alert("Confirmación", "La observación fue agregada correctamente.");
   };
 
-  const handleUpdateStatus = async (status) => {
-    if (statusLockRef.current || savingStatus || order.status === status) return;
+  const handleUpdateStatus = async (nextStatus) => {
+    if (statusLockRef.current || savingStatus || currentStatus === nextStatus) return;
 
-    Alert.alert(
-      "Confirmar cambio de estado",
-      `Deseas cambiar la orden ${order.code || ""} a "${status}"?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Confirmar",
-          onPress: () => updateStatus(status),
-        },
-      ]
-    );
+    if (nextStatus === "cotizado") {
+      const associatedQuotation = getOrderAssociatedQuotation(order);
+
+      if (!associatedQuotation) {
+        Alert.alert(
+          "Cotizacion requerida",
+          "Esta orden todavia no tiene una cotizacion. Genere una cotizacion antes de cambiarla a Cotizado."
+        );
+        return;
+      }
+
+      if (isQuotationExplicitlyExpired(associatedQuotation)) {
+        Alert.alert(
+          "Cotizacion vencida",
+          "Esta orden tiene una cotizacion vencida. Se recomienda generar una nueva cotizacion antes de continuar.",
+          [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Continuar",
+              onPress: () => confirmOrUpdateStatus(nextStatus),
+            },
+          ]
+        );
+        return;
+      }
+    }
+
+    confirmOrUpdateStatus(nextStatus);
+  };
+
+  const confirmOrUpdateStatus = (nextStatus) => {
+    const nextLabel = getOrderStateLabel(nextStatus);
+    let message = null;
+
+    if (isFinalOrderState(currentStatus)) {
+      message = "Esta orden ya estaba cerrada. Cambiar su estado puede afectar el historial. Deseas continuar?";
+    } else if (isFinalOrderState(nextStatus)) {
+      message = "Este estado puede cerrar la atencion de la orden. Deseas continuar?";
+    } else if (isBackwardTransition(currentStatus, nextStatus)) {
+      message = "Estas cambiando la orden a un estado anterior. Deseas continuar?";
+    }
+
+    if (!message) {
+      updateStatus(nextStatus);
+      return;
+    }
+
+    Alert.alert("Confirmar cambio de estado", message, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: `Cambiar a ${nextLabel}`,
+        onPress: () => updateStatus(nextStatus),
+      },
+    ]);
   };
 
   const updateStatus = async (status) => {
@@ -117,23 +167,23 @@ export function OrderDetailScreen({
   };
 
   const handleCancelOrder = () => {
-    if (!onCancelOrder || isCancelling || order.status === "Anulado") return;
+    if (!onCancelOrder || isCancelling || currentStatus === "cancelado") return;
 
     Alert.alert(
-      "Anular orden",
-      `Deseas anular la orden ${order.code || ""}? Esta accion quedara registrada.`,
+      "Cancelar orden",
+      `Deseas cancelar la orden ${order.code || ""}? Esta accion quedara registrada.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
-          text: "Anular",
+          text: "Cancelar orden",
           style: "destructive",
           onPress: async () => {
             setIsCancelling(true);
             try {
-              await onCancelOrder(order.id, "Anulada por administrador");
-              Alert.alert("Confirmacion", "La orden fue anulada correctamente.");
+              await onCancelOrder(order.id, "Cancelada por administrador");
+              Alert.alert("Confirmacion", "La orden fue cancelada correctamente.");
             } catch (error) {
-              Alert.alert("No se pudo anular", error.message || "Intenta nuevamente.");
+              Alert.alert("No se pudo cancelar", error.message || "Intenta nuevamente.");
             } finally {
               setIsCancelling(false);
             }
@@ -185,24 +235,24 @@ export function OrderDetailScreen({
 
             <View style={styles.statusGrid}>
               {orderStatuses.map((status) => {
-                const active = order.status === status;
+                const active = currentStatus === status.value;
 
                 return (
                   <Pressable
-                    key={status}
+                    key={status.value}
                     style={[
                       styles.statusButton,
                       active && styles.statusButtonActive,
                       savingStatus && styles.disabledButton,
                     ]}
-                    onPress={() => handleUpdateStatus(status)}
+                    onPress={() => handleUpdateStatus(status.value)}
                     disabled={Boolean(savingStatus)}
                   >
-                    {savingStatus === status ? (
+                    {savingStatus === status.value ? (
                       <ActivityIndicator size="small" color={active ? "#FFFFFF" : "#5655B9"} />
                     ) : (
                       <Text style={[styles.statusButtonText, active && styles.statusButtonTextActive]}>
-                        {status}
+                        {status.label}
                       </Text>
                     )}
                   </Pressable>
@@ -213,13 +263,13 @@ export function OrderDetailScreen({
               <Pressable
                 style={[styles.cancelButton, isCancelling && styles.disabledButton]}
                 onPress={handleCancelOrder}
-                disabled={isCancelling || order.status === "Anulado"}
+                disabled={isCancelling || currentStatus === "cancelado"}
               >
                 {isCancelling ? (
                   <ActivityIndicator color="#B91C1C" />
                 ) : (
                   <Text style={styles.cancelButtonText}>
-                    {order.status === "Anulado" ? "Orden anulada" : "Anular orden"}
+                    {currentStatus === "cancelado" ? "Orden cancelada" : "Cancelar orden"}
                   </Text>
                 )}
               </Pressable>
@@ -326,6 +376,24 @@ function InfoRow({ label, value }) {
       <Text style={styles.value}>{toDisplayText(value)}</Text>
     </View>
   );
+}
+
+function getOrderAssociatedQuotation(order) {
+  if (order?.cotizacion) return order.cotizacion;
+
+  if (Array.isArray(order?.cotizaciones) && order.cotizaciones.length > 0) {
+    return order.cotizaciones[0];
+  }
+
+  if (Array.isArray(order?.cotizacionesAsociadas) && order.cotizacionesAsociadas.length > 0) {
+    return order.cotizacionesAsociadas[0];
+  }
+
+  return null;
+}
+
+function isQuotationExplicitlyExpired(quotation) {
+  return quotation?.vencida === true || quotation?.activa === false;
 }
 
 function buildOrderQuotation(order) {

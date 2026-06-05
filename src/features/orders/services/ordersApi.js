@@ -1,12 +1,7 @@
 import { apiRequest } from "../../../shared/api/client";
+import { ORDER_STATES, normalizeOrderState } from "../utils/orderStates";
 
-export const orderStatuses = [
-  "Recibido",
-  "Cotizado",
-  "Listo",
-  "Entregado",
-  "Sin solucion",
-];
+export const orderStatuses = ORDER_STATES;
 
 export function listOrdenes(search = "") {
   const query = search ? `?buscar=${encodeURIComponent(search)}` : "";
@@ -20,7 +15,7 @@ export function createOrden(orderData) {
       equipoId: orderData.equipoId,
       diagnostico: orderData.diagnostico || orderData.failure,
       prioridad: orderData.prioridad || "Normal",
-      estado: orderData.estado || "Recibido",
+      estado: normalizeOrderState(orderData.estado || orderData.status || "recibido"),
       observaciones: orderData.observaciones,
       garantiaDias: orderData.garantiaDias || 0,
     }),
@@ -34,7 +29,7 @@ export function createOrdenesLote(orderData) {
       equipoIds: orderData.equipoIds || [],
       diagnostico: orderData.diagnostico || orderData.failure,
       prioridad: orderData.prioridad || "Normal",
-      estado: orderData.estado || "Recibido",
+      estado: normalizeOrderState(orderData.estado || orderData.status || "recibido"),
       observaciones: orderData.observaciones,
       garantiaDias: orderData.garantiaDias || 0,
     }),
@@ -51,7 +46,7 @@ export function updateOrden(orderId, data) {
 export function updateEstadoOrden(orderId, estado) {
   return apiRequest(`/api/ordenes/${orderId}/estado`, {
     method: "PATCH",
-    body: JSON.stringify({ estado }),
+    body: JSON.stringify({ estado: normalizeOrderState(estado) }),
   }).then(mapOrden);
 }
 
@@ -66,7 +61,7 @@ function mapOrden(orden) {
   const equipmentName = orden.equipmentName || orden.equipoNombre || orden.equipo?.nombre || orden.equipo?.modelo || "Equipo";
   const cliente = orden.cliente && typeof orden.cliente === "object" ? orden.cliente : null;
   const clientName = orden.clientName || orden.clienteNombre || cliente?.nombre || cliente?.razonSocial || orden.equipo?.cliente?.nombre || "Cliente";
-  const status = orden.status || orden.estado;
+  const status = normalizeOrderState(orden.status || orden.estado || orden.statusLabel || orden.estadoLabel);
   const failure = orden.failure || orden.diagnostico;
 
   return {
@@ -75,6 +70,8 @@ function mapOrden(orden) {
     codigo: orden.codigo || orden.code,
     status,
     estado: status,
+    statusLabel: orden.statusLabel || orden.estadoLabel,
+    estadoLabel: orden.estadoLabel || orden.statusLabel,
     failure,
     falla: failure,
     diagnostico: orden.diagnostico || failure,

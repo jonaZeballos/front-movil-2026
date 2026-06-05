@@ -18,7 +18,7 @@ import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
 
 const PRIORITIES = ["Baja", "Media", "Alta", "Urgente"];
-const INITIAL_STATUSES = ["Recibido", "Pendiente"];
+const INITIAL_STATUSES = ["Recibido", "En diagnostico"];
 
 export function OrderFormModal({
   visible,

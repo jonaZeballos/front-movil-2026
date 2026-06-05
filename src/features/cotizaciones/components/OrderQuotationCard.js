@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { colors } from "../../../shared/theme/colors";
+import { getOrderStateLabel } from "../../orders/utils/orderStates";
 import {
   getClienteNombre,
   getDiagnosticoTexto,
@@ -26,7 +27,7 @@ export function OrderQuotationCard({ order, selected = false, onSelect }) {
         </View>
 
         <View style={styles.statusPill}>
-          <Text style={styles.statusText}>{toDisplayText(order.estado || order.status, "Sin estado")}</Text>
+          <Text style={styles.statusText}>{getOrderStateLabel(order.estado || order.status)}</Text>
         </View>
       </View>
 

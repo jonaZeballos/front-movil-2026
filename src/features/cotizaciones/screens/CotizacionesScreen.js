@@ -13,6 +13,7 @@ import {
   isCotizacionActiva,
   toDisplayText,
 } from "../utils/quotationFormatters";
+import { normalizeOrderState } from "../../orders/utils/orderStates";
 
 export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation, onViewQuotation }) {
   const [selectedClientId, setSelectedClientId] = useState(null);
@@ -20,8 +21,8 @@ export function CotizacionesScreen({ orders = [], onBack, onGenerateQuotation, o
   const [clientPickerVisible, setClientPickerVisible] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
   const quoteableOrders = orders.map(mapOrderForQuotation).filter((order) => {
-    const status = String(order.status || order.estado || "").toLowerCase();
-    return status !== "entregado" && status !== "sin solucion";
+    const status = normalizeOrderState(order.status || order.estado);
+    return status !== "entregado" && status !== "sin_solucion" && status !== "cancelado";
   });
   const clients = useMemo(() => getClientsFromOrders(quoteableOrders), [quoteableOrders]);
   const filteredClients = useMemo(

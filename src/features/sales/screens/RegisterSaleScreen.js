@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
+import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
 import { fontFamilies } from "../../../shared/theme/fonts";
 import { SaleProductItem } from "../components/SaleProductItem";
@@ -148,20 +149,16 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
   };
 
   return (
-    <ScreenContainer backgroundColor={colors.primary} edges={["top"]} keyboardAvoiding>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]} keyboardAvoiding>
       <View style={styles.root}>
         <View style={styles.header}>
           <Pressable style={styles.backButton} onPress={onBack}>
-            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={22} color="#111827" />
           </Pressable>
 
-          <View>
+          <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle}>Registrar venta</Text>
             <Text style={styles.headerSubtitle}>Selecciona cliente, productos y pago</Text>
-          </View>
-
-          <View style={styles.headerIcon}>
-            <Ionicons name="cart-outline" size={24} color="#FFFFFF" />
           </View>
         </View>
 
@@ -182,7 +179,7 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
               <Text style={styles.clientPickerMeta}>
                 {selectedClient
                   ? selectedClient.email || selectedClient.correo || selectedClient.telefono || "Cliente seleccionado"
-                  : "Buscar por nombre, CI/NIT, telefono, correo o direccion"}
+                  : "Buscar cliente por nombre, CI, telefono o correo"}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#6B7280" />
@@ -294,16 +291,12 @@ function ClientPickerModal({ visible, clients, search, onSearch, onClose, onSele
             </Pressable>
           </View>
 
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#8A8A8A" />
-            <TextInput
-              value={search}
-              onChangeText={onSearch}
-              placeholder="Buscar cliente"
-              placeholderTextColor="#8A8A8A"
-              style={styles.searchInput}
-            />
-          </View>
+          <SearchInput
+            value={search}
+            onChangeText={onSearch}
+            placeholder="Buscar cliente por nombre, CI, telefono o correo"
+            style={styles.modalSearch}
+          />
 
           <FlatList
             data={clients}
@@ -345,47 +338,41 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dashboardBg,
   },
   header: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.dashboardBg,
     paddingHorizontal: 18,
     paddingTop: 16,
-    paddingBottom: 24,
+    paddingBottom: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
   backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(255,255,255,0.14)",
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     alignItems: "center",
     justifyContent: "center",
   },
+  headerTextWrap: {
+    flex: 1,
+  },
   headerTitle: {
-    color: "#FFFFFF",
+    color: "#111827",
     fontFamily: fontFamilies.bold,
     fontSize: 23,
   },
   headerSubtitle: {
     marginTop: 2,
-    color: "#DEE1FF",
+    color: "#6B7280",
     fontFamily: fontFamilies.medium,
     fontSize: 13,
   },
-  headerIcon: {
-    marginLeft: "auto",
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(255,255,255,0.14)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   content: {
     flex: 1,
-    marginTop: -8,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
+    marginTop: 0,
     backgroundColor: colors.dashboardBg,
   },
   scrollContent: {
@@ -400,12 +387,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   clientPickerButton: {
-    minHeight: 62,
+    minHeight: 56,
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: "#EFEFF5",
+    borderColor: "#E5E7EB",
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
@@ -486,23 +473,8 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: 18,
   },
-  searchBox: {
+  modalSearch: {
     marginTop: 14,
-    minHeight: 48,
-    borderRadius: 15,
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#111827",
-    fontFamily: fontFamilies.medium,
-    fontSize: 14,
   },
   clientList: {
     paddingTop: 10,

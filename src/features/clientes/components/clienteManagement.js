@@ -4,11 +4,11 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
+import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
 import { getClientStats } from "../services/clientHistoryApi";
 
@@ -173,18 +173,11 @@ export default function GestionClientes({
       </View>
 
       <View style={styles.searchBox}>
-        <Text style={styles.searchLabel}>Buscar cliente</Text>
-
-        <View style={styles.searchInput}>
-          <Feather name="search" size={18} color="#8C8C8C" />
-          <TextInput
-            style={styles.inputText}
-            placeholder="Por nombre, telefono, correo, documento o direccion"
-            placeholderTextColor="#8C8C8C"
-            value={busqueda}
-            onChangeText={setBusqueda}
-          />
-        </View>
+        <SearchInput
+          value={busqueda}
+          onChangeText={setBusqueda}
+          placeholder="Buscar por nombre, telefono, correo o CI"
+        />
       </View>
 
       <View style={styles.listHeader}>
@@ -301,33 +294,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   searchBox: {
-    backgroundColor: colors.surface,
     marginHorizontal: 14,
-    marginVertical: 12,
-    borderRadius: 18,
-    padding: 16,
-  },
-  searchLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#4B4B4B",
-    letterSpacing: 1.1,
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  searchInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-  },
-  inputText: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.black,
+    marginTop: 4,
+    marginBottom: 12,
   },
   listHeader: {
     paddingHorizontal: 18,

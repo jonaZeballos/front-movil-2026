@@ -29,12 +29,12 @@ const roleIcons = {
 
 export function RolesPermissionsScreen({ onBack }) {
   return (
-    <ScreenContainer backgroundColor={colors.primary} edges={["top"]}>
+    <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.root}>
-        <View style={styles.hero}>
+        <View style={styles.header}>
           <View style={styles.headerRow}>
             <Pressable style={styles.backButton} onPress={onBack}>
-              <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+              <Ionicons name="arrow-back" size={22} color="#111827" />
             </Pressable>
 
             <View style={styles.headerTextWrap}>
@@ -42,20 +42,9 @@ export function RolesPermissionsScreen({ onBack }) {
               <Text style={styles.headerSubtitle}>Control de acceso del sistema</Text>
             </View>
           </View>
-
-          <View style={styles.heroCard}>
-            <View style={styles.heroIconBox}>
-              <Feather name="lock" size={22} color="#FFFFFF" />
-            </View>
-
-            <View style={styles.heroInfo}>
-              <Text style={styles.heroTitle}>Acceso administrativo</Text>
-              <Text style={styles.heroText}>
-                Desde esta sección puedes consultar qué funciones tiene permitido
-                usar cada rol dentro de la aplicación.
-              </Text>
-            </View>
-          </View>
+          <Text style={styles.headerDescription}>
+            Consulta que funciones tiene permitido usar cada rol dentro de la aplicacion.
+          </Text>
         </View>
 
         <ScrollView
@@ -121,13 +110,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.dashboardBg,
   },
-  hero: {
-    backgroundColor: colors.primary,
+  header: {
+    backgroundColor: colors.dashboardBg,
     paddingHorizontal: 18,
     paddingTop: 18,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingBottom: 8,
   },
   headerRow: {
     flexDirection: "row",
@@ -135,67 +122,47 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(255, 255, 255, 0.16)",
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   headerTextWrap: {
     flex: 1,
   },
   headerTitle: {
-    color: "#FFFFFF",
+    color: "#111827",
     fontFamily: fontFamilies.bold,
     fontSize: 24,
     lineHeight: 30,
   },
   headerSubtitle: {
     marginTop: 2,
-    color: "#DEE1FF",
+    color: "#6B7280",
     fontFamily: fontFamilies.medium,
     fontSize: 13,
   },
-  heroCard: {
-    marginTop: 20,
+  headerDescription: {
+    marginTop: 14,
     borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.14)",
+    backgroundColor: "#FFFFFF",
     padding: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  heroIconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
-    backgroundColor: "#2C2B72",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroInfo: {
-    flex: 1,
-  },
-  heroTitle: {
-    color: "#FFFFFF",
-    fontFamily: fontFamilies.semibold,
-    fontSize: 15,
-    marginBottom: 3,
-  },
-  heroText: {
-    color: "#ECEEFF",
+    color: "#6B7280",
     fontFamily: fontFamilies.regular,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 19,
   },
   content: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 14,
-    paddingTop: 18,
-    paddingBottom: 28,
+    paddingTop: 10,
+    paddingBottom: 118,
   },
   sectionTitle: {
     color: "#111111",
@@ -284,3 +251,4 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 });
+

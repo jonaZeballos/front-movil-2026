@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
+import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
 import { OrderQuotationCard } from "../components/OrderQuotationCard";
 import {
@@ -215,16 +216,12 @@ function ClientPickerModal({ visible, clients, search, onSearch, onSelect, onClo
               <Ionicons name="close" size={22} color="#111827" />
             </Pressable>
           </View>
-          <View style={styles.searchShell}>
-            <Feather name="search" size={18} color="#8A8A8A" />
-            <TextInput
-              value={search}
-              onChangeText={onSearch}
-              placeholder="Buscar cliente"
-              placeholderTextColor="#8A8A8A"
-              style={styles.searchInput}
-            />
-          </View>
+          <SearchInput
+            value={search}
+            onChangeText={onSearch}
+            placeholder="Buscar cliente por nombre, CI o telefono"
+            style={styles.modalSearch}
+          />
           <FlatList
             data={clients}
             keyExtractor={(item) => item.id}
@@ -336,8 +333,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   clientPickerButton: {
-    minHeight: 58,
-    borderRadius: 16,
+    minHeight: 56,
+    borderRadius: 18,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -428,22 +425,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "900",
   },
-  searchShell: {
+  modalSearch: {
     marginTop: 14,
-    minHeight: 48,
-    borderRadius: 15,
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#111827",
-    fontSize: 14,
   },
   modalList: {
     paddingTop: 10,

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
+import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
 
 const PRIORITIES = ["Baja", "Media", "Alta", "Urgente"];
@@ -388,16 +389,12 @@ function SelectionModal({
               <Ionicons name="close" size={22} color="#111827" />
             </Pressable>
           </View>
-          <View style={styles.searchShell}>
-            <Feather name="search" size={18} color="#8A8A8A" />
-            <TextInput
-              value={search}
-              onChangeText={onSearch}
-              placeholder="Buscar"
-              placeholderTextColor="#8A8A8A"
-              style={styles.searchInput}
-            />
-          </View>
+          <SearchInput
+            value={search}
+            onChangeText={onSearch}
+            placeholder="Buscar"
+            style={styles.modalSearch}
+          />
           <FlatList
             data={data}
             keyExtractor={keyExtractor}
@@ -509,8 +506,8 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   inputShell: {
-    minHeight: 54,
-    borderRadius: 16,
+    minHeight: 56,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     backgroundColor: "#FFFFFF",
@@ -616,22 +613,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "900",
   },
-  searchShell: {
+  modalSearch: {
     marginTop: 14,
-    minHeight: 48,
-    borderRadius: 15,
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#111827",
-    fontSize: 14,
   },
   selectionList: {
     paddingTop: 10,

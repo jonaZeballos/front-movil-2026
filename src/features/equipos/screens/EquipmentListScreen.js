@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
+import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
 
 export function EquipmentListScreen({ equipments, onRegister, onOpenEquipment, onBack }) {
@@ -37,17 +38,11 @@ export function EquipmentListScreen({ equipments, onRegister, onOpenEquipment, o
         </View>
 
         <View style={styles.searchCard}>
-          <Text style={styles.label}>BUSCAR POR CLIENTE O TIPO</Text>
-          <View style={styles.inputShell}>
-            <Ionicons name="search-outline" size={18} color="#8C8C8C" />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Busca por cliente o tipo"
-              placeholderTextColor="#8C8C8C"
-              style={styles.searchInput}
-            />
-          </View>
+          <SearchInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Buscar por cliente, tipo o modelo"
+          />
         </View>
 
         <View style={styles.sectionHeader}>
@@ -135,34 +130,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   searchCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    padding: 16,
-    marginBottom: 16,
-  },
-  label: {
-    marginBottom: 8,
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#4B4B4B",
-    letterSpacing: 1.3,
-  },
-  inputShell: {
-    minHeight: 56,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#EBEBEB",
-    backgroundColor: "#F9FAFB",
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#111111",
-    fontSize: 15,
-    paddingVertical: 0,
+    marginBottom: 14,
   },
   createButton: {
     height: 54,

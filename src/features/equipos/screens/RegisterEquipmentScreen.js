@@ -14,6 +14,7 @@ import {
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
+import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
 import { OrderFormModal } from "../../orders/components/OrderFormModal";
 
@@ -444,16 +445,12 @@ function ClientPickerModal({
             </Pressable>
           </View>
 
-          <View style={styles.searchShell}>
-            <Feather name="search" size={18} color="#8A8A8A" />
-            <TextInput
-              value={search}
-              onChangeText={onSearch}
-              placeholder="Buscar cliente"
-              placeholderTextColor="#8A8A8A"
-              style={styles.searchInput}
-            />
-          </View>
+          <SearchInput
+            value={search}
+            onChangeText={onSearch}
+            placeholder="Buscar cliente por nombre, CI o telefono"
+            style={styles.modalSearch}
+          />
 
           <FlatList
             data={clients}
@@ -570,7 +567,7 @@ const styles = StyleSheet.create({
   },
   fieldShell: {
     minHeight: 56,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     paddingHorizontal: 14,
@@ -752,22 +749,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  searchShell: {
+  modalSearch: {
     marginTop: 16,
-    minHeight: 50,
-    borderRadius: 16,
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    columnGap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#111827",
-    fontSize: 15,
   },
   clientList: {
     paddingTop: 12,

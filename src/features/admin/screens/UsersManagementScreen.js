@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -6,6 +7,12 @@ import { colors } from "../../../shared/theme/colors";
 import { bottomActionMargin } from "../../../shared/styles/bottomActions";
 
 export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
+  const [expandedId, setExpandedId] = useState(null);
+
+  const toggleExpand = (id) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
+
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
@@ -28,8 +35,13 @@ export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
           {users.map((user) => {
             const roleConfig = getRoleConfig(user.role);
+            const isExpanded = expandedId === user.id;
             return (
-              <View key={user.id} style={styles.card}>
+              <Pressable
+                key={user.id}
+                style={styles.card}
+                onPress={() => toggleExpand(user.id)}
+              >
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{user.initials || "U"}</Text>
                 </View>
@@ -45,8 +57,53 @@ export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
                       <Text style={styles.blockedText}>Bloqueado</Text>
                     </View>
                   ) : null}
+
+                  {isExpanded ? (
+                    <View style={styles.expandedDetail}>
+                      <DetailRow 
+                        label="Nombre" 
+                        value={user.nombreCompleto || user.nombre || user.nombres || user.apellidos || user.name || "No registrado"} 
+                      />
+                      <DetailRow 
+                        label="Correo" 
+                        value={user.email || user.correo || "No registrado"} 
+                      />
+                      {!!user.username && (
+                        <DetailRow 
+                          label="Username" 
+                          value={user.username} 
+                        />
+                      )}
+                      <DetailRow 
+                        label="Rol" 
+                        value={user.rol || user.role || "No registrado"} 
+                      />
+                      <DetailRow 
+                        label="Estado" 
+                        value={user.bloqueado ? "Bloqueado" : "Activo"} 
+                        valueStyle={user.bloqueado ? styles.detailValueRed : styles.detailValueGreen}
+                      />
+                      {user.bloqueado && (
+                        <DetailRow 
+                          label="Motivo" 
+                          value={user.motivoBloqueo || "No especificado"} 
+                          valueStyle={styles.detailValueRed}
+                        />
+                      )}
+                      <DetailRow 
+                        label="Teléfono" 
+                        value={user.numero || user.telefono || user.phone || "No registrado"} 
+                      />
+                      <DetailRow 
+                        label="Fecha de registro" 
+                        value={formatDate(user.fechaCreacion || user.createdAt)} 
+                      />
+                    </View>
+                  ) : null}
                 </View>
-              </View>
+
+                <Text style={styles.chevron}>{isExpanded ? "▲" : "▼"}</Text>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -92,6 +149,32 @@ function getRoleConfig(value) {
     color: "#64748B",
     backgroundColor: "#F1F5F9",
   };
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "No disponible";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "No disponible";
+    return d.toLocaleDateString("es-BO", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return "No disponible";
+  }
+}
+
+function DetailRow({ label, value, valueStyle }) {
+  return (
+    <View style={styles.detailRow}>
+      <Text style={styles.detailLabel}>{label}:</Text>
+      <Text style={[styles.detailValue, valueStyle]} numberOfLines={2}>
+        {value}
+      </Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -168,7 +251,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 14,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   avatar: {
     width: 44,
@@ -220,5 +303,50 @@ const styles = StyleSheet.create({
     color: "#B91C1C",
     fontSize: 12,
     fontWeight: "800",
+  },
+  chevron: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    marginLeft: 8,
+    alignSelf: "center",
+  },
+  expandedDetail: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#F0F0F0",
+    rowGap: 6,
+  },
+  detailRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    columnGap: 4,
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#9CA3AF",
+  },
+  detailValue: {
+    fontSize: 12,
+    color: "#374151",
+    flexShrink: 1,
+  },
+  detailValueRed: {
+    color: "#B91C1C",
+    fontWeight: "700",
+  },
+  detailValueGreen: {
+    color: "#047857",
+    fontWeight: "700",
+  },
+  detailText: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  detailTextRed: {
+    fontSize: 12,
+    color: "#B91C1C",
+    fontWeight: "700",
   },
 });

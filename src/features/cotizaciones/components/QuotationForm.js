@@ -33,7 +33,7 @@ export function QuotationForm({ form, errors, onChange }) {
       />
 
       <Field
-        label="Descuento"
+        label="Descuento (opcional)"
         placeholder="0.00"
         value={form.descuento}
         error={errors.descuento}

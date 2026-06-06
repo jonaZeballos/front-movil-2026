@@ -57,12 +57,22 @@ export default function RegistrarCliente({ onVolver, onGuardar, isSaving = false
     const correo = form.correo.trim();
     const direccion = form.direccion.trim();
 
+    const ONLY_LETTERS_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚàèìòùÀÈÌÒÙäëïöüÄËÏÖÜñÑ\s]+$/;
+
     if (nombres.length < 2) {
       nextErrors.nombres = "Ingrese nombres validos.";
+    } else if (nombres.length > 20) {
+      nextErrors.nombres = "El nombre no debe superar 20 caracteres.";
+    } else if (!ONLY_LETTERS_REGEX.test(nombres)) {
+      nextErrors.nombres = "El nombre solo debe contener letras.";
     }
 
     if (apellidos.length < 2) {
       nextErrors.apellidos = "Ingrese apellidos validos.";
+    } else if (apellidos.length > 20) {
+      nextErrors.apellidos = "El apellido no debe superar 20 caracteres.";
+    } else if (!ONLY_LETTERS_REGEX.test(apellidos)) {
+      nextErrors.apellidos = "El apellido solo debe contener letras.";
     }
 
     if (!documentoRaw) {

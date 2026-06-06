@@ -51,6 +51,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsReadRemote,
   markNotificationAsReadRemote,
+  deleteNotificationRemote,
 } from "../../features/notifications";
 
 import { onboardingPreloadAssets } from "../../shared/assets";
@@ -84,6 +85,7 @@ import {
   updateEstadoOrden,
   updateOrden,
 } from "../../features/orders/services/ordersApi";
+import { isFinalOrderState } from "../../features/orders/utils/orderStates";
 import { listProductos } from "../../features/productos/services";
 import { listVentas } from "../../features/sales/services/salesApi";
 import { createCotizacion } from "../../features/cotizaciones/services";
@@ -156,6 +158,7 @@ export function AppNavigator() {
   const [notifications, setNotifications] = useState(getInitialNotifications);
 
   const unreadNotificationsCount = getUnreadNotificationsCount(notifications);
+  const activeOrders = orders.filter((o) => !isFinalOrderState(o.status || o.estado));
 
   const runNavigationOnce = (key, action, lockMs = 700) => {
     const now = Date.now();
@@ -415,6 +418,13 @@ export function AppNavigator() {
       markAllNotificationsAsRead(prevNotifications)
     );
     markAllNotificationsAsReadRemote().catch(() => {});
+  };
+
+  const handleDeleteNotification = (notificationId) => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.filter((notification) => notification.id !== notificationId)
+    );
+    deleteNotificationRemote(notificationId).catch(() => {});
   };
 
   const createServiceOrder = async (
@@ -711,7 +721,7 @@ export function AppNavigator() {
               user={session?.user}
               stats={{
                 users: users.length,
-                orders: orders.length,
+                orders: activeOrders.length,
                 sales: salesReports.length,
               }}
               unreadNotificationsCount={unreadNotificationsCount}
@@ -853,6 +863,8 @@ export function AppNavigator() {
               notifications={notifications}
               onMarkAsRead={handleMarkNotificationAsRead}
               onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+              onDelete={handleDeleteNotification}
+              products={products}
             />
           )}
         </Stack.Screen>
@@ -868,7 +880,7 @@ export function AppNavigator() {
             <HomeScreen
               user={session?.user}
               stats={{
-                ordenes: orders.length,
+                ordenes: activeOrders.length,
                 equipos: equipments.length,
                 clientes: clientes.length,
               }}
@@ -983,7 +995,7 @@ export function AppNavigator() {
         <Stack.Screen name="OrdersList">
           {({ navigation }) => (
             <OrdersListScreen
-              orders={orders}
+              orders={activeOrders}
               onCreateOrder={() => pushOnce(navigation, "CreateOrder")}
               onOpenOrder={(order) =>
                 pushOnce(navigation, "OrderDetail", { orderId: order.id })

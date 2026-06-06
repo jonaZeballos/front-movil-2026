@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Modal, Pressable, StyleSheet, Text, TextInput, View, Keyboard, Platform, KeyboardAvoidingView } from "react-native";
 
 import GestionClientes from "../components/clienteManagement";
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -76,6 +76,24 @@ export function ManagementScreen({
     ]);
   };
 
+  const checkIsAdmin = (nav) => {
+    if (!nav) return false;
+    let currentNav = nav;
+    while (currentNav) {
+      const state = currentNav.getState();
+      if (state?.routes) {
+        for (const route of state.routes) {
+          if (route.name === "AdminDashboard") return true;
+          if (route.name === "SalesDashboard" || route.name === "Home") return false;
+        }
+      }
+      currentNav = currentNav.getParent ? currentNav.getParent() : null;
+    }
+    return false;
+  };
+
+  const isAdminUser = checkIsAdmin(navigation);
+
   return (
     <ScreenContainer>
       <GestionClientes
@@ -83,6 +101,7 @@ export function ManagementScreen({
         ordenes={ordenes}
         equipos={equipos}
         mode={mode}
+        isAdmin={isAdminUser}
         onRegistrar={handleRegistrar}
         onBack={handleBack}
         onSelectCliente={handleSelectCliente}
@@ -134,29 +153,31 @@ export function ManagementScreen({
               </View>
             ) : null}
 
-            <Pressable
-              style={[
-                modalStyles.blacklistButton,
-                selectedCliente?.enListaNegra && modalStyles.removeBlacklistButton,
-              ]}
-              onPress={() => {
-                if (!selectedCliente) return;
-                if (selectedCliente.enListaNegra) {
-                  handleRemoveFromBlacklist(selectedCliente);
-                } else {
-                  setBlacklistTarget(selectedCliente);
-                }
-              }}
-            >
-              <Text
+            {isAdminUser ? (
+              <Pressable
                 style={[
-                  modalStyles.blacklistButtonText,
-                  selectedCliente?.enListaNegra && modalStyles.removeBlacklistButtonText,
+                  modalStyles.blacklistButton,
+                  selectedCliente?.enListaNegra && modalStyles.removeBlacklistButton,
                 ]}
+                onPress={() => {
+                  if (!selectedCliente) return;
+                  if (selectedCliente.enListaNegra) {
+                    handleRemoveFromBlacklist(selectedCliente);
+                  } else {
+                    setBlacklistTarget(selectedCliente);
+                  }
+                }}
               >
-                {selectedCliente?.enListaNegra ? "Quitar de lista negra" : "Agregar a lista negra"}
-              </Text>
-            </Pressable>
+                <Text
+                  style={[
+                    modalStyles.blacklistButtonText,
+                    selectedCliente?.enListaNegra && modalStyles.removeBlacklistButtonText,
+                  ]}
+                >
+                  {selectedCliente?.enListaNegra ? "Quitar de lista negra" : "Agregar a lista negra"}
+                </Text>
+              </Pressable>
+            ) : null}
 
             <Pressable
               style={modalStyles.historyButton}
@@ -179,39 +200,65 @@ export function ManagementScreen({
         </View>
       </Modal>
 
-      <Modal visible={!!blacklistTarget} transparent animationType="fade">
-        <View style={modalStyles.overlay}>
-          <View style={modalStyles.card}>
-            <Text style={modalStyles.title}>Agregar a lista negra</Text>
-            <Text style={modalStyles.value}>{blacklistTarget?.nombre || "Cliente seleccionado"}</Text>
-            <TextInput
-              value={blacklistReason}
-              onChangeText={setBlacklistReason}
-              placeholder="Motivo obligatorio"
-              placeholderTextColor="#8C8C8C"
-              style={modalStyles.reasonInput}
-              multiline
-            />
-            <Pressable
-              style={[modalStyles.closeButton, isUpdatingBlacklist && { opacity: 0.7 }]}
-              onPress={handleAddToBlacklist}
-              disabled={isUpdatingBlacklist}
-            >
-              <Text style={modalStyles.closeButtonText}>
-                {isUpdatingBlacklist ? "Guardando..." : "Guardar"}
+      <Modal visible={!!blacklistTarget} transparent animationType="fade" onRequestClose={() => { if (!isUpdatingBlacklist) setBlacklistTarget(null); }}>
+        <Pressable 
+          style={modalStyles.overlay} 
+          onPress={() => {
+            if (!isUpdatingBlacklist) {
+              Keyboard.dismiss();
+              setBlacklistTarget(null);
+              setBlacklistReason("");
+            }
+          }}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ width: "100%", alignItems: "center" }}
+          >
+            <Pressable style={modalStyles.card} onPress={(e) => e.stopPropagation()}>
+              <Text style={modalStyles.title}>Agregar a lista negra</Text>
+              
+              <Text style={modalStyles.label}>Cliente</Text>
+              <Text style={[modalStyles.value, { fontWeight: "800", marginBottom: 14 }]}>
+                {blacklistTarget?.nombre || "Cliente seleccionado"}
               </Text>
+
+              <Text style={modalStyles.label}>Motivo de lista negra *</Text>
+              <TextInput
+                value={blacklistReason}
+                onChangeText={setBlacklistReason}
+                placeholder="Indica la justificación obligatoria..."
+                placeholderTextColor="#9CA3AF"
+                style={modalStyles.reasonInput}
+                multiline
+                numberOfLines={3}
+              />
+              
+              <View style={{ gap: 10, marginTop: 8 }}>
+                <Pressable
+                  style={[modalStyles.closeButton, isUpdatingBlacklist && { opacity: 0.7 }]}
+                  onPress={handleAddToBlacklist}
+                  disabled={isUpdatingBlacklist}
+                >
+                  <Text style={modalStyles.closeButtonText}>
+                    {isUpdatingBlacklist ? "Guardando..." : "Guardar"}
+                  </Text>
+                </Pressable>
+                
+                <Pressable
+                  style={modalStyles.historyButton}
+                  onPress={() => {
+                    setBlacklistTarget(null);
+                    setBlacklistReason("");
+                  }}
+                  disabled={isUpdatingBlacklist}
+                >
+                  <Text style={modalStyles.historyButtonText}>Cancelar</Text>
+                </Pressable>
+              </View>
             </Pressable>
-            <Pressable
-              style={modalStyles.historyButton}
-              onPress={() => {
-                setBlacklistTarget(null);
-                setBlacklistReason("");
-              }}
-            >
-              <Text style={modalStyles.historyButtonText}>Cancelar</Text>
-            </Pressable>
-          </View>
-        </View>
+          </KeyboardAvoidingView>
+        </Pressable>
       </Modal>
     </ScreenContainer>
   );

@@ -24,6 +24,7 @@ export default function GestionClientes({
   onOpenHistory,
   onAddToBlacklist,
   onRemoveFromBlacklist,
+  isAdmin = false,
 }) {
   const [busqueda, setBusqueda] = useState("");
   const [viewMode, setViewMode] = useState("full");
@@ -78,8 +79,15 @@ export default function GestionClientes({
               <Text style={styles.cardEmail}>{item.correo || item.email || "Sin correo"}</Text>
             ) : null}
             {item.enListaNegra ? (
-              <View style={styles.blacklistBadge}>
-                <Text style={styles.blacklistBadgeText}>Lista negra</Text>
+              <View>
+                <View style={styles.blacklistBadge}>
+                  <Text style={styles.blacklistBadgeText}>Lista negra</Text>
+                </View>
+                {item.motivoListaNegra ? (
+                  <Text style={styles.blacklistReasonText} numberOfLines={2}>
+                    Motivo: {item.motivoListaNegra}
+                  </Text>
+                ) : null}
               </View>
             ) : null}
           </View>
@@ -129,27 +137,29 @@ export default function GestionClientes({
             <Text style={styles.historyButtonText}>Historial</Text>
           </Pressable>
 
-          <Pressable
-            style={[styles.blacklistButton, item.enListaNegra && styles.removeBlacklistButton]}
-            onPress={() =>
-              item.enListaNegra ? onRemoveFromBlacklist?.(item) : onAddToBlacklist?.(item)
-            }
-          >
-            <Feather
-              name={item.enListaNegra ? "check-circle" : "slash"}
-              size={15}
-              color={item.enListaNegra ? "#047857" : "#B91C1C"}
-            />
-            <Text
-              style={[
-                styles.blacklistButtonText,
-                item.enListaNegra && styles.removeBlacklistButtonText,
-              ]}
-              numberOfLines={1}
+          {isAdmin ? (
+            <Pressable
+              style={[styles.blacklistButton, item.enListaNegra && styles.removeBlacklistButton]}
+              onPress={() =>
+                item.enListaNegra ? onRemoveFromBlacklist?.(item) : onAddToBlacklist?.(item)
+              }
             >
-              {item.enListaNegra ? "Quitar" : "Lista negra"}
-            </Text>
-          </Pressable>
+              <Feather
+                name={item.enListaNegra ? "check-circle" : "slash"}
+                size={15}
+                color={item.enListaNegra ? "#047857" : "#B91C1C"}
+              />
+              <Text
+                style={[
+                  styles.blacklistButtonText,
+                  item.enListaNegra && styles.removeBlacklistButtonText,
+                ]}
+                numberOfLines={1}
+              >
+                {item.enListaNegra ? "Quitar" : "Lista negra"}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
         ) : null}
       </CardWrapper>
@@ -398,6 +408,12 @@ const styles = StyleSheet.create({
     color: "#B91C1C",
     fontSize: 11,
     fontWeight: "900",
+  },
+  blacklistReasonText: {
+    color: "#B91C1C",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 4,
   },
   cardDetail: {
     fontSize: 13,

@@ -6,51 +6,69 @@ import {
   getNotificationConfig,
 } from "../services";
 
-export function NotificationCard({ notification, onPress }) {
+export function NotificationCard({ notification, onPress, onDelete }) {
   const config = getNotificationConfig(notification?.type);
 
   return (
-    <Pressable
-      onPress={() => onPress?.(notification)}
-      style={({ pressed }) => [
-        styles.card,
-        !notification?.read && styles.unreadCard,
-        pressed && styles.pressed,
-      ]}
-    >
-      <View style={[styles.iconBox, { backgroundColor: config.color }]}>
-        <Ionicons name={config.iconName} size={21} color="#FFFFFF" />
-      </View>
-
-      <View style={styles.info}>
-        <View style={styles.titleRow}>
-          <Text style={styles.title}>{notification?.title}</Text>
-          {!notification?.read && <View style={styles.dot} />}
+    <View style={styles.cardContainer}>
+      <Pressable
+        onPress={() => onPress?.(notification)}
+        style={({ pressed }) => [
+          styles.card,
+          !notification?.read && styles.unreadCard,
+          pressed && styles.pressed,
+        ]}
+      >
+        <View style={[styles.iconBox, { backgroundColor: config.color }]}>
+          <Ionicons name={config.iconName} size={21} color="#FFFFFF" />
         </View>
 
-        <Text style={styles.message} numberOfLines={2}>
-          {notification?.message}
-        </Text>
+        <View style={styles.info}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{notification?.title}</Text>
+            {!notification?.read && <View style={styles.dot} />}
+          </View>
 
-        <View style={styles.metaRow}>
-          <Text style={[styles.typeLabel, { color: config.color }]}>
-            {config.label}
+          <Text style={styles.message} numberOfLines={2}>
+            {notification?.message}
           </Text>
-          <Text style={styles.date}>
-            {formatNotificationDate(notification?.createdAt)}
-          </Text>
+
+          <View style={styles.metaRow}>
+            <Text style={[styles.typeLabel, { color: config.color }]}>
+              {config.label}
+            </Text>
+            <Text style={styles.date}>
+              {formatNotificationDate(notification?.createdAt)}
+            </Text>
+          </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+
+      {onDelete && (
+        <Pressable
+          onPress={() => onDelete?.(notification)}
+          style={({ pressed }) => [
+            styles.deleteButtonContainer,
+            pressed && styles.deletePressed,
+          ]}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="trash-outline" size={16} color="#EF4444" />
+        </Pressable>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  cardContainer: {
+    position: "relative",
+    marginBottom: 12,
+  },
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 22,
     padding: 15,
-    marginBottom: 12,
     flexDirection: "row",
     borderWidth: 1,
     borderColor: "#F1F5F9",
@@ -77,6 +95,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     columnGap: 8,
+    paddingRight: 28,
   },
   title: {
     flex: 1,
@@ -110,4 +129,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
-});
+  deleteButtonContainer: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: "#FEF2F2",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
+  deletePressed: {
+    backgroundColor: "#FEE2E2",
+    opacity: 0.8,
+  },
+});

@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { SearchInput } from "../../../shared/components/SearchInput";
@@ -149,6 +150,26 @@ export function RegisterEquipmentScreen({
   const [savingMode, setSavingMode] = useState(null);
   const submitLockRef = useRef(false);
 
+  const navigation = useNavigation();
+
+  const checkIsAdmin = (nav) => {
+    if (!nav) return false;
+    let currentNav = nav;
+    while (currentNav) {
+      const state = currentNav.getState();
+      if (state?.routes) {
+        for (const route of state.routes) {
+          if (route.name === "AdminDashboard") return true;
+          if (route.name === "SalesDashboard" || route.name === "Home") return false;
+        }
+      }
+      currentNav = currentNav.getParent ? currentNav.getParent() : null;
+    }
+    return false;
+  };
+
+  const isAdmin = checkIsAdmin(navigation);
+
   useEffect(() => {
     if (clientes.length === 0) {
       onRefreshClientes?.().catch(() => {});
@@ -235,10 +256,38 @@ export function RegisterEquipmentScreen({
 
   const handleClientSelect = (cliente) => {
     if (cliente.enListaNegra) {
-      Alert.alert(
-        "Cliente en lista negra",
-        cliente.motivoListaNegra || "Este cliente requiere revision del administrador."
-      );
+      const motivo = cliente.motivoListaNegra || "Este cliente requiere revision del administrador.";
+      if (isAdmin) {
+        Alert.alert(
+          "Cliente en lista negra",
+          `Motivo: ${motivo}. \xbfDeseas continuar de todas formas?`,
+          [
+            {
+              text: "Cancelar",
+              style: "cancel",
+            },
+            {
+              text: "Continuar",
+              onPress: () => {
+                setSelectedClient(cliente);
+                clearError("client");
+                setClientModalVisible(false);
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Cliente en lista negra",
+          `Motivo: ${motivo}. Solicita autorizaci\xf3n del administrador para continuar.`,
+          [
+            {
+              text: "Entendido",
+              style: "default",
+            },
+          ]
+        );
+      }
       return;
     }
 

@@ -43,7 +43,7 @@ export function getReportClientName(cliente) {
     .join(" ")
     .trim();
 
-  return fullName || cliente?.nombre || cliente?.razonSocial || cliente?.clienteNombre || "Cliente";
+  return fullName || cliente?.nombre || cliente?.razonSocial || cliente?.clienteNombre || "Cliente no registrado";
 }
 
 export function getPaymentLabel(method) {
@@ -101,6 +101,8 @@ export function normalizeReportSale(venta = {}) {
     venta.number ||
     venta.numero;
 
+  const robustDate = venta.issuedAt || venta.fechaCreacion || venta.createdAt || venta.fecha || venta.fechaVenta || venta.fecha_venta || venta.fechaEmision;
+
   return {
     ...venta,
     id: venta.id || reciboCodigo,
@@ -116,11 +118,11 @@ export function normalizeReportSale(venta = {}) {
     descuento,
     total,
     totalProductos: productos.reduce((sum, item) => sum + Number(item.cantidad || 0), 0),
-    issuedAt: venta.issuedAt || venta.fechaCreacion || venta.createdAt || venta.fecha,
-    createdAt: venta.createdAt || venta.fechaCreacion || venta.issuedAt || venta.fecha,
+    issuedAt: robustDate,
+    createdAt: robustDate,
     recibo: venta.recibo || {
       codigo: reciboCodigo,
-      fecha: venta.fechaCreacion || venta.issuedAt || venta.createdAt,
+      fecha: robustDate,
       estado: venta.status || "Emitido",
     },
   };
@@ -139,6 +141,8 @@ export function normalizeReportService(orden = {}) {
     (typeof orden.equipo === "string" ? orden.equipo : "") ||
     "Equipo no registrado";
 
+  const robustDate = orden.createdAt || orden.fechaRecepcion || orden.fecha || orden.fecha_creacion || orden.updatedAt || orden.fechaOrden || orden.fechaServicio;
+
   return {
     ...orden,
     id: orden.id || orden.codigo || orden.code,
@@ -154,7 +158,7 @@ export function normalizeReportService(orden = {}) {
     descripcion: orden.descripcion || orden.observaciones || orden.diagnostico || "Sin descripcion",
     cotizaciones: Array.isArray(orden.cotizaciones) ? orden.cotizaciones : [],
     totalCotizado: Number(orden.totalCotizado || 0),
-    createdAt: orden.createdAt || orden.fechaRecepcion || orden.fecha || orden.updatedAt,
+    createdAt: robustDate,
   };
 }
 
@@ -262,12 +266,12 @@ export function getOrderDate(orden) {
 }
 
 export function formatReportDate(value) {
-  if (!value) return "Sin fecha";
+  if (!value) return "Fecha no disponible";
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Sin fecha";
+    return "Fecha no disponible";
   }
 
   return date.toLocaleDateString("es-BO", {

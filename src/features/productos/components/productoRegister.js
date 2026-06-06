@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   Alert,
@@ -35,58 +36,106 @@ export default function RegistroProducto({
   const requiresTecnico = inventoryType === "tecnico" && role === "admin";
   const isTechnicalInventory = inventoryType === "tecnico";
 
+  const [errors, setErrors] = useState({});
+
   useEffect(() => {
     if (initialCategoriaId) {
       setSelectedCategoriaId(initialCategoriaId);
     }
   }, [initialCategoriaId]);
 
+  const handleExit = () => {
+    const isDirty = nombre || marca || modelo || descripcion || precio || stock || (stockMinimo !== "1") || (selectedCategoriaId && selectedCategoriaId !== initialCategoriaId) || selectedTecnicoId;
+    if (isDirty) {
+      Alert.alert(
+        "Descartar cambios",
+        "Tienes datos ingresados. ¿Deseas salir sin guardar?",
+        [
+          { text: "Continuar editando", style: "cancel" },
+          { text: "Salir sin guardar", style: "destructive", onPress: onCancelar },
+        ]
+      );
+    } else {
+      onCancelar();
+    }
+  };
+
   const onSubmit = () => {
     if (isSaving) return;
 
-    const trimmedPrecio = String(precio).trim();
-    const trimmedStock = String(stock).trim();
-    const trimmedStockMinimo = String(stockMinimo).trim();
-    const parsedPrecio = trimmedPrecio ? Number(trimmedPrecio.replace(",", ".")) : 0;
-    const parsedStock = Number(trimmedStock);
-    const parsedStockMinimo = Number(trimmedStockMinimo);
+    let newErrors = {};
 
     if (!selectedCategoriaId) {
-      return Alert.alert("Categoria requerida", "Seleccione una categoria.");
-    }
-
-    if (nombre.trim().length < 3) {
-      return Alert.alert(
-        isTechnicalInventory ? "Insumo incompleto" : "Producto incompleto",
-        isTechnicalInventory ? "Ingrese el nombre del insumo." : "Ingrese el nombre del producto."
-      );
+      newErrors.categoria = "Seleccione una categoría.";
     }
 
     if (requiresTecnico && !selectedTecnicoId) {
-      return Alert.alert("Tecnico requerido", "Seleccione un tecnico.");
+      newErrors.tecnico = "Seleccione un técnico.";
     }
 
-    if (!isTechnicalInventory && !trimmedPrecio) {
-      return Alert.alert("Precio requerido", "Ingrese un precio de venta valido.");
+    const trimmedNombre = nombre.trim();
+    if (!trimmedNombre) {
+      newErrors.nombre = isTechnicalInventory ? "Ingrese el nombre del insumo." : "Ingrese el nombre del producto.";
+    } else if (trimmedNombre.length < 3) {
+      newErrors.nombre = "El nombre debe tener al menos 3 caracteres.";
+    } else if (trimmedNombre.length > 50) {
+      newErrors.nombre = "El nombre no debe superar 50 caracteres.";
+    } else if (/^\d+$/.test(trimmedNombre)) {
+      newErrors.nombre = "El nombre no puede ser solo números.";
     }
 
-    if (trimmedPrecio && (!Number.isFinite(parsedPrecio) || parsedPrecio < 0)) {
-      return Alert.alert("Precio invalido", isTechnicalInventory ? "Ingrese un precio de referencia valido." : "Ingrese un precio de venta valido.");
+    const trimmedMarca = marca.trim();
+    if (trimmedMarca && trimmedMarca.length > 30) {
+      newErrors.marca = "La marca no debe superar 30 caracteres.";
     }
 
+    const trimmedModelo = modelo.trim();
+    if (trimmedModelo && trimmedModelo.length > 30) {
+      newErrors.modelo = "El modelo no debe superar 30 caracteres.";
+    }
+
+    const trimmedDesc = descripcion.trim();
+    if (trimmedDesc && trimmedDesc.length > 200) {
+      newErrors.descripcion = "La descripción no debe superar 200 caracteres.";
+    }
+
+    const trimmedPrecio = String(precio).trim();
+    const parsedPrecio = trimmedPrecio ? Number(trimmedPrecio.replace(",", ".")) : 0;
+    
+    if (!isTechnicalInventory) {
+      if (!trimmedPrecio || !Number.isFinite(parsedPrecio) || parsedPrecio < 0) {
+        newErrors.precio = "Ingrese un precio válido.";
+      }
+    } else {
+      if (trimmedPrecio && (!Number.isFinite(parsedPrecio) || parsedPrecio < 0)) {
+        newErrors.precio = "Ingrese un precio válido.";
+      }
+    }
+
+    const trimmedStock = String(stock).trim();
+    const parsedStock = Number(trimmedStock);
     if (!trimmedStock || !Number.isInteger(parsedStock) || parsedStock < 0) {
-      return Alert.alert("Stock invalido", "Ingrese un stock valido.");
+      newErrors.stock = "Ingrese un stock válido.";
     }
 
+    const trimmedStockMinimo = String(stockMinimo).trim();
+    const parsedStockMinimo = Number(trimmedStockMinimo);
     if (!trimmedStockMinimo || !Number.isInteger(parsedStockMinimo) || parsedStockMinimo < 0) {
-      return Alert.alert("Stock minimo invalido", "Ingrese un stock minimo valido.");
+      newErrors.stockMinimo = "Ingrese un stock mínimo válido.";
     }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
 
     const producto = {
-      nombre: nombre.trim(),
-      marca: marca.trim(),
-      modelo: modelo.trim(),
-      descripcion: descripcion.trim(),
+      nombre: trimmedNombre,
+      marca: trimmedMarca,
+      modelo: trimmedModelo,
+      descripcion: trimmedDesc,
       precio: parsedPrecio,
       stock: parsedStock,
       stockMinimo: parsedStockMinimo,
@@ -104,13 +153,16 @@ export default function RegistroProducto({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+          <Pressable onPress={handleExit} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#1f1f39" />
+          </Pressable>
           <Text style={styles.title}>Registrar nuevo producto</Text>
           <Text style={styles.subtitle}>
             Llena los campos para añadir un {isTechnicalInventory ? "insumo al inventario tecnico" : "producto al inventario de tienda"}
           </Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Categoria *</Text>
+            <Text style={styles.label}>Categoría *</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -122,7 +174,7 @@ export default function RegistroProducto({
                 return (
                   <Pressable
                     key={categoria.id}
-                    style={[styles.categoryChip, selected && styles.categoryChipSelected]}
+                    style={[styles.categoryChip, selected && styles.categoryChipSelected, errors.categoria && styles.inputErrorBorder]}
                     onPress={() => setSelectedCategoriaId(categoria.id)}
                   >
                     <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>
@@ -132,11 +184,12 @@ export default function RegistroProducto({
                 );
               })}
             </ScrollView>
+            {errors.categoria && <Text style={styles.errorText}>{errors.categoria}</Text>}
           </View>
 
           {requiresTecnico ? (
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Tecnico *</Text>
+              <Text style={styles.label}>Técnico *</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -149,7 +202,7 @@ export default function RegistroProducto({
                   return (
                     <Pressable
                       key={tecnico.id}
-                      style={[styles.categoryChip, selected && styles.categoryChipSelected]}
+                      style={[styles.categoryChip, selected && styles.categoryChipSelected, errors.tecnico && styles.inputErrorBorder]}
                       onPress={() => setSelectedTecnicoId(tecnico.id)}
                     >
                       <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>
@@ -159,82 +212,89 @@ export default function RegistroProducto({
                   );
                 })}
               </ScrollView>
+              {errors.tecnico && <Text style={styles.errorText}>{errors.tecnico}</Text>}
             </View>
           ) : null}
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{isTechnicalInventory ? "Nombre del insumo *" : "Nombre del producto *"}</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.nombre && styles.inputErrorBorder]}
               placeholder={isTechnicalInventory ? "Ej. Alcohol isopropilico" : "Ej. Cargador universal laptop"}
               placeholderTextColor="#999"
               value={nombre}
               onChangeText={setNombre}
             />
+            {errors.nombre && <Text style={styles.errorText}>{errors.nombre}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Marca (opcional)</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.marca && styles.inputErrorBorder]}
               placeholder="Ej. Dell"
               placeholderTextColor="#999"
               value={marca}
               onChangeText={setMarca}
             />
+            {errors.marca && <Text style={styles.errorText}>{errors.marca}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Modelo (opcional)</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.modelo && styles.inputErrorBorder]}
               placeholder="Ej. Inspiron 15"
               placeholderTextColor="#999"
               value={modelo}
               onChangeText={setModelo}
             />
+            {errors.modelo && <Text style={styles.errorText}>{errors.modelo}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{isTechnicalInventory ? "Precio de referencia (opcional)" : "Precio de venta *"}</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.precio && styles.inputErrorBorder]}
               placeholder={isTechnicalInventory ? "Opcional. Ej. 35" : "Ej. 120"}
               placeholderTextColor="#999"
               value={precio}
               onChangeText={setPrecio}
               keyboardType="numeric"
             />
+            {errors.precio && <Text style={styles.errorText}>{errors.precio}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Stock *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.stock && styles.inputErrorBorder]}
               placeholder="Ej. 10"
               placeholderTextColor="#999"
               value={stock}
               onChangeText={setStock}
               keyboardType="numeric"
             />
+            {errors.stock && <Text style={styles.errorText}>{errors.stock}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Stock minimo *</Text>
+            <Text style={styles.label}>Stock mínimo *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors.stockMinimo && styles.inputErrorBorder]}
               placeholder="Ej. 2"
               placeholderTextColor="#999"
               value={stockMinimo}
               onChangeText={setStockMinimo}
               keyboardType="numeric"
             />
+            {errors.stockMinimo && <Text style={styles.errorText}>{errors.stockMinimo}</Text>}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Descripcion (opcional)</Text>
+            <Text style={styles.label}>Descripción (opcional)</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, errors.descripcion && styles.inputErrorBorder]}
               placeholder={isTechnicalInventory ? "Ej. Uso interno para mantenimiento preventivo" : "Ej. Producto disponible para venta al cliente"}
               placeholderTextColor="#999"
               value={descripcion}
@@ -242,10 +302,11 @@ export default function RegistroProducto({
               multiline
               textAlignVertical="top"
             />
+            {errors.descripcion && <Text style={styles.errorText}>{errors.descripcion}</Text>}
           </View>
 
           <View style={styles.actions}>
-            <Pressable style={[styles.button, styles.cancelButton]} onPress={onCancelar}>
+            <Pressable style={[styles.button, styles.cancelButton]} onPress={handleExit}>
               <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancelar</Text>
             </Pressable>
             <Pressable
@@ -363,7 +424,9 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   cancelButton: {
-    backgroundColor: "#f4f4f8",
+    backgroundColor: "#fefefe",
+    borderColor: "#e1e1e8",
+    borderWidth: 1,
     marginRight: 10,
   },
   submitButton: {
@@ -383,9 +446,28 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   cancelButtonText: {
-    color: "#4e4e62",
+    color: "#B91C1C", // rojo suave
   },
   submitButtonText: {
     color: "#ffffff",
+  },
+  errorText: {
+    color: "#B91C1C",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 2,
+  },
+  inputErrorBorder: {
+    borderColor: "#B91C1C",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#e1e1e8",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    alignSelf: "flex-start",
   },
 });

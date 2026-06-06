@@ -60,17 +60,44 @@ export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
 
                   {isExpanded ? (
                     <View style={styles.expandedDetail}>
-                      {!!user.phone && (
-                        <Text style={styles.detailText}>Telefono: {user.phone}</Text>
+                      <DetailRow 
+                        label="Nombre" 
+                        value={user.nombreCompleto || user.nombre || user.nombres || user.apellidos || user.name || "No registrado"} 
+                      />
+                      <DetailRow 
+                        label="Correo" 
+                        value={user.email || user.correo || "No registrado"} 
+                      />
+                      {!!user.username && (
+                        <DetailRow 
+                          label="Username" 
+                          value={user.username} 
+                        />
                       )}
-                      {user.bloqueado && !!user.motivoBloqueo && (
-                        <Text style={styles.detailTextRed}>Motivo bloqueo: {user.motivoBloqueo}</Text>
+                      <DetailRow 
+                        label="Rol" 
+                        value={user.rol || user.role || "No registrado"} 
+                      />
+                      <DetailRow 
+                        label="Estado" 
+                        value={user.bloqueado ? "Bloqueado" : "Activo"} 
+                        valueStyle={user.bloqueado ? styles.detailValueRed : styles.detailValueGreen}
+                      />
+                      {user.bloqueado && (
+                        <DetailRow 
+                          label="Motivo" 
+                          value={user.motivoBloqueo || "No especificado"} 
+                          valueStyle={styles.detailValueRed}
+                        />
                       )}
-                      {!!user.createdAt && (
-                        <Text style={styles.detailText}>
-                          Registrado: {new Date(user.createdAt).toLocaleDateString("es-BO")}
-                        </Text>
-                      )}
+                      <DetailRow 
+                        label="Teléfono" 
+                        value={user.numero || user.telefono || user.phone || "No registrado"} 
+                      />
+                      <DetailRow 
+                        label="Fecha de registro" 
+                        value={formatDate(user.fechaCreacion || user.createdAt)} 
+                      />
                     </View>
                   ) : null}
                 </View>
@@ -122,6 +149,32 @@ function getRoleConfig(value) {
     color: "#64748B",
     backgroundColor: "#F1F5F9",
   };
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "No disponible";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "No disponible";
+    return d.toLocaleDateString("es-BO", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return "No disponible";
+  }
+}
+
+function DetailRow({ label, value, valueStyle }) {
+  return (
+    <View style={styles.detailRow}>
+      <Text style={styles.detailLabel}>{label}:</Text>
+      <Text style={[styles.detailValue, valueStyle]} numberOfLines={2}>
+        {value}
+      </Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -198,7 +251,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 14,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   avatar: {
     width: 44,
@@ -262,7 +315,30 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: "#F0F0F0",
-    rowGap: 4,
+    rowGap: 6,
+  },
+  detailRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    columnGap: 4,
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#9CA3AF",
+  },
+  detailValue: {
+    fontSize: 12,
+    color: "#374151",
+    flexShrink: 1,
+  },
+  detailValueRed: {
+    color: "#B91C1C",
+    fontWeight: "700",
+  },
+  detailValueGreen: {
+    color: "#047857",
+    fontWeight: "700",
   },
   detailText: {
     fontSize: 12,

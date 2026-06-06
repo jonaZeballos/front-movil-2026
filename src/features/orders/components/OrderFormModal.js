@@ -327,10 +327,8 @@ export function OrderFormModal({
           data={filteredClients}
           keyExtractor={(item) => String(item.id)}
           renderItem={(item) => (
-            <SelectionItem
-              title={getClientName(item)}
-              subtitle={`${item.enListaNegra ? "Lista negra · " : ""}Doc: ${item.numeroDocumento || "Sin documento"} · ${item.telefono || "Sin telefono"}`}
-              icon="account-outline"
+            <ClientSelectionItem
+              item={item}
               onPress={() => selectClient(item)}
             />
           )}
@@ -481,6 +479,28 @@ function SelectionModal({
         </View>
       </View>
     </Modal>
+  );
+}
+
+function ClientSelectionItem({ item, onPress }) {
+  const name = getClientName(item);
+  const doc = item.numeroDocumento || "Sin documento";
+  const tel = item.telefono || "Sin telefono";
+  return (
+    <Pressable style={styles.selectionItem} onPress={onPress}>
+      <View style={styles.selectionIcon}>
+        <MaterialCommunityIcons name="account-outline" size={19} color="#5655B9" />
+      </View>
+      <View style={styles.selectionInfo}>
+        <Text style={styles.selectionItemTitle}>{name}</Text>
+        <Text style={styles.selectionItemSubtitle}>
+          {item.enListaNegra ? (
+            <Text style={styles.blacklistBadge}>Lista negra · </Text>
+          ) : null}
+          {`Doc: ${doc} · ${tel}`}
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -759,5 +779,10 @@ const styles = StyleSheet.create({
     color: "#B91C1C",
     fontSize: 13,
     fontWeight: "700",
+  },
+  blacklistBadge: {
+    color: "#B91C1C",
+    fontSize: 12,
+    fontWeight: "900",
   },
 });

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -6,6 +7,12 @@ import { colors } from "../../../shared/theme/colors";
 import { bottomActionMargin } from "../../../shared/styles/bottomActions";
 
 export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
+  const [expandedId, setExpandedId] = useState(null);
+
+  const toggleExpand = (id) => {
+    setExpandedId((prev) => (prev === id ? null : id));
+  };
+
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
       <View style={styles.container}>
@@ -28,8 +35,13 @@ export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
           {users.map((user) => {
             const roleConfig = getRoleConfig(user.role);
+            const isExpanded = expandedId === user.id;
             return (
-              <View key={user.id} style={styles.card}>
+              <Pressable
+                key={user.id}
+                style={styles.card}
+                onPress={() => toggleExpand(user.id)}
+              >
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{user.initials || "U"}</Text>
                 </View>
@@ -45,8 +57,26 @@ export function UsersManagementScreen({ users = [], onBack, onCreateUser }) {
                       <Text style={styles.blockedText}>Bloqueado</Text>
                     </View>
                   ) : null}
+
+                  {isExpanded ? (
+                    <View style={styles.expandedDetail}>
+                      {!!user.phone && (
+                        <Text style={styles.detailText}>Telefono: {user.phone}</Text>
+                      )}
+                      {user.bloqueado && !!user.motivoBloqueo && (
+                        <Text style={styles.detailTextRed}>Motivo bloqueo: {user.motivoBloqueo}</Text>
+                      )}
+                      {!!user.createdAt && (
+                        <Text style={styles.detailText}>
+                          Registrado: {new Date(user.createdAt).toLocaleDateString("es-BO")}
+                        </Text>
+                      )}
+                    </View>
+                  ) : null}
                 </View>
-              </View>
+
+                <Text style={styles.chevron}>{isExpanded ? "▲" : "▼"}</Text>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -220,5 +250,27 @@ const styles = StyleSheet.create({
     color: "#B91C1C",
     fontSize: 12,
     fontWeight: "800",
+  },
+  chevron: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    marginLeft: 8,
+    alignSelf: "center",
+  },
+  expandedDetail: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#F0F0F0",
+    rowGap: 4,
+  },
+  detailText: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  detailTextRed: {
+    fontSize: 12,
+    color: "#B91C1C",
+    fontWeight: "700",
   },
 });

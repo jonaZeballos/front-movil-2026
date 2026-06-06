@@ -267,7 +267,7 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
             </View>
           ) : null}
 
-          <Text style={styles.sectionTitle}>Descuento</Text>
+          <Text style={styles.sectionTitle}>Descuento (opcional)</Text>
 
           <View style={styles.inputBox}>
             <Text style={styles.inputPrefix}>Bs</Text>

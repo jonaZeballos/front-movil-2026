@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
 import { SearchInput } from "../../../shared/components/SearchInput";
@@ -23,6 +24,26 @@ import { PaymentMethodSelector } from "../components/PaymentMethodSelector";
 import { getBusinessPaymentSettings } from "../services/salesApi";
 
 export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onContinue }) {
+  const navigation = useNavigation();
+
+  const checkIsAdmin = (nav) => {
+    if (!nav) return false;
+    let currentNav = nav;
+    while (currentNav) {
+      const state = currentNav.getState();
+      if (state?.routes) {
+        for (const route of state.routes) {
+          if (route.name === "AdminDashboard") return true;
+          if (route.name === "SalesDashboard" || route.name === "Home") return false;
+        }
+      }
+      currentNav = currentNav.getParent ? currentNav.getParent() : null;
+    }
+    return false;
+  };
+
+  const isAdmin = checkIsAdmin(navigation);
+
   const [selectedClientId, setSelectedClientId] = useState(null);
   const [clientModalVisible, setClientModalVisible] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
@@ -202,6 +223,15 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
             <Ionicons name="chevron-forward" size={20} color="#6B7280" />
           </Pressable>
 
+          {selectedClient?.enListaNegra ? (
+            <View style={styles.blacklistWarning}>
+              <Ionicons name="warning" size={16} color="#B91C1C" />
+              <Text style={styles.blacklistWarningText} numberOfLines={2}>
+                Cliente en lista negra: {selectedClient.motivoListaNegra || "Sin motivo registrado"}
+              </Text>
+            </View>
+          ) : null}
+
           <Text style={styles.sectionTitle}>Productos del inventario</Text>
 
           {productos.length === 0 ? (
@@ -271,14 +301,41 @@ export function RegisterSaleScreen({ clientes = [], productos = [], onBack, onCo
           onClose={() => setClientModalVisible(false)}
           onSelect={(client) => {
             if (client.enListaNegra) {
-              Alert.alert(
-                "Cliente en lista negra",
-                client.motivoListaNegra || "Este cliente requiere revision del administrador."
-              );
-              return;
+              const motivo = client.motivoListaNegra || "Este cliente requiere revision del administrador.";
+              if (isAdmin) {
+                Alert.alert(
+                  "Cliente en lista negra",
+                  `Motivo: ${motivo}. ¿Deseas continuar de todas formas?`,
+                  [
+                    {
+                      text: "Cancelar",
+                      style: "cancel",
+                    },
+                    {
+                      text: "Continuar",
+                      onPress: () => {
+                        setSelectedClientId(client.id);
+                        setClientModalVisible(false);
+                      },
+                    },
+                  ]
+                );
+              } else {
+                Alert.alert(
+                  "Cliente en lista negra",
+                  `Motivo: ${motivo}. Solicita autorización del administrador para continuar.`,
+                  [
+                    {
+                      text: "Entendido",
+                      style: "default",
+                    },
+                  ]
+                );
+              }
+            } else {
+              setSelectedClientId(client.id);
+              setClientModalVisible(false);
             }
-            setSelectedClientId(client.id);
-            setClientModalVisible(false);
           }}
         />
       </View>
@@ -581,5 +638,22 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.medium,
     fontSize: 13,
     paddingVertical: 22,
+  },
+  blacklistWarning: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    borderRadius: 18,
+    padding: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  blacklistWarningText: {
+    flex: 1,
+    color: "#B91C1C",
+    fontFamily: fontFamilies.semibold,
+    fontSize: 13,
   },
 });

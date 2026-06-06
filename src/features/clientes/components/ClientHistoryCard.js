@@ -24,6 +24,20 @@ export function ClientHistoryCard({ cliente, stats }) {
         </View>
       </View>
 
+      {cliente?.enListaNegra ? (
+        <View style={styles.blacklistAlert}>
+          <View style={styles.alertHeader}>
+            <Feather name="alert-triangle" size={16} color="#B91C1C" />
+            <Text style={styles.alertTitle}>Cliente en lista negra</Text>
+          </View>
+          {cliente.motivoListaNegra ? (
+            <Text style={styles.alertReason}>
+              Motivo: {cliente.motivoListaNegra}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
       <View style={styles.contactBox}>
         <View style={styles.contactRow}>
           <Feather name="phone" size={15} color="#6B7280" />
@@ -150,5 +164,30 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontSize: 12,
     fontWeight: "800",
+  },
+  blacklistAlert: {
+    backgroundColor: "#FEE2E2",
+    borderRadius: 16,
+    padding: 12,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+  },
+  alertHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  alertTitle: {
+    color: "#B91C1C",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  alertReason: {
+    color: "#7F1D1D",
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 4,
+    lineHeight: 17,
   },
 });

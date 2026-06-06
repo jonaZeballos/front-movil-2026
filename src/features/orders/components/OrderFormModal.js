@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 import { SearchInput } from "../../../shared/components/SearchInput";
 import { colors } from "../../../shared/theme/colors";
@@ -34,6 +35,26 @@ export function OrderFormModal({
   onClose,
   onSubmit,
 }) {
+  const navigation = useNavigation();
+
+  const checkIsAdmin = (nav) => {
+    if (!nav) return false;
+    let currentNav = nav;
+    while (currentNav) {
+      const state = currentNav.getState();
+      if (state?.routes) {
+        for (const route of state.routes) {
+          if (route.name === "AdminDashboard") return true;
+          if (route.name === "SalesDashboard" || route.name === "Home") return false;
+        }
+      }
+      currentNav = currentNav.getParent ? currentNav.getParent() : null;
+    }
+    return false;
+  };
+
+  const isAdmin = checkIsAdmin(navigation);
+
   const [selectedClient, setSelectedClient] = useState(initialClient);
   const [selectedEquipment, setSelectedEquipment] = useState(initialEquipment);
   const [selectedEquipments, setSelectedEquipments] = useState(initialEquipment ? [initialEquipment] : []);
@@ -134,18 +155,47 @@ export function OrderFormModal({
 
   const selectClient = (client) => {
     if (client.enListaNegra) {
-      Alert.alert(
-        "Cliente en lista negra",
-        client.motivoListaNegra || "Este cliente requiere revision del administrador."
-      );
-      return;
+      const motivo = client.motivoListaNegra || "Este cliente requiere revision del administrador.";
+      if (isAdmin) {
+        Alert.alert(
+          "Cliente en lista negra",
+          `Motivo: ${motivo}. ¿Deseas continuar de todas formas?`,
+          [
+            {
+              text: "Cancelar",
+              style: "cancel",
+            },
+            {
+              text: "Continuar",
+              onPress: () => {
+                setSelectedClient(client);
+                setSelectedEquipment(null);
+                setSelectedEquipments([]);
+                setPicker(null);
+                clearError("client");
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Cliente en lista negra",
+          `Motivo: ${motivo}. Solicita autorización del administrador para continuar.`,
+          [
+            {
+              text: "Entendido",
+              style: "default",
+            },
+          ]
+        );
+      }
+    } else {
+      setSelectedClient(client);
+      setSelectedEquipment(null);
+      setSelectedEquipments([]);
+      setPicker(null);
+      clearError("client");
     }
-
-    setSelectedClient(client);
-    setSelectedEquipment(null);
-    setSelectedEquipments([]);
-    setPicker(null);
-    clearError("client");
   };
 
   const selectEquipment = (equipment) => {
@@ -197,6 +247,15 @@ export function OrderFormModal({
                 error={errors.client}
                 onPress={() => setPicker("client")}
               />
+
+              {selectedClient?.enListaNegra ? (
+                <View style={styles.blacklistWarning}>
+                  <MaterialCommunityIcons name="alert" size={16} color="#B91C1C" />
+                  <Text style={styles.blacklistWarningText} numberOfLines={2}>
+                    Cliente en lista negra: {selectedClient.motivoListaNegra || "Sin motivo registrado"}
+                  </Text>
+                </View>
+              ) : null}
 
               <PickerField
                 label={allowMultipleEquipments && !lockEquipment ? "Equipos" : "Equipo"}
@@ -682,5 +741,23 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "900",
+  },
+  blacklistWarning: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    borderRadius: 14,
+    padding: 12,
+    marginTop: -8,
+    marginBottom: 16,
+    gap: 8,
+  },
+  blacklistWarningText: {
+    flex: 1,
+    color: "#B91C1C",
+    fontSize: 13,
+    fontWeight: "700",
   },
 });

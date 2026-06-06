@@ -20,6 +20,12 @@ export async function markAllNotificationsAsReadRemote() {
   });
 }
 
+export async function deleteNotificationRemote(notificationId) {
+  return apiRequest(`/api/notificaciones/${notificationId}`, {
+    method: "DELETE",
+  });
+}
+
 export function getInitialNotifications() {
   return [];
 }
@@ -81,12 +87,12 @@ export function buildOrderStatusNotification(order) {
 }
 
 export function formatNotificationDate(value) {
-  if (!value) return "Sin fecha";
+  if (!value) return "Fecha no disponible.";
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Sin fecha";
+    return "Fecha no disponible.";
   }
 
   return date.toLocaleString("es-BO", {

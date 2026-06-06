@@ -51,6 +51,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsReadRemote,
   markNotificationAsReadRemote,
+  deleteNotificationRemote,
 } from "../../features/notifications";
 
 import { onboardingPreloadAssets } from "../../shared/assets";
@@ -417,6 +418,13 @@ export function AppNavigator() {
       markAllNotificationsAsRead(prevNotifications)
     );
     markAllNotificationsAsReadRemote().catch(() => {});
+  };
+
+  const handleDeleteNotification = (notificationId) => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.filter((notification) => notification.id !== notificationId)
+    );
+    deleteNotificationRemote(notificationId).catch(() => {});
   };
 
   const createServiceOrder = async (
@@ -855,6 +863,7 @@ export function AppNavigator() {
               notifications={notifications}
               onMarkAsRead={handleMarkNotificationAsRead}
               onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+              onDelete={handleDeleteNotification}
               products={products}
             />
           )}

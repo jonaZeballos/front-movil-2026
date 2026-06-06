@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ScreenContainer } from "../../../shared/components/ScreenContainer";
@@ -13,12 +13,32 @@ export function NotificationsScreen({
   products = [],
   onOpenNotification,
   onMarkAllAsRead,
+  onDelete,
 }) {
   const unreadCount = getUnreadNotificationsCount(notifications);
   
   const lowStockProducts = products.filter(
     (p) => Number(p.stock || 0) <= Number(p.stockMinimo || 1)
   );
+
+  const handleDeletePress = (notification) => {
+    Alert.alert(
+      "Eliminar notificación",
+      "¿Eliminar esta notificación?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => onDelete?.(notification.id),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <ScreenContainer backgroundColor={colors.dashboardBg} edges={["top"]}>
@@ -37,7 +57,7 @@ export function NotificationsScreen({
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-          <Text style={styles.sectionTitle}>Stock bajo</Text>
+          <Text style={styles.sectionTitle}>Alertas de stock bajo</Text>
           {lowStockProducts.length === 0 ? (
             <View style={styles.emptyStockBox}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#10B981" />
@@ -81,6 +101,7 @@ export function NotificationsScreen({
                 key={notification.id}
                 notification={notification}
                 onPress={onOpenNotification}
+                onDelete={handleDeletePress}
               />
             ))
           )}

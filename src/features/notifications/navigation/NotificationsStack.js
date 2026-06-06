@@ -10,6 +10,7 @@ export function NotificationsStack({
   notifications = [],
   onMarkAsRead,
   onMarkAllAsRead,
+  products = [],
 }) {
   const { createGuardedNavigation } = useNavigationActionGuard();
 
@@ -36,6 +37,7 @@ export function NotificationsStack({
             <NotificationsScreen
               navigation={guardedNavigation}
               notifications={notifications}
+              products={products}
               onMarkAllAsRead={onMarkAllAsRead}
               onOpenNotification={(notification) => {
                 onMarkAsRead?.(notification.id);
